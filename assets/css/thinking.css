@@ -1,0 +1,424 @@
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Montserrat;
+        background: #f3f6fb;
+        padding: 20px;
+    }
+
+    /* ===== HEADER ===== */
+    .header-top {
+        max-width: 1200px;
+        margin: 0 auto 20px;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        height: 60px;
+    }
+
+
+    .header-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #000;
+        flex: 1;
+        text-align: center;
+        letter-spacing: 0.2px;
+    }
+
+    .logo_container img {
+        max-width: 120px;
+        height: auto;
+    }
+
+    .header-top p {
+        font-size: 18px;
+        font-weight: bold;
+        color: #205AB1;
+    }
+
+    /* ===== CONTAINER ===== */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px;
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 50px;
+        position: relative;
+    }
+
+    .progress-line {
+        position: absolute;
+        top: -28px;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background: #e0e0e0;
+        z-index: 0;
+        border-Radius: 32px;
+    }
+
+    .progress-line-filled {
+        position: absolute;
+        top: -28px;
+        left: 0;
+        width: 40%;
+        height: 10px;
+        background: linear-gradient(to right, #14a33fff, #1565C0);
+        z-index: 1;
+        transition: width 0.5s ease;
+        border-Radius: 32px;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+        padding: 0 10px;
+    }
+
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .step.completed .step-circle {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .step.active .step-circle {
+        background: #2196F3;
+        color: white;
+    }
+
+    .step.inactive .step-circle {
+        background: #e0e0e0;
+        color: #999;
+    }
+
+    .step-label {
+        font-size: 13px;
+        color: #666;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-title {
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 20px;
+    }
+
+    .time-info {
+        text-align: center;
+        color: #666;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .time-number {
+        color: #2196F3;
+        font-weight: bold;
+    }
+
+    .complexity {
+        text-align: center;
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 40px;
+    }
+
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #e0e0e0;
+        border-top: 2px solid #2196F3;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ===== STEPS LIST ===== */
+    .steps-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .step-card {
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        transition: all 0.3s ease;
+    }
+
+    .step-card.completed {
+        background: #E8F5E9;
+        box-shadow: 0 6px 18px rgba(81, 160, 98, 0.35);
+        /* border: 2px solid #4CAF50; */
+    }
+
+    .step-card.active {
+        background: #E3F2FD;
+        box-shadow: 0 6px 18px rgba(60, 167, 255, 0.35);
+
+
+        /* border: 2px solid #2196F3; */
+    }
+
+    .step-card.inactive {
+        background: #FAFAFA;
+        /* border: 2px solid #E0E0E0; */
+    }
+
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 24px;
+    }
+
+    .step-card.completed .step-icon {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .step-card.active .step-icon {
+        background: #2196F3;
+        color: white;
+    }
+
+    .step-card.inactive .step-icon {
+        background: #BDBDBD;
+        color: white;
+    }
+
+    .step-content {
+        flex: 1;
+    }
+
+    .step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .step-number {
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .step-card.completed .step-number {
+        color: #4CAF50;
+    }
+
+    .step-card.active .step-number {
+        color: #2196F3;
+    }
+
+    .step-card.inactive .step-number {
+        color: #999;
+    }
+
+    .step-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .step-description {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .step-status {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 16px;
+    }
+
+    .step-card.completed .step-status {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .step-card.active .step-status {
+        background: #2196F3;
+        color: white;
+    }
+
+    .step-card.inactive .step-status {
+        background: #E0E0E0;
+        color: #999;
+    }
+
+    /* ===== CONTROL BUTTONS ===== */
+    .settings-btn {
+        text-align: center;
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .settings-btn h4 {
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .settings-btn a {
+        color: #2196F3;
+        text-decoration: none;
+        font-size: 14px;
+        padding: 8px 12px;
+        margin: 5px;
+        display: inline-block;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .settings-btn a:hover {
+        background: #e3f2fd;
+    }
+
+    .auto-btn {
+        display: inline-block;
+        background: #2196F3;
+        color: white !important;
+        padding: 12px 24px !important;
+        border-radius: 8px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .auto-btn:hover {
+        background: #1976D2;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        body {
+            padding: 10px;
+        }
+
+        .header-top {
+            padding: 15px 20px;
+        }
+
+        .header-top p {
+            font-size: 16px;
+        }
+
+        .logo_container img {
+            max-width: 80px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .main-title {
+            font-size: 22px;
+        }
+
+        .step-label {
+            font-size: 11px;
+        }
+
+        .step-circle {
+            width: 35px;
+            height: 35px;
+            font-size: 12px;
+        }
+
+        .step-card {
+            padding: 16px;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+
+        .step-title {
+            font-size: 16px;
+        }
+
+        .step-description {
+            font-size: 13px;
+        }
+
+    .settings-btn a {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .step-label {
+        font-size: 10px;
+        max-width: 60px;
+    }
+
+    .step {
+        padding: 0 5px;
+    }
+
+    .header-top {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}

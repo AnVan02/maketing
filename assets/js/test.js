@@ -1,4 +1,4 @@
-// API Configuration - CẬP NHẬT THEO BACKEND MỚI
+// API Configuration
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 // Utility functions
@@ -24,7 +24,6 @@ async function makeApiRequest(endpoint, data) {
 }
 
 function showNotification(message, type = 'info') {
-    // Có thể thay thế bằng toast đẹp hơn
     const colors = {
         success: '#28a745',
         error: '#dc3545',
@@ -99,7 +98,7 @@ function getSecondaryKeywords() {
     );
 }
 
-// Tải cấu hình từ API - MỚI THÊM
+// Tải cấu hình từ API
 async function loadConfigs() {
     try {
         const response = await fetch(`${API_BASE_URL}/ui/configs`);
@@ -141,7 +140,7 @@ async function loadConfigs() {
     }
 }
 
-// Hàm populate dropdown - MỚI THÊM
+// Hàm populate dropdown
 function populateDropdown(elementId, options) {
     const select = document.getElementById(elementId);
     select.innerHTML = '<option value="">Chọn...</option>';
@@ -159,7 +158,7 @@ function populateDropdown(elementId, options) {
     });
 }
 
-// Xử lý gợi ý AI - CẬP NHẬT THEO BACKEND MỚI
+// Xử lý gợi ý AI
 const aiSuggestBtn = document.getElementById('aiSuggestBtn');
 const articleTitle = document.getElementById('articleTitle');
 const userQuery = document.getElementById('user_query');
@@ -175,7 +174,6 @@ aiSuggestBtn.addEventListener('click', async function() {
     showLoading(true);
 
     try {
-        // Gọi API suggest titles với cấu trúc mới
         const titleData = {
             main_keyword: keyword,
             language: document.getElementById('language').value || 'Tiếng Việt'
@@ -204,9 +202,11 @@ aiSuggestBtn.addEventListener('click', async function() {
     }
 });
 
-// hàm phần thông tin cơ bang
+// ============================================
+// PHẦN THÔNG TIN CƠ BẢN - TAB TUẦN TỰ
+// ============================================
 
-// === KHAI BÁO BIẾN VÀ KEY LOCAL STORAGE ===
+// Biến toàn cục
 const tabs = document.querySelectorAll(".tab");
 const subButtons = document.querySelectorAll("#private .sub");
 const fileSelector = document.getElementById("file-selector"); 
@@ -228,8 +228,7 @@ const stepMap = {
     'link': 2
 };
 
-
-// === HÀM TIỆN ÍCH VÀ LOCAL STORAGE ===
+// Hàm tiện ích
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -255,7 +254,6 @@ function readFileAsBase64(file) {
     });
 }
 
-
 // Hàm xử lý file sau khi chọn/kéo thả
 async function processFiles(files) {
     if (!files || files.length === 0) return;
@@ -268,48 +266,61 @@ async function processFiles(files) {
 
     const validFiles = Array.from(files).filter(f => allowedTypes.includes(f.type));
     
-    if (validFiles.length > 0) {
+    if (validFiles.length === 0) {
+        showNotification("Chỉ chấp nhận file PDF, DOCX hoặc Excel!", "warning");
+        return;
+    }
+    
+    // Xóa file cũ nếu có (chỉ cho phép 1 file)
+    selectedFiles = [];
+    
+    for (const file of validFiles) {
+        const base64Content = await readFileAsBase64(file);
+        selectedFiles.push({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            base64: base64Content
+        });
+        break; // Chỉ lấy 1 file đầu tiên
+    }
+
+    renderFiles(); 
+    saveState(); 
+
+    // Đánh dấu bước 'file' đã hoàn thành
+    if (selectedFiles.length > 0 && maxCompletedStep === 0) {
+        maxCompletedStep = 1;
+        saveState();
+        showNotification("✅ Tải file thành công! Bạn có thể chuyển sang bước tiếp theo.", "success");
         
-        for (const file of validFiles) {
-            // Lưu file metadata và Base64 vào mảng
-            const base64Content = await readFileAsBase64(file);
-            selectedFiles.push({
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                base64: base64Content
-            });
-        }
-
-        renderFiles(); 
-        saveState(); 
-
-        // --- LOGIC CẬP NHẬT TIẾN TRÌNH ---
-        if (selectedFiles.length > 0 && maxCompletedStep === 0) {
-            maxCompletedStep = 1; // Đánh dấu bước 'file' đã hoàn thành
-            saveState(); 
-            alert("Tải file thành công! Bạn có thể chuyển sang bước tiếp theo.");
-            
-            // Cập nhật giao diện khung kéo thả thành trạng thái đã khóa
-            setupSubtabContent('file'); 
+        // Cập nhật UI cho các subtab
+        updateSubtabStates();
+        
+        // Nếu đang ở tab file, refresh UI
+        const currentSub = document.querySelector('.sub.active');
+        if (currentSub && currentSub.dataset.sub === 'file') {
+            setupSubtabContent('file');
         }
     }
 }
 
-
-// === 1. HÀM RENDER FILE ===
+// 1. HÀM RENDER FILE
 function renderFiles() {
     outsideFileListContainer.innerHTML = ""; 
     const isFileStepCompleted = maxCompletedStep > 0; 
 
     if (selectedFiles.length === 0) {
         if (maxCompletedStep > 0) {
-             maxCompletedStep = 0;
-             saveState(); 
-             // Cập nhật lại nội dung subtab nếu đang ở tab 'file'
-             if (document.querySelector('.sub[data-sub="file"]').classList.contains('active')) {
-                  setupSubtabContent('file');
-             }
+            maxCompletedStep = 0;
+            saveState(); 
+            updateSubtabStates();
+            
+            // Nếu đang ở tab file, refresh UI
+            const currentSub = document.querySelector('.sub.active');
+            if (currentSub && currentSub.dataset.sub === 'file') {
+                setupSubtabContent('file');
+            }
         }
         return; 
     }
@@ -332,7 +343,7 @@ function renderFiles() {
                 </div>
             </div>
             ${isFileStepCompleted ? 
-                `<span style="color:#777; font-size:12px; margin-left:10px;">(Đã khóa)</span>` : 
+                `<span class="locked-text">(Đã khóa)</span>` : 
                 `<button class="remove-file" data-index="${index}">×</button>`
             }
         `;
@@ -344,56 +355,31 @@ function renderFiles() {
     if (!isFileStepCompleted) {
         document.querySelectorAll(".remove-file").forEach(btn => {
             btn.addEventListener("click", (e) => {
+                e.stopPropagation();
                 const index = parseInt(e.currentTarget.dataset.index);
                 selectedFiles.splice(index, 1);
-                saveState(); // Lưu lại trạng thái sau khi xóa
+                saveState(); 
                 renderFiles(); 
             });
         });
     }
 }
 
-
-// === 2. HÀM XỬ LÝ KÉO THẢ VÀ CHỌN FILE ===
-function enableDragDrop(box) {
-    box.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        if (maxCompletedStep === 0) box.classList.add("hover");
-    });
-    box.addEventListener("dragleave", () => {
-        box.classList.remove("hover");
-    });
-    box.addEventListener("drop", (e) => {
-        e.preventDefault();
-        box.classList.remove("hover");
-        if (maxCompletedStep === 0) { 
-             processFiles(e.dataTransfer.files);
-        }
-    });
-}
-
-fileSelector.addEventListener("change", (e) => {
-    processFiles(e.target.files);
-    e.target.value = null; 
-});
-
-
-// === 3. HÀM SETUP NỘI DUNG SUBTAB VÀ KIỂM SOÁT HIỂN THỊ DANH SÁCH FILE ===
+// 2. HÀM SETUP NỘI DUNG SUBTAB
 function setupSubtabContent(sub) {
     subtabContentArea.innerHTML = ''; 
     const isFileStepCompleted = maxCompletedStep > 0;
     
-    // --- KIỂM SOÁT HIỂN THỊ DANH SÁCH FILE (Yêu cầu: Chỉ hiển thị khi ở tab 'file') ---
+    // KIỂM SOÁT HIỂN THỊ DANH SÁCH FILE: Chỉ hiển thị khi ở tab 'file'
     if (sub === 'file') {
         outsideFileListContainer.style.display = 'flex'; 
         renderFiles(); 
     } else {
-        outsideFileListContainer.style.display = 'none'; // Ẩn khi không phải tab 'file'
+        outsideFileListContainer.style.display = 'none';
     }
-    // -------------------------------------------------------------
 
     if (sub === "file") {
-        // --- Tạo khung kéo thả ---
+        // Tạo khung kéo thả
         const uploadBoxHTML = `
             <div class="upload-box" id="actual-upload-box">
                 <div class="icon">☁️</div>
@@ -408,115 +394,189 @@ function setupSubtabContent(sub) {
             actualUploadBox.classList.remove('clickable');
             actualUploadBox.style.pointerEvents = 'none'; 
             actualUploadBox.style.opacity = '0.7';
-            actualUploadBox.innerHTML = `<p style="color:#28a745;font-weight:600;">✅ File đã được tải lên thành công!</p>`;
+            actualUploadBox.style.backgroundColor = '#f5f5f5';
+            actualUploadBox.innerHTML = `
+                <div class="icon">✅</div>
+                <p style="color:#28a745;font-weight:600;">File đã được tải lên thành công!</p>
+            `;
         } else {
             // Trạng thái MỞ (Chưa hoàn thành)
             actualUploadBox.classList.add('clickable'); 
             actualUploadBox.style.pointerEvents = 'auto';
             actualUploadBox.style.opacity = '1';
+            actualUploadBox.style.backgroundColor = 'white';
             
-            enableDragDrop(actualUploadBox); 
-
+            // Thêm event cho kéo thả
+            actualUploadBox.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                actualUploadBox.classList.add("hover");
+            });
+            
+            actualUploadBox.addEventListener("dragleave", () => {
+                actualUploadBox.classList.remove("hover");
+            });
+            
+            actualUploadBox.addEventListener("drop", (e) => {
+                e.preventDefault();
+                actualUploadBox.classList.remove("hover");
+                processFiles(e.dataTransfer.files);
+            });
+            
+            // Thêm event cho click
             actualUploadBox.addEventListener("click", () => {
-                if (actualUploadBox.classList.contains('clickable')) {
-                    fileSelector.click(); 
-                }
+                fileSelector.click(); 
             });
         }
     } else if (sub === "text") {
-        // --- Tạo Textarea (Giao diện Nhập văn bản) ---
+        // Tạo Textarea
+        const isReadonly = maxCompletedStep > 1;
         subtabContentArea.innerHTML = `
             <div style="margin-top: 10px;">
-                <div class="text-editor-toolbar" style="border: 1px solid #ccc; border-bottom: none; padding: 5px; background: #f7f7f7; border-radius: 4px 4px 0 0;">
-                    <button>↩️</button>
-                    <button>↪️</button>
-                    <button>🖨️</button>
-                    <select><option>Arial</option></select>
-                    <button>-</button>
-                    <span style="font-size: 14px;">00</span>
-                    <button>+</button>
-                    <button><b>B</b></button>
-                    <button><i>I</i></button>
-                    <button><u>U</u></button>
-                    <button>S</button>
-                    <button>⬛</button>
-                    <button>A</button>
-                </div>
                 <textarea id="textarea-text" placeholder="Nhập nội dung tại đây..." 
-                          style="width:100%;height:150px;padding:10px;border: 1px solid #ccc;border-radius: 0 0 4px 4px;">${tempTextContent}</textarea>
+                          style="width:100%;height:150px;padding:10px;border: 1px solid #ccc;border-radius: 4px;"
+                          ${isReadonly ? 'readonly' : ''}>${tempTextContent}</textarea>
+                ${isReadonly ? '<p style="color:#777; font-size:12px; margin-top:5px;">(Đã khóa - bạn đã chuyển sang bước tiếp theo)</p>' : ''}
             </div>
         `;
-        document.getElementById('textarea-text').addEventListener('input', (e) => {
-            tempTextContent = e.target.value;
-            saveState(); // Lưu trạng thái văn bản
-        });
+        
+        const textarea = document.getElementById('textarea-text');
+        if (!isReadonly) {
+            textarea.addEventListener('input', (e) => {
+                tempTextContent = e.target.value;
+                saveState();
+                
+                // Nếu có nội dung, đánh dấu đã hoàn thành bước text
+                if (tempTextContent.trim() && maxCompletedStep < 2) {
+                    maxCompletedStep = 2;
+                    saveState();
+                    updateSubtabStates();
+                }
+            });
+        }
         
     } else if (sub === "link") {
-        // --- Tạo Input Link ---
-        subtabContentArea.innerHTML = `<input type="url" id="input-link" placeholder="Nhập link sản phẩm..." value="${tempLinkContent}" style="width:100%;padding:10px;margin-top: 10px; border: 1px solid #ccc;border-radius: 4px;">`;
+        // Tạo Input Link
+        const isReadonly = maxCompletedStep > 2;
+        subtabContentArea.innerHTML = `
+            <input type="url" id="input-link" placeholder="Nhập link sản phẩm..." 
+                   value="${tempLinkContent}" 
+                   style="width:100%;padding:10px;margin-top: 10px; border: 1px solid #ccc;border-radius: 4px;"
+                   ${isReadonly ? 'readonly' : ''}>
+            ${isReadonly ? '<p style="color:#777; font-size:12px; margin-top:5px;">(Đã khóa)</p>' : ''}
+        `;
         
-        document.getElementById('input-link').addEventListener('input', (e) => {
-            tempLinkContent = e.target.value;
-            saveState(); // Lưu trạng thái link
-        });
+        const inputLink = document.getElementById('input-link');
+        if (!isReadonly) {
+            inputLink.addEventListener('input', (e) => {
+                tempLinkContent = e.target.value;
+                saveState();
+            });
+        }
     }
 }
 
-// === 4. XỬ LÝ SUBBUTTONS (Kiểm soát chuyển đổi và Khóa lùi) ===
+// 3. HÀM CẬP NHẬT TRẠNG THÁI SUBTAB
+function updateSubtabStates() {
+    subButtons.forEach(btn => {
+        const sub = btn.dataset.sub;
+        const step = stepMap[sub];
+        
+        if (step < maxCompletedStep) {
+            // Tab đã hoàn thành - thêm class locked
+            btn.classList.add('locked');
+            btn.style.opacity = '0.6';
+            btn.title = `Bước "${btn.textContent}" đã hoàn thành và bị khóa`;
+        } else if (step === maxCompletedStep) {
+            // Tab hiện tại
+            btn.classList.remove('locked');
+            btn.style.opacity = '1';
+            btn.title = `Bước hiện tại: ${btn.textContent}`;
+        } else if (step === maxCompletedStep + 1) {
+            // Tab tiếp theo có thể truy cập
+            btn.classList.remove('locked');
+            btn.style.opacity = '1';
+            btn.title = `Bước tiếp theo: ${btn.textContent}`;
+        } else {
+            // Tab chưa đến
+            btn.classList.remove('locked');
+            btn.style.opacity = '0.4';
+            btn.title = `Chưa đến bước này`;
+        }
+    });
+}
+
+// 4. XỬ LÝ SUBBUTTONS
 subButtons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
         const sub = btn.dataset.sub;
         const targetStep = stepMap[sub];
         
-        const currentActiveSub = document.querySelector('.sub.active');
-        const currentStep = currentActiveSub ? stepMap[currentActiveSub.dataset.sub] : 0; 
-
-        // --- KIỂM TRA QUAY LẠI VÀ NHẢY BƯỚC ---
-        
-        // 1. NGĂN CHẶN QUAY LẠI (Target < Current)
-        if (targetStep < currentStep) {
+        // Kiểm tra nếu tab bị khóa
+        if (btn.classList.contains('locked')) {
             e.preventDefault();
-            alert(`Không thể quay lại bước đã hoàn thành (Bước ${targetStep + 1}).`);
+            alert(`❌ Không thể quay lại bước "${btn.textContent}" đã hoàn thành.\n\nHệ thống làm việc theo tuần tự:\n1. Tải file → 2. Nhập văn bản → 3. Link sản phẩm`);
+            return;
+        }
+        
+        // Kiểm tra nếu nhảy bước (chưa hoàn thành bước trước)
+        if (targetStep > maxCompletedStep + 1) {
+            e.preventDefault();
+            const currentStepName = getStepName(maxCompletedStep);
+            alert(`⏳ Vui lòng hoàn thành bước "${currentStepName}" trước khi chuyển sang bước tiếp theo.`);
             return;
         }
 
-        // --- CHUYỂN TAB HỢP LỆ ---
+        // Chuyển tab hợp lệ
         subButtons.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
 
-        setupSubtabContent(sub); // Thiết lập nội dung (và kiểm soát hiển thị file list)
+        setupSubtabContent(sub);
     });
 });
 
+function getStepName(step) {
+    const stepNames = {
+        0: 'Tải file',
+        1: 'Nhập văn bản', 
+        2: 'Link sản phẩm'
+    };
+    return stepNames[step] || '';
+}
 
-// === 5. XỬ LÝ TAB CHÍNH (Giữ nguyên) ===
+// 5. XỬ LÝ TAB CHÍNH
 tabs.forEach(tab => {
     tab.addEventListener("click", () => {
         tabs.forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
 
         const target = tab.dataset.tab;
-        document.querySelectorAll(".content").forEach(c => c.classList.toggle("active", c.id === target));
+        document.querySelectorAll(".content").forEach(c => {
+            c.classList.toggle("active", c.id === target);
+        });
         
         if (target === "private") {
-            // Đảm bảo subtab đang active được click lại khi chuyển tab chính
+            // Kích hoạt lại subtab đang active
             const activeSub = document.querySelector('.sub.active');
             if (activeSub) {
-                 activeSub.click();
+                setupSubtabContent(activeSub.dataset.sub);
             } else {
-                 document.querySelector('.sub[data-sub="file"]').click();
+                document.querySelector('.sub[data-sub="file"]').click();
             }
         } else {
-            // Đảm bảo ẩn danh sách file khi chuyển tab chính (ví dụ: sang Internet)
             outsideFileListContainer.style.display = 'none';
         }
     });
 });
 
+// 6. XỬ LÝ CHỌN FILE TỪ INPUT
+fileSelector.addEventListener("change", (e) => {
+    processFiles(e.target.files);
+    e.target.value = null; // Reset input
+});
 
-// === KHỞI TẠO TRANG (LOAD DỮ LIỆU TỪ LOCAL STORAGE) ===
+// KHỞI TẠO TRANG
 function initialize() {
-    // 1. Tải file từ Local Storage
+    // Tải dữ liệu từ Local Storage
     const savedFiles = localStorage.getItem(STORAGE_KEY);
     if (savedFiles) {
         try {
@@ -527,178 +587,28 @@ function initialize() {
         }
     }
     
-    // 2. Kích hoạt subtab 'file' mặc định
-    document.querySelector('.sub[data-sub="file"]').click(); 
-}
-
-document.addEventListener('DOMContentLoaded', initialize);
-// ===============
-
-// === HÀM TIỆN ÍCH ===
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = 2;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-// Hàm xử lý file sau khi chọn/kéo thả
-function processFiles(files) {
-    if (!files || files.length === 0) return;
+    // Cập nhật trạng thái subtab
+    updateSubtabStates();
     
-    const allowedTypes = [
-        "application/pdf",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    ];
-
-    const validFiles = Array.from(files).filter(f => allowedTypes.includes(f.type));
-    
-    if (files.length !== validFiles.length) {
-        // Chỉ hiện cảnh báo nếu có file không hợp lệ
-        if (files.length > validFiles.length) {
-            alert("Chỉ được PDF, DOCX hoặc Excel! Các file không hợp lệ đã bị bỏ qua.");
-        }
-    }
-    
-    if (validFiles.length > 0) {
-        selectedFiles = selectedFiles.concat(validFiles);
-        renderFiles(); 
-    }
-}
-
-
-// === 1. HÀM RENDER FILE (RENDER BÊN NGOÀI KHUNG) ===
-function renderFiles() {
-    outsideFileListContainer.innerHTML = ""; 
-
-    if (selectedFiles.length === 0) {
-        return; 
-    }
-    
-    selectedFiles.forEach((file, index) => {
-        const fileSizeFormatted = formatFileSize(file.size);
-        const fileIcon = file.type.includes("pdf") ? '📄' : 
-                         file.type.includes("word") ? '📃' : 
-                         file.type.includes("excel") ? '📊' : '📁';
-                         
-        const fileDiv = document.createElement("div");
-        fileDiv.classList.add("uploaded-file");
-        
-        fileDiv.innerHTML = `
-            <div class="file-info">
-                <span class="file-icon">${fileIcon}</span>
-                <div class="file-details">
-                    <div class="file-name">${file.name}</div>
-                    <div class="file-size-status">${fileSizeFormatted} - Đã tải lên</div>
-                </div>
-            </div>
-            <button class="remove-file" data-index="${index}">×</button>
-        `;
-        
-        outsideFileListContainer.appendChild(fileDiv);
-    });
-    
-    // Thêm event listener cho các nút xóa
-    document.querySelectorAll(".remove-file").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const index = parseInt(e.currentTarget.dataset.index);
-            selectedFiles.splice(index, 1);
-            renderFiles(); 
-        });
-    });
-}
-// === 2. XỬ LÝ CLICK ĐỂ TẢI LÊN ===
-uploadBox.addEventListener("click", () => {
-    // Chỉ kích hoạt nếu subtab 'file' đang active và uploadBox có class 'clickable'
-    if (uploadBox.classList.contains('clickable') && document.querySelector('.sub[data-sub="file"]').classList.contains('active')) {
-        fileSelector.click(); 
-    }
-});
-
-// Bắt sự kiện thay đổi file trên input ẩn
-fileSelector.addEventListener("change", (e) => {
-    processFiles(e.target.files);
-    e.target.value = null; // Reset giá trị
-});
-
-// === 3. XỬ LÝ KÉO THẢ (DRAG & DROP) ===
-function enableDragDrop(box) {
-    box.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        if (document.querySelector('.sub[data-sub="file"]').classList.contains('active')) {
-             box.classList.add("hover");
-        }
-    });
-    box.addEventListener("dragleave", () => {
-        box.classList.remove("hover");
-    });
-    box.addEventListener("drop", (e) => {
-        e.preventDefault();
-        box.classList.remove("hover");
-        processFiles(e.dataTransfer.files);
-    });
-}
-
-// === 4. XỬ LÝ SUBTABS ===
-function setupUploadBox(sub) {
-    if (sub === "file") {
-        uploadBox.innerHTML = `<div class="icon">☁️</div><p>Kéo thả File (PDF, Docx, Excel) vào đây</p>`;
-        outsideFileListContainer.style.display = 'flex'; 
-        uploadBox.classList.add('clickable'); // Cho phép click
+    // Kích hoạt subtab đầu tiên
+    const firstSub = document.querySelector('.sub[data-sub="file"]');
+    if (firstSub && !firstSub.classList.contains('locked')) {
+        firstSub.click();
     } else {
-        uploadBox.innerHTML = sub === "text"
-            ? `<textarea placeholder="Nhập văn bản..." style="width:100%;height:150px;padding:10px;border: 1px solid #ccc;border-radius: 4px;"></textarea>`
-            : `<input type="url" placeholder="Nhập link sản phẩm..." style="width:100%;padding:10px;border: 1px solid #ccc;border-radius: 4px;">`;
-        outsideFileListContainer.style.display = 'none'; 
-        uploadBox.classList.remove('clickable'); // Ngăn click ở tab khác
+        // Nếu file đã bị khóa, chuyển sang bước tiếp theo có thể truy cập
+        const accessibleSub = document.querySelector('.sub:not(.locked)');
+        if (accessibleSub) {
+            accessibleSub.click();
+        }
     }
 }
 
-subButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-        subButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+// ============================================
+// CÁC HÀM KHÁC (giữ nguyên)
+// ============================================
 
-        const sub = btn.dataset.sub;
-        
-        outsideFileListContainer.innerHTML = ""; 
-        setupUploadBox(sub); 
-
-        if (sub === "file") {
-            renderFiles(); 
-            enableDragDrop(uploadBox);
-        }
-    });
-});
-
-// === 5. XỬ LÝ TAB CHÍNH ===
-tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-
-        const target = tab.dataset.tab;
-        contents.forEach(c => c.classList.toggle("active", c.id === target));
-        
-        if (target === "private") {
-            document.querySelector('.sub[data-sub="file"]').click();
-        }
-    });
-});
-
-// === KÍCH HOẠT BAN ĐẦU ===
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('.sub[data-sub="file"]').click(); 
-    enableDragDrop(uploadBox);
-});
-// ===============
-
-// Hàm hiển thị gợi ý tiêu đề (cải tiến)
+// Hàm hiển thị gợi ý tiêu đề
 function showTitleSuggestions(titles) {
-    // Tạo modal đơn giản
     const modal = document.createElement('div');
     modal.style.cssText = `
         position: fixed;
@@ -762,7 +672,7 @@ advancedToggle.addEventListener('click', function() {
     advancedContent.classList.toggle('open');
 });
 
-// Cập nhật preview khi thay đổi độ dài - CẬP NHẬT
+// Cập nhật preview khi thay đổi độ dài
 const articleLength = document.getElementById('article_length');
 const previewLength = document.getElementById('previewLength');
 const previewTime = document.getElementById('previewTime');
@@ -772,7 +682,7 @@ articleLength.addEventListener('input', function() {
     const length = parseInt(this.value);
     previewLength.textContent = `${length} từ`;
     
-    // Cập nhật thời gian dự kiến dựa trên độ dài
+    // Cập nhật thời gian dự kiến
     let time = '3-5 phút';
     if (length < 1000) time = '2-3 phút';
     else if (length > 2000) time = '5-8 phút';
@@ -845,7 +755,7 @@ infoIcons.forEach(icon => {
     });
 });
 
-// Xử lý nút Generate - CẬP NHẬT LỚN THEO BACKEND MỚI
+// Xử lý nút Generate
 const generateBtn = document.getElementById('generateBtn');
 generateBtn.addEventListener('click', async function(e) {
     e.preventDefault();
@@ -877,7 +787,7 @@ generateBtn.addEventListener('click', async function(e) {
                            .filter(link => link.startsWith('http'))
             : [];
 
-        // Tạo request data theo cấu trúc backend mới
+        // Tạo request data
         const requestData = {
             user_query: user_query,
             top_news: [], // Có thể thêm sau nếu cần
@@ -898,7 +808,7 @@ generateBtn.addEventListener('click', async function(e) {
 
         console.log('📦 Request data gửi đi:', JSON.stringify(requestData, null, 2));
         
-        // Gọi API tạo bài viết - ENDPOINT MỚI
+        // Gọi API tạo bài viết
         const response = await fetch(`${API_BASE_URL}/ai/contents`, {
             method: 'POST',
             headers: {
@@ -934,7 +844,7 @@ generateBtn.addEventListener('click', async function(e) {
     }
 });
 
-// Xử lý lưu nháp - CẬP NHẬT
+// Xử lý lưu nháp
 const saveDraftBtn = document.getElementById('saveDraft');
 saveDraftBtn.addEventListener('click', function(e) {
     e.preventDefault();
@@ -958,7 +868,7 @@ saveDraftBtn.addEventListener('click', function(e) {
     showNotification('Nháp đã được lưu thành công!', 'success');
 });
 
-// Khôi phục nháp nếu có - CẬP NHẬT
+// Khôi phục nháp nếu có
 function loadDraft() {
     const draft = localStorage.getItem('articleDraft');
     if (draft) {
@@ -1022,6 +932,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load draft nếu có
     loadDraft();
+    
+    // Khởi tạo phần thông tin cơ bản
+    initialize();
     
     // Kích hoạt event cho độ dài
     articleLength.dispatchEvent(new Event('input'));

@@ -338,16 +338,14 @@ function updateSubtabStates() {
 }
 
 // Event Listeners cho Tabs
-if (subButtons.length > 0) {
-    subButtons.forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-            if (btn.classList.contains('locked')) return;
-            subButtons.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            setupSubtabContent(btn.dataset.sub);
-        });
+subButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+        if (btn.classList.contains('locked')) return;
+        subButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        setupSubtabContent(btn.dataset.sub);
     });
-}
+});
 
 tabs.forEach(tab => {
     tab.addEventListener("click", () => {
@@ -361,12 +359,12 @@ tabs.forEach(tab => {
             if (c.id === target) c.classList.add("active");
         });
 
-        // if (target === "private") {
-        //     const activeSub = document.querySelector('.sub.active');
-        //     // setupSubtabContent(activeSub ? activeSub.dataset.sub : 'file'); // Disable old logic
-        // } else {
-        //     if (outsideFileListContainer) outsideFileListContainer.style.display = 'none';
-        // }
+        if (target === "private") {
+            const activeSub = document.querySelector('.sub.active');
+            setupSubtabContent(activeSub ? activeSub.dataset.sub : 'file');
+        } else {
+            if (outsideFileListContainer) outsideFileListContainer.style.display = 'none';
+        }
     });
 });
 
@@ -509,41 +507,8 @@ function loadDraft() {
 }
 
 // ============================================
-// 6. XỬ LÝ GENERATE (FIXED & UPDATED)
+// 6. XỬ LÝ GENERATE (FIXED)
 // ============================================
-
-// --- Character Counter Logic ---
-const contextTextarea = document.getElementById('private_context');
-if (contextTextarea) {
-    contextTextarea.addEventListener('input', function () {
-        const count = this.value.trim().split(/\s+/).filter(w => w.length > 0).length;
-        const counterEl = this.parentElement.querySelector('.char-counter');
-        if (counterEl) counterEl.textContent = `${count}/300 từ`;
-
-        if (count > 300) {
-            counterEl.style.color = 'red';
-        } else {
-            counterEl.style.color = '#9CA3AF';
-        }
-    });
-}
-
-// --- Add Website Button Logic (Simple interaction) ---
-const addWebBtn = document.getElementById('addWebsiteBtn');
-if (addWebBtn) {
-    addWebBtn.addEventListener('click', () => {
-        const inp = document.getElementById('user_website');
-        if (inp && inp.value.trim()) {
-            showNotification(`Đã thêm website: ${inp.value}`, 'success');
-            // Logic lưu website vào list có thể thêm ở đây nếu cần
-        } else {
-            showNotification('Vui lòng nhập URL website', 'warning');
-            inp?.focus();
-        }
-    });
-}
-
-
 const generateBtn = document.getElementById('generateBtn');
 if (generateBtn) {
     generateBtn.addEventListener('click', async function (e) {
@@ -553,25 +518,9 @@ if (generateBtn) {
         const activeTab = document.querySelector('.tab.active');
         const sourceType = activeTab && activeTab.dataset.tab === 'private' ? 'private' : 'internet';
 
-        // 2. Lấy dữ liệu Input theo từng Tab
-        let user_query = '';
-        let title = '';
-        let context = '';
-        let website = '';
-
-        if (sourceType === 'internet') {
-            user_query = document.getElementById('internet_user_query')?.value.trim();
-            title = document.getElementById('articleTitle_internet')?.value.trim();
-            context = document.getElementById('internet_context')?.value.trim();
-            website = document.getElementById('user_website')?.value.trim();
-        } else {
-            user_query = document.getElementById('user_query')?.value.trim();
-            title = document.getElementById('articleTitle')?.value.trim();
-            context = document.getElementById('private_context')?.value.trim();
-            website = document.getElementById('user_website')?.value.trim();
-        }
-
-        // Common Configs
+        // 2. Lấy dữ liệu Input
+        const user_query = document.getElementById('user_query')?.value.trim();
+        const title = document.getElementById('articleTitle')?.value.trim();
         const content_type = document.getElementById('content_types')?.value;
         const writing_tone = document.getElementById('writing_tones')?.value;
         const language = document.getElementById('languages')?.value;
@@ -579,25 +528,19 @@ if (generateBtn) {
         const article_length = document.getElementById('article_length')?.value;
 
         // Tags
-        const tags = Array.from(document.querySelectorAll('.active #tagContainer .tag')).map(t => t.textContent.replace('×', '').trim());
+        const tags = Array.from(document.querySelectorAll('#tagContainer .tag')).map(t => t.textContent.replace('×', '').trim());
 
         // 3. Validate
         if (!user_query || !content_type || !bot) {
-            showNotification('Vui lòng điền: Từ khóa chính, Loại bài và AI Model!', 'warning');
+            showNotification('Vui lòng điền: Từ khóa, Loại bài và AI Model!', 'warning');
             return;
         }
 
-        // Old Private data validation (skipped if using new form)
-        // if (sourceType === 'private') {
-        //     if (selectedFiles.length === 0 && tempTextContent.length < 10 && productLinks.length === 0 && !context) {
-        //         return showNotification('Vui lòng nhập liệu ở tab Dữ liệu riêng!', 'warning');
-        //     }
-        // }
-
-        // Update global var if needed or prepare payload directly below
-        window.currentPayloadData = {
-            context, website // Store for payload creation
-        };
+        if (sourceType === 'private') {
+            if (selectedFiles.length === 0 && tempTextContent.length < 10 && productLinks.length === 0) {
+                return showNotification('Vui lòng nhập liệu ở tab Dữ liệu riêng!', 'warning');
+            }
+        }
 
     });
 };
@@ -613,7 +556,7 @@ if (typeof window.transitionToLoadingState === 'function') {
 // 5. Tạo Payload & Chuyển trang (Giả lập delay xử lý)
 setTimeout(() => {
     const payload = {
-        user_query: user_query, // Note: user_query variable needs to be accessible here, check scope!
+        user_query: user_query,
         source_type: sourceType,
         config: {
             title: title,
@@ -622,9 +565,7 @@ setTimeout(() => {
             lang: language,
             bot: bot,
             len: article_length,
-            tags: tags,
-            context: window.currentPayloadData?.context || '',
-            website: window.currentPayloadData?.website || ''
+            tags: tags
         },
         private_data: {
             files: selectedFiles,
@@ -669,11 +610,10 @@ async function initializePage() {
     setupDraftSystem();
     loadDraft();
 
-    // Kích hoạt tab đầu tiên (Logic cũ, check exists)
+    // Kích hoạt tab đầu tiên
     const firstSub = document.querySelector('.sub[data-sub="file"]');
-    if (firstSub && !firstSub.classList.contains('locked')) {
-        firstSub.click();
-    } else {
+    if (firstSub && !firstSub.classList.contains('locked')) firstSub.click();
+    else {
         const acc = document.querySelector('.sub:not(.locked)');
         if (acc) acc.click();
     }
@@ -707,3 +647,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializePage();
     initializeSidebarToggle();
 });
+

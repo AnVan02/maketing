@@ -153,9 +153,10 @@
                     <!-- Hidden preview structure to keep JS happy if it tries to update it, or we update JS -->
                     <div id="previewLength" style="display:none;"></div>
 
-                    <div class="loading" id="loading" style="display: none; text-align: center; margin: 20px 0;">
-                        <div class="spinner"></div>
-                        <p>Đang tạo bài viết...</p>
+                    <div class="loading" id="loading" style="display: none; text-align: center; margin-top: 50px;">
+                        <div class="spinner-large"></div>
+                        <h3 style="margin-top: 20px; color: #333; font-weight: 600;">Dàn ý đang được khởi tạo...</h3>
+                        <p style="color: #666; margin-top: 10px; max-width: 400px; margin-left: auto; margin-right: auto;">Hệ thống đang xử lý thông tin và sắp xếp nội dung. Vui lòng chờ trong giây lát.</p>
                     </div>
                 </div>
             </div>
@@ -165,7 +166,7 @@
 
 <div class="tooltip" id="tooltip"></div>
 <script src="cau-hinh-bai-viet.js"></script>
-<!-- <script src="khoi-tao-bai-viet.js"></script> -->
+<script src="khoi-tao-bai-viet.js"></script>
 <!-- <script src="dan-y-bai-viet.js"></script> -->
 
 

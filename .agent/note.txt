@@ -1,0 +1,48 @@
+1. 
+crawl_news.html
+ (Tìm kiếm tin tức)
+Mục đích: Tìm kiếm các bài viết trên mạng dựa trên từ khóa người dùng nhập vào.
+API Endpoint: POST http://172.16.1.78:8080/api/v1/crawl/news
+Cách hoạt động:
+Người dùng nhập từ khóa (ví dụ: "chatgpt 5.0 có gì mới ?").
+Code gửi từ khóa (query) và số lượng kết quả (max_results) lên server.
+Server trả về danh sách các bài viết (Tiêu đề, Link, Mô tả ngắn).
+Kết quả được hiển thị ngay trên giao diện web.
+
+2. 
+crawl_crawl.html
+ (Lấy nội dung chi tiết)
+Mục đích: Sau khi có danh sách các link bài viết (từ bước 1), file này dùng để "cào" (crawl) nội dung chi tiết bên trong các link đó.
+API Endpoint: POST http://172.16.1.78:8080/api/v1/crawl/crawl
+Cách hoạt động:
+Gửi một danh sách các bài viết (articles) bao gồm URL, tiêu đề, và mô tả ngắn lên server.
+Server sẽ truy cập vào từng URL để lấy toàn bộ nội dung văn bản bên trong.
+Kết quả trả về thường sẽ bao gồm nội dung chi tiết (content hoặc content_preview) của từng bài báo.
+
+3. 
+ai_news_filtering.html
+ (Lọc tin & Sinh dàn ý)
+Mục đích: Phân tích nội dung chi tiết của các bài báo đã cào được, lọc ra những thông tin quan trọng nhất liên quan đến từ khóa, và có thể là bước đệm để sinh dàn ý.
+API Endpoint: POST http://172.16.1.78:8080/api/v1/ai/news-filterings
+Cách hoạt động:
+Dữ liệu gửi đi (payload) rất chi tiết, bao gồm nội dung bài viết gốc (content_preview - đoạn văn bản dài đã cào được ở bước 2).
+Kèm theo đó là từ khóa chính (main_keyword) và tiêu đề dự kiến (article_title).
+AI sẽ đọc hiểu nội dung này để chắt lọc thông tin (top_news) hoặc đề xuất cấu trúc bài viết phù hợp.
+
+4. 
+ai_contents.html
+ (Viết bài hoàn chỉnh)
+Mục đích: Bước cuối cùng, sử dụng thông tin đã tổng hợp và dàn ý chi tiết để AI viết thành một bài viết hoàn chỉnh.
+API Endpoint: POST http://172.16.1.78:8080/api/v1/ai/contents
+Cách hoạt động:
+Payload gửi đi rất phức tạp, bao gồm:
+top_news: Các nguồn tin tham khảo.
+config: Cấu hình bài viết (Giọng văn, độ dài, loại bài, bot ID...).
+outline: Một dàn ý chi tiết (H1, H2, H3) với các chỉ dẫn cụ thể cho từng mục (số chữ, từ khóa con, giọng văn riêng cho từng đoạn).
+AI sẽ dựa vào dàn ý này để viết nội dung cho từng mục nhỏ, ghép lại thành bài viết lớn.
+Tóm lại: Bộ 4 file này mô phỏng quy trình:
+
+Search (crawl_news) -> Tìm link.
+Crawl (crawl_crawl) -> Đọc nội dung link.
+Filter/Outline (ai_news_filtering) -> Đọc hiểu và lên khung ý tưởng.
+Write (ai_contents) -> Viết bài chi tiết từ khung ý tưởng.

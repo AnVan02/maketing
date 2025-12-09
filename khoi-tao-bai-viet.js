@@ -71,7 +71,7 @@ function transitionToLoadingState() {
 function redirectToThinkingPage(delay = 1000) {
     console.log(`⏱️ Đang chờ ${delay}ms trước khi chuyển trang Thinking...`);
     setTimeout(() => {
-        window.location.href = 'thinking.php';
+        window.location.href = 'dan-y-bai-viet.php';
     }, delay);
 }
 

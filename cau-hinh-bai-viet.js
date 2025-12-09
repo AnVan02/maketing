@@ -1,7 +1,17 @@
 // ============================================
 // 1. BIẾN TOÀN CỤC VÀ CẤU HÌNH
 // ============================================
-const API_BASE_URL = 'http://172.16.1.26:8080/api/v1/ui';
+const API_BASE_URL = 'http://172.16.1.78:8080/api/v1';
+
+// API endpoints theo demo
+const API_ENDPOINTS = {
+    crawl_news: '/crawl/news',
+    crawl_crawl: '/crawl/crawl',
+    ai_news_filtering: '/ai/news-filterings',
+    ai_contents: '/ai/contents',
+    ui_configs: '/ui/configs',
+    ui_generate: '/ui/generate'
+};
 
 // DOM Elements chính
 const tabs = document.querySelectorAll(".tab");
@@ -20,17 +30,18 @@ let selectedFiles = [];
 let tempTextContent = localStorage.getItem('tempTextContent') || "";
 let tempLinkContent = localStorage.getItem('tempLinkContent') || "";
 let productLinks = JSON.parse(localStorage.getItem('productLinks')) || [];
+let crawledArticles = [];
+let filteredOutline = null;
 
 // Ánh xạ bước thực hiện
 const stepMap = { 'file': 0, 'text': 1, 'link': 2 };
 
 // ============================================
-// 2. HÀM GỌI API HỆ THỐNG (CORE LOGIC)
+// 2. HÀM GỌI API HỆ THỐNG
 // ============================================
 
 async function loadConfigs() {
     console.log("🚀 Đang tải cấu hình hệ thống...");
-    // ID số nhiều (Chuẩn)
     const selectIds = ['content_types', 'writing_tones', 'languages', 'bots'];
 
     selectIds.forEach(id => {
@@ -39,7 +50,7 @@ async function loadConfigs() {
     });
 
     try {
-        const res = await fetch(`${API_BASE_URL}/configs`, {
+        const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ui_configs}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -48,7 +59,6 @@ async function loadConfigs() {
         });
 
         if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
         const data = await res.json();
         console.log("✅ Configs loaded:", data);
 
@@ -70,7 +80,6 @@ async function loadConfigs() {
         populate('writing_tones', data.writing_tones, 'Chọn tone giọng');
         populate('languages', data.languages, 'Chọn ngôn ngữ');
         populate('bots', data.bots, 'Chọn AI Model');
-
         return true;
 
     } catch (e) {
@@ -113,8 +122,6 @@ function formatFileSize(bytes) {
 
 function showNotification(message, type = 'info') {
     const colors = { success: '#28a745', error: '#dc3545', warning: '#ffc107', info: '#17a2b8' };
-
-    // Xóa thông báo cũ
     const existing = document.querySelectorAll('.custom-notification');
     existing.forEach(e => e.remove());
 
@@ -126,13 +133,23 @@ function showNotification(message, type = 'info') {
     setTimeout(() => { notification.remove(); }, 3000);
 }
 
-function showLoading(show) {
+function showLoading(show, message = "Đang xử lý...") {
     const loading = document.getElementById('loading');
     const generateBtn = document.getElementById('generateBtn');
-    if (loading) loading.style.display = show ? 'block' : 'none';
+    const videoPlaceholder = document.querySelector('.video-placeholder');
+    const previewText = document.querySelector('.preview-text');
+
+    if (loading) {
+        loading.style.display = show ? 'block' : 'none';
+        if (videoPlaceholder) videoPlaceholder.style.display = show ? 'none' : 'block';
+        if (previewText) previewText.style.display = show ? 'none' : 'block';
+    }
+
     if (generateBtn) {
         generateBtn.disabled = show;
-        generateBtn.innerHTML = show ? `<span class="edit-icon">⏳</span> Đang xử lý...` : `<span class="edit-icon">📝</span> Tạo dàn ý bài viết <span style="margin-left: 5px;">→</span>`;
+        generateBtn.innerHTML = show ?
+            `<span class="edit-icon">⏳</span> ${message}` :
+            `<span class="edit-icon">📝</span> Tạo dàn ý bài viết <span style="margin-left: 5px;">→</span>`;
     }
 }
 
@@ -142,6 +159,8 @@ function saveState() {
     localStorage.setItem('tempLinkContent', tempLinkContent);
     localStorage.setItem('productLinks', JSON.stringify(productLinks));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedFiles));
+    localStorage.setItem('crawledArticles', JSON.stringify(crawledArticles));
+    localStorage.setItem('filteredOutline', JSON.stringify(filteredOutline));
 }
 
 function readFileAsBase64(file) {
@@ -285,12 +304,15 @@ function setupSubtabContent(sub) {
             </div>
         `;
 
-        const ta = document.getElementById('textarea-text');
-        if (!isReadonly && ta) {
-            ta.addEventListener('input', (e) => {
-                tempTextContent = e.target.value; saveState();
+        const editor = document.getElementById('editor');
+        if (!isReadonly && editor) {
+            editor.addEventListener('input', (e) => {
+                tempTextContent = e.target.innerHTML;
+                saveState();
                 if (tempTextContent.length > 10 && maxCompletedStep < 2) {
-                    maxCompletedStep = 2; saveState(); updateSubtabStates();
+                    maxCompletedStep = 2;
+                    saveState();
+                    updateSubtabStates();
                 }
             });
         }
@@ -354,19 +376,10 @@ tabs.forEach(tab => {
         tabs.forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
         const target = tab.dataset.tab;
-
-        // Toggle hiển thị content
         document.querySelectorAll(".content").forEach(c => {
             c.classList.remove("active");
             if (c.id === target) c.classList.add("active");
         });
-
-        // if (target === "private") {
-        //     const activeSub = document.querySelector('.sub.active');
-        //     // setupSubtabContent(activeSub ? activeSub.dataset.sub : 'file'); // Disable old logic
-        // } else {
-        //     if (outsideFileListContainer) outsideFileListContainer.style.display = 'none';
-        // }
     });
 });
 
@@ -375,10 +388,8 @@ if (fileSelector) {
 }
 
 // ============================================
-// 5. CÁC TÍNH NĂNG BỔ SUNG (Tags, Drafts, AI Suggest)
+// 5. TÍNH NĂNG BỔ SUNG
 // ============================================
-
-// --- Tags Management ---
 function initializeKeywordTags() {
     const input = document.getElementById('secondaryKeyword');
     const container = document.getElementById('tagContainer');
@@ -386,7 +397,6 @@ function initializeKeywordTags() {
 
     if (!input || !container) return;
 
-    // 1. Add Tags Manually
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && input.value.trim()) {
             e.preventDefault();
@@ -395,9 +405,7 @@ function initializeKeywordTags() {
         }
     });
 
-    // Helper to add tag
     function addTag(text) {
-        // Prevent duplicates
         const existing = Array.from(container.querySelectorAll('.tag')).map(t => t.textContent.replace('×', '').trim());
         if (existing.includes(text)) return;
 
@@ -407,69 +415,15 @@ function initializeKeywordTags() {
         container.appendChild(tag);
     }
 
-    // 2. API Suggestion Logic
-    async function fetchKeywordsFromApi(query) {
-        if (!query) return;
-
-        // Show loading state in container
-        const loadingTag = document.createElement('span');
-        loadingTag.className = 'tag loading-tag';
-        loadingTag.textContent = 'Đang tìm từ khóa... ⏳';
-        container.appendChild(loadingTag);
-
-        try {
-            // Call API
-            const res = await fetch(`${API_BASE_URL}/suggest_keywords`, { // Assuming endpoint
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query: query })
-            });
-
-            // Remove loading
-            loadingTag.remove();
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data && Array.isArray(data.keywords)) {
-                    data.keywords.forEach(kw => addTag(kw));
-                    showNotification(`Đã tìm thấy ${data.keywords.length} từ khóa liên quan!`, 'success');
-                }
-            } else {
-                // Determine if we should show mock for demo if API fails
-                console.warn("API Error, checking for mock mode...");
-                // Mock Data for Demo purposes if API fails (Safe fallback)
-                const mockKeywords = [query + " là gì", "lợi ích của " + query, "cách sử dụng " + query];
-                mockKeywords.forEach(kw => addTag(kw));
-                showNotification("Đã tìm thấy từ khóa gợi ý (Demo)", 'info');
-            }
-
-        } catch (e) {
-            loadingTag.remove();
-            console.error("Fetch Keywords Error:", e);
-            // Fallback Mock
-            const mockKeywords = [query + " giá rẻ", query + " tốt nhất", "review " + query];
-            mockKeywords.forEach(kw => addTag(kw));
-        }
-    }
-
-    // Trigger on Blur of Main Input
-    if (mainInput) {
-        mainInput.addEventListener('blur', () => {
-            if (mainInput.value.trim() && container.children.length === 0) {
-                fetchKeywordsFromApi(mainInput.value.trim());
-            }
-        });
-    }
+    window.addKeywordTag = addTag;
 }
 
-// --- AI Suggest ---
 function initializeAiSuggest() {
     const btn = document.getElementById('aiSuggestBtn');
     if (!btn) return;
     btn.addEventListener('click', () => {
         const kw = document.getElementById('user_query')?.value;
         if (!kw) return showNotification("Nhập từ khóa trước!", "warning");
-
         showNotification("Đang tạo gợi ý...", "info");
         setTimeout(() => {
             document.getElementById('articleTitle').value = `Top 5 điều cần biết về ${kw}`;
@@ -478,7 +432,6 @@ function initializeAiSuggest() {
     });
 }
 
-// --- Save Draft ---
 function setupDraftSystem() {
     const saveBtn = document.getElementById('saveDraft');
     if (!saveBtn) return;
@@ -502,62 +455,163 @@ function loadDraft() {
             const d = JSON.parse(draft);
             if (d.query) document.getElementById('user_query').value = d.query;
             if (d.title) document.getElementById('articleTitle').value = d.title;
-            // Note: Select boxes sẽ tự map khi loadConfigs chạy xong
             showNotification("Đã khôi phục nháp.", "info");
         } catch (e) { }
     }
 }
 
 // ============================================
-// 6. XỬ LÝ GENERATE (FIXED & UPDATED)
+// 6. CÁC API THEO DEMO
 // ============================================
 
-// --- Character Counter Logic ---
+async function crawlNewsFromInternet(query, maxResults = 5) {
+    try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.crawl_news}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                query: query,
+                max_results: maxResults
+            })
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const data = await response.json();
+        if (data.success && data.results) {
+            crawledArticles = data.results;
+            saveState();
+            return data.results;
+        }
+        return [];
+    } catch (error) {
+        console.error("❌ Lỗi crawl news:", error);
+        showNotification("Không thể crawl tin tức từ internet", "error");
+        return [];
+    }
+}
+
+async function crawlArticleDetails(articles) {
+    try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.crawl_crawl}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ articles: articles })
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const data = await response.json();
+        return data.articles || [];
+    } catch (error) {
+        console.error("❌ Lỗi crawl chi tiết:", error);
+        return articles;
+    }
+}
+
+async function filterNewsAndGenerateOutline(articles, mainKeyword, title) {
+    try {
+        const secondaryKeywords = Array.from(document.querySelectorAll('.active .tag'))
+            .map(t => t.textContent.replace('×', '').trim());
+
+        const payload = {
+            articles: articles,
+            main_keyword: mainKeyword,
+            secondary_keywords: secondaryKeywords,
+            article_title: title || `Bài viết về ${mainKeyword}`,
+            top_k: 3
+        };
+
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ai_news_filtering}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const data = await response.json();
+        filteredOutline = data;
+        saveState();
+        return data;
+    } catch (error) {
+        console.error("❌ Lỗi filter news:", error);
+        showNotification("Không thể tạo dàn ý từ tin tức", "error");
+        return null;
+    }
+}
+
+async function generateContentFromOutline(outlineData, config) {
+    try {
+        const secondaryKeywords = Array.from(document.querySelectorAll('.active .tag'))
+            .map(t => t.textContent.replace('×', '').trim());
+
+        const payload = {
+            top_news: crawledArticles.slice(0, 2).map(article => ({
+                rank: 1,
+                title: article.title,
+                url: article.url,
+                images: [],
+                content_preview: article.snippet || article.content_preview || ""
+            })),
+            target_language: config.lang || "Tiếng Việt",
+            config: {
+                bot_id: config.bot || "GPT-4.1",
+                article_length: config.len || "500",
+                tone: config.tone || "Chuyên nghiệp",
+                article_type: config.type || "blog",
+                custome_instructions: null
+            },
+            title: config.title || `Bài viết về ${config.main_keyword}`,
+            outline: outlineData.outline || [],
+            main_keyword: config.main_keyword || "",
+            secondary_keywords: secondaryKeywords
+        };
+
+        console.log("📤 Sending content generation payload:", payload);
+
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ai_contents}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("❌ Lỗi generate content:", error);
+        showNotification("Không thể tạo nội dung từ dàn ý", "error");
+        return null;
+    }
+}
+
+// ============================================
+// 7. HÀM GENERATE CHÍNH
+// ============================================
+
+// Character Counter
 const contextTextarea = document.getElementById('private_context');
 if (contextTextarea) {
     contextTextarea.addEventListener('input', function () {
         const count = this.value.trim().split(/\s+/).filter(w => w.length > 0).length;
         const counterEl = this.parentElement.querySelector('.char-counter');
-        if (counterEl) counterEl.textContent = `${count}/300 từ`;
-
-        if (count > 300) {
-            counterEl.style.color = 'red';
-        } else {
-            counterEl.style.color = '#9CA3AF';
+        if (counterEl) {
+            counterEl.textContent = `${count}/300 từ`;
+            counterEl.style.color = count > 300 ? 'red' : '#9CA3AF';
         }
     });
 }
 
-// --- Add Website Button Logic (Simple interaction) ---
-const addWebBtn = document.getElementById('addWebsiteBtn');
-if (addWebBtn) {
-    addWebBtn.addEventListener('click', () => {
-        const inp = document.getElementById('user_website');
-        if (inp && inp.value.trim()) {
-            showNotification(`Đã thêm website: ${inp.value}`, 'success');
-            // Logic lưu website vào list có thể thêm ở đây nếu cần
-        } else {
-            showNotification('Vui lòng nhập URL website', 'warning');
-            inp?.focus();
-        }
-    });
-}
-
-
+// Main Generate Function
 const generateBtn = document.getElementById('generateBtn');
 if (generateBtn) {
     generateBtn.addEventListener('click', async function (e) {
         e.preventDefault();
 
-        // 1. Xác định nguồn dữ liệu (Internet hay Private)
+        // 1. Xác định nguồn dữ liệu
         const activeTab = document.querySelector('.tab.active');
         const sourceType = activeTab && activeTab.dataset.tab === 'private' ? 'private' : 'internet';
 
-        // 2. Lấy dữ liệu Input theo từng Tab
-        let user_query = '';
-        let title = '';
-        let context = '';
-        let website = '';
+        // 2. Lấy dữ liệu Input
+        let user_query = '', title = '', context = '', website = '';
 
         if (sourceType === 'internet') {
             user_query = document.getElementById('internet_user_query')?.value.trim();
@@ -578,79 +632,136 @@ if (generateBtn) {
         const bot = document.getElementById('bots')?.value;
         const article_length = document.getElementById('article_length')?.value;
 
-        // Tags
-        const tags = Array.from(document.querySelectorAll('.active #tagContainer .tag')).map(t => t.textContent.replace('×', '').trim());
-
         // 3. Validate
-        if (!user_query || !content_type || !bot) {
-            showNotification('Vui lòng điền: Từ khóa chính, Loại bài và AI Model!', 'warning');
+        if (!user_query) {
+            showNotification('Vui lòng nhập từ khóa chính!', 'warning');
             return;
         }
 
-        // Old Private data validation (skipped if using new form)
-        // if (sourceType === 'private') {
-        //     if (selectedFiles.length === 0 && tempTextContent.length < 10 && productLinks.length === 0 && !context) {
-        //         return showNotification('Vui lòng nhập liệu ở tab Dữ liệu riêng!', 'warning');
-        //     }
-        // }
+        if (!content_type || !bot) {
+            showNotification('Vui lòng chọn Loại bài và AI Model!', 'warning');
+            return;
+        }
 
-        // Update global var if needed or prepare payload directly below
-        window.currentPayloadData = {
-            context, website // Store for payload creation
-        };
+        // 4. Show loading
+        showLoading(true, "Đang xử lý...");
 
+        try {
+            let finalResult = null;
+
+            if (sourceType === 'internet') {
+                // Bước 1: Crawl news
+                showLoading(true, "Đang tìm kiếm tin tức...");
+                const crawledNews = await crawlNewsFromInternet(user_query, 5);
+
+                if (crawledNews.length === 0) {
+                    showNotification("Không tìm thấy tin tức nào cho từ khóa này", "warning");
+                    showLoading(false);
+                    return;
+                }
+
+                // Bước 2: Crawl chi tiết bài viết
+                showLoading(true, "Đang thu thập chi tiết bài viết...");
+                const detailedArticles = await crawlArticleDetails(crawledNews.slice(0, 2));
+
+                // Bước 3: Filter và tạo outline
+                showLoading(true, "Đang tạo dàn ý bài viết...");
+                const outlineResult = await filterNewsAndGenerateOutline(
+                    detailedArticles,
+                    user_query,
+                    title
+                );
+
+                if (!outlineResult) {
+                    showLoading(false);
+                    return;
+                }
+
+                // Bước 4: Generate content từ outline
+                showLoading(true, "Đang viết bài...");
+                const config = {
+                    title: title,
+                    type: content_type,
+                    tone: writing_tone,
+                    lang: language,
+                    bot: bot,
+                    len: article_length,
+                    main_keyword: user_query,
+                    context: context,
+                    website: website
+                };
+
+                finalResult = await generateContentFromOutline(outlineResult, config);
+
+            } else {
+                // QUY TRÌNH CHO NGUỒN PRIVATE
+                showLoading(true, "Đang xử lý dữ liệu nội bộ...");
+
+                const payload = {
+                    user_query: user_query,
+                    source_type: 'private',
+                    config: {
+                        title: title,
+                        type: content_type,
+                        tone: writing_tone,
+                        lang: language,
+                        bot: bot,
+                        len: article_length,
+                        context: context,
+                        website: website
+                    },
+                    private_data: {
+                        files: selectedFiles,
+                        text: tempTextContent,
+                        links: productLinks
+                    }
+                };
+
+                console.log("📤 Sending private data payload:", payload);
+
+                const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ui_generate}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "ngrok-skip-browser-warning": "true"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+                finalResult = data;
+            }
+
+            // 5. Save result and redirect
+            if (finalResult) {
+                sessionStorage.setItem('apiResult', JSON.stringify(finalResult));
+                sessionStorage.setItem('generationSource', sourceType);
+
+                showNotification("✅ Tạo bài viết thành công!", "success");
+
+                setTimeout(() => {
+                    if (typeof window.redirectToThinkingPage === 'function') {
+                        window.redirectToThinkingPage();
+                    } else {
+                        window.location.href = 'thinking.php';
+                    }
+                }, 1000);
+            } else {
+                showLoading(false);
+                showNotification("Không thể tạo bài viết. Vui lòng thử lại!", "error");
+            }
+
+        } catch (error) {
+            console.error("❌ Generate Error:", error);
+            showLoading(false);
+            showNotification(`Lỗi: ${error.message}`, "error");
+        }
     });
-};
-
-// 4. Chuyển sang Loading UI (New JS Logic)
-if (typeof window.transitionToLoadingState === 'function') {
-    window.transitionToLoadingState();
-} else {
-    // Fallback if file not loaded
-    showLoading(true);
 }
 
-// 5. Tạo Payload & Chuyển trang (Giả lập delay xử lý)
-setTimeout(() => {
-    const payload = {
-        user_query: user_query, // Note: user_query variable needs to be accessible here, check scope!
-        source_type: sourceType,
-        config: {
-            title: title,
-            type: content_type,
-            tone: writing_tone,
-            lang: language,
-            bot: bot,
-            len: article_length,
-            tags: tags,
-            context: window.currentPayloadData?.context || '',
-            website: window.currentPayloadData?.website || ''
-        },
-        private_data: {
-            files: selectedFiles,
-            text: tempTextContent,
-            links: productLinks
-        }
-    };
-
-    console.log("📤 Payload:", payload);
-    sessionStorage.setItem('pipelineData', JSON.stringify(payload));
-
-    // Gọi hàm chuyển trang từ khoi-tao-bai-viet.js
-    if (typeof window.redirectToThinkingPage === 'function') {
-        window.redirectToThinkingPage(2500); // Chuyển sau 2.5s
-    } else {
-        // Fallback nếu chưa load file js kia
-        setTimeout(() => {
-            window.location.href = 'thinking.php';
-        }, 2500);
-    }
-
-}, 1500);
-
-
 // ============================================
-// 7. KHỞI TẠO TRANG
+// 8. KHỞI TẠO TRANG
 // ============================================
 async function initializePage() {
     // 1. Load API Configs
@@ -662,6 +773,16 @@ async function initializePage() {
         try { selectedFiles = JSON.parse(savedFiles); } catch (e) { selectedFiles = []; }
     }
 
+    const savedCrawled = localStorage.getItem('crawledArticles');
+    if (savedCrawled) {
+        try { crawledArticles = JSON.parse(savedCrawled); } catch (e) { crawledArticles = []; }
+    }
+
+    const savedOutline = localStorage.getItem('filteredOutline');
+    if (savedOutline) {
+        try { filteredOutline = JSON.parse(savedOutline); } catch (e) { filteredOutline = null; }
+    }
+
     // 3. Init UI Features
     updateSubtabStates();
     initializeKeywordTags();
@@ -669,7 +790,7 @@ async function initializePage() {
     setupDraftSystem();
     loadDraft();
 
-    // Kích hoạt tab đầu tiên (Logic cũ, check exists)
+    // 4. Kích hoạt tab đầu tiên
     const firstSub = document.querySelector('.sub[data-sub="file"]');
     if (firstSub && !firstSub.classList.contains('locked')) {
         firstSub.click();
@@ -678,7 +799,7 @@ async function initializePage() {
         if (acc) acc.click();
     }
 
-    // Preview Text Update
+    // 5. Preview Text Update
     const lenInput = document.getElementById('article_length');
     if (lenInput) {
         lenInput.addEventListener('input', () => {
@@ -690,11 +811,10 @@ async function initializePage() {
     showNotification('Hệ thống đã sẵn sàng!', 'info');
 }
 
-// --- Sidebar Toggle ---
+// Sidebar Toggle
 function initializeSidebarToggle() {
     const toggleBtn = document.querySelector('.menu-toggle');
     const appContainer = document.querySelector('.app-container');
-
     if (toggleBtn && appContainer) {
         toggleBtn.addEventListener('click', () => {
             appContainer.classList.toggle('sidebar-collapsed');

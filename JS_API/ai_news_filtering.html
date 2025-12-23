@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Filtering</title>
+</head>
+<body>
+    
+    <h3>Lọc tin tin tức liên quan đến từ khóa và sinh outline</h3>
+
+    <button onclick="filtering()">Sinh dàn ý</button>
+
+    <pre id="result"></pre>
+
+    <script>
+        async function filtering() {
+            const payload = {
+                articles: [
+                    {
+                        url: "https://openai.com/vi-VN/index/introducing-gpt-5/",
+                        title: "Xin giới thiệu GPT-5 | OpenAI",
+                        snippet: "Giới thiệu GPT-5 từ OpenAI",
+                        content_preview: "Chuyển sang\n  * [ChatGPT(mở trong cửa sổ mới)](https://chatgpt.com/?openaicom-did=727facb3-aa30-41bc-a3df-efe68d1f4021&openaicom_referred=true)\n  * [Sora(mở trong cửa sổ mới)](https://sora.com/)\n  * [API Platform(mở trong cửa sổ mới)](https://platform.openai.com/)\n\n\nXin giới thiệu GPT-5 | OpenAI\n7 tháng 8, 2025\n[Phát hành](https://openai.com/research/index/release/)[Sản phẩm](https://openai.com/vi-VN/news/product-releases/)\n# Xin giới thiệu GPT-5\nMô hình thông minh, nhanh và hữu ích nhất của chúng tôi, có tích hợp khả năng tư duy trí tuệ cấp chuyên gia cho tất cả mọi người.\n[Thử trên ChatGPT(mở trong cửa sổ mới)](https://chatgpt.com/?openaicom-did=727facb3-aa30-41bc-a3df-efe68d1f4021&openaicom_referred=true)\nĐang tải…\nXin giới thiệu GPT‑5, hệ thống AI tốt nhất của chúng tôi cho đến nay. GPT‑5 là bước tiến vượt bậc về trí tuệ so với tất cả các mô hình trước đây của chúng tôi, với hiệu suất tiên tiến nhất về lập trình, toán học, viết lách, sức khỏe, nhận thức thị giác, và nhiều lĩnh vực khác. Đây là một hệ thống hợp nhất biết khi nào cần phản hồi nhanh và khi nào cần suy nghĩ lâu hơn để cung cấp phản hồi ở cấp độ chuyên gia. GPT‑5 được cung cấp cho tất cả người dùng, người đăng ký bản Plus sẽ được sử dụng nhiều hơn và người đăng ký bản Pro được truy cập vào GPT‑5 Pro, phiên bản có khả năng suy luận mở rộng để cung cấp câu trả lời đầy đủ hơn và chính xác hơn.\n## Một hệ thống hợp nhất\nGPT‑5 là một hệ thống hợp nhất với**mô hình thông minh, hiệu quả** giúp trả lời hầu hết các câu hỏi, là một **mô hình suy luận sâu hơn** (GPT‑5 tư duy) cho các vấn đề khó hơn, cũng là **bộ định tuyến thời gian thực** đưa ra quyết định nhanh là nên sử dụng cái gì dựa trên loại hình trò chuyện, mức độ phức tạp, nhu cầu công cụ, và ý định rõ ràng của bạn (ví dụ: khi bạn nói “hãy suy nghĩ kỹ về điều này” trong lời nhắc). Bộ định tuyến này được huấn luyện liên tục dựa trên các tín hiệu thực",
+                        images: [],
+                        success: true,
+                        error: null
+                    }
+                ],
+                main_keyword: "chatgpt 5.0 có gì mới?",
+                secondary_keywords: ["AI", "ChatGPT"],
+                article_title: "Sự khác biệt của ChatGPT 5.0",
+                top_k: 3
+            };
+
+            console.log("REQUEST:", payload);
+
+            const response = await fetch("https://caiman-warm-swan.ngrok-free.app/api/v1/ai/news-filterings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            console.log("RESPONSE:", data)
+
+            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

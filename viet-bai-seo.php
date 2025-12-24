@@ -113,6 +113,30 @@
                 <div class="accordion-content"></div>
             </div>
         </div>
+    <!-- Small Floating Trigger for Selection -->
+    <div id="ai-floating-trigger" class="ai-floating-trigger" style="display: none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12L2.7 16.5"/><path d="M12 12l8.5 4.5"/><path d="M12 12V21"/></svg>
+    </div>
+
+    <!-- Floating AI Chat Popup for Selection -->
+    <div id="ai-selection-popup" class="ai-selection-popup" style="display: none;">
+        <div class="popup-header">
+            <span class="popup-title"></span>
+            <button class="close-popup"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="popup-body">
+            <div id="popup-content-preview" class="popup-content-preview"></div>
+            <div class="popup-actions-links">
+                <span class="popup-link" id="popup-copy-btn">Sao chép</span>
+                <span class="popup-link" id="popup-replace-btn">Thay vào bài viết</span>
+            </div>
+        </div>
+        <div class="popup-footer">
+            <div class="popup-input-wrapper">
+                <input type="text" id="popup-chat-input" placeholder="Nhập yêu cầu chỉnh sửa...">
+                <button id="popup-send-btn" class="popup-send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
     </div>
 </div>
 <script src="./js/viet-bai-seo.js"></script>

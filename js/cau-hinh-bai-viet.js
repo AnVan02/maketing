@@ -390,7 +390,9 @@ function showLoading(show) { // Hiển thị loading
     if (loading) loading.style.display = show ? 'block' : 'none';
     if (generateBtn) {
         generateBtn.disabled = show;
-        generateBtn.innerHTML = show ? `<span class="edit-icon">⏳</span> Đang xử lý...` : `<span class="edit-icon">📝</span> Tạo dàn ý bài viết <span style="margin-left: 5px;">→</span>`;
+        generateBtn.innerHTML = show ?
+            `⏳ Đang xử lý...` :
+            `Tạo dàn ý bài viết <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     }
 }
 

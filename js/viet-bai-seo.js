@@ -39,12 +39,140 @@ function setupDebugTool() {
     }
 }
 
+let selectedText = "";
+let selectedRange = null;
+let lastPopupResult = "";
+
 function setupFloatingTool() {
-    const tool = document.querySelector('.ai-floating-tool');
-    if (tool) {
-        tool.addEventListener('click', () => {
-            alert("Tính năng AI Rewrite đang được kích hoạt!");
-        });
+    const trigger = document.getElementById('ai-floating-trigger');
+    const popup = document.getElementById('ai-selection-popup');
+    const container = document.getElementById('sectionsContainer');
+
+    if (!trigger || !popup || !container) return;
+
+    // Detect selection
+    container.addEventListener('mouseup', (e) => {
+        setTimeout(() => {
+            const selection = window.getSelection();
+            const text = selection.toString().trim();
+
+            if (text.length > 0) {
+                selectedText = text;
+                selectedRange = selection.getRangeAt(0);
+                const rect = selectedRange.getBoundingClientRect();
+
+                // Show trigger
+                trigger.style.display = 'flex';
+                trigger.style.top = `${rect.top + window.scrollY - 45}px`;
+                trigger.style.left = `${rect.left + window.scrollX + (rect.width / 2) - 25}px`;
+
+                // Hide popup if it was open
+                popup.style.display = 'none';
+            } else {
+                if (!trigger.contains(e.target) && !popup.contains(e.target)) {
+                    trigger.style.display = 'none';
+                    popup.style.display = 'none';
+                }
+            }
+        }, 10);
+    });
+
+    // Handle trigger click
+    trigger.addEventListener('click', () => {
+        const rect = selectedRange.getBoundingClientRect();
+
+        // Show popup
+        popup.style.display = 'block';
+        popup.style.top = `${rect.top + window.scrollY - popup.offsetHeight - 15}px`;
+        popup.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (popup.offsetWidth / 2)}px`;
+
+        // Populate preview with current text
+        const preview = document.getElementById('popup-content-preview');
+        if (preview) preview.innerHTML = selectedText;
+
+        trigger.style.display = 'none';
+        lastPopupResult = ""; // Reset result
+    });
+
+    // Close buttons
+    const closeBtn = popup.querySelector('.close-popup');
+    if (closeBtn) {
+        closeBtn.onclick = () => popup.style.display = 'none';
+    }
+
+    // Action links
+    const copyBtn = document.getElementById('popup-copy-btn');
+    const replaceBtn = document.getElementById('popup-replace-btn');
+
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            const textToCopy = lastPopupResult || selectedText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showNotification("Đã sao chép vào bộ nhớ tạm!", "success");
+            });
+        };
+    }
+
+    if (replaceBtn) {
+        replaceBtn.onclick = () => {
+            if (lastPopupResult && selectedRange) {
+                const span = document.createElement('span');
+                span.className = 'ai-refined';
+                span.innerHTML = lastPopupResult;
+                selectedRange.deleteContents();
+                selectedRange.insertNode(span);
+                popup.style.display = 'none';
+            } else {
+                showNotification("Vui lòng yêu cầu AI xử lý trước khi thay vào bài viết.", "info");
+            }
+        };
+    }
+
+    // Send button
+    const sendBtn = document.getElementById('popup-send-btn');
+    const input = document.getElementById('popup-chat-input');
+    if (sendBtn && input) {
+        sendBtn.onclick = () => {
+            const val = input.value.trim();
+            if (val) {
+                handleAIAction('custom', val);
+                input.value = '';
+            }
+        };
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        };
+    }
+}
+
+async function handleAIAction(action, instruction) {
+    if (!selectedText || !selectedRange) return;
+
+    const popup = document.getElementById('ai-selection-popup');
+    const preview = document.getElementById('popup-content-preview');
+    const btn = document.getElementById('popup-send-btn');
+
+    if (!preview || !btn) return;
+
+    // Show loading
+    preview.innerHTML = `<div style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Đang xử lý...</div>`;
+    btn.disabled = true;
+
+    try {
+        console.log(`🤖 AI Selection Action: ${instruction}`);
+
+        // Simulating API call
+        setTimeout(() => {
+            // In real app, this comes from API
+            lastPopupResult = `[AI Refined] Nội dung mới dựa trên yêu cầu: "${instruction}" cho đoạn văn bản đã chọn.`;
+            preview.innerHTML = lastPopupResult;
+            btn.disabled = false;
+        }, 1500);
+
+    } catch (error) {
+        console.error("❌ Selection AI Error:", error);
+        preview.innerHTML = `<div style="color:red">Lỗi: ${error.message}</div>`;
+        btn.disabled = false;
     }
 }
 

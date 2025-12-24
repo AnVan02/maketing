@@ -138,18 +138,20 @@ function renderOutline() {
 
     // Render danh sách (Title + Sections)
     listContainer.innerHTML = `
-        <div class="outline-actions-header" style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px; color:#4B5563">
-             <button class="btn-action-outline"><i class="fas fa-undo"></i><img src="./images/icon-khoi-phuc.png" style="margin-right: 12px;">Khôi phục</button>
-             <button class="btn-action-outline"><i class="fas fa-book"></i> Hướng dẫn</button>
+        <div class="outline-actions-header">
+             <div class="header-breadcrumb">Dàn ý bài viết</div>
+             <div class="header-buttons">
+                <button class="btn-action-outline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Khôi phục</button>
+                <button class="btn-action-outline">Hướng dẫn</button>
+             </div>
         </div>
         <div class="outline-title-section">
-            <label>Dàn ý bài viết</label>
-            <div style="position: relative;color:#727272">
+            <div class="title-input-wrapper">
                 <input type="text" 
                        id="outlineMainTitle" 
                        class="outline-main-title-input" 
                        value="${escapeHtml(outlineData.title)}" 
-                       placeholder="Nhập tiêu đề chính..." style="color:1037B8">
+                       placeholder="Nhập tiêu đề chính...">
                 <span class="h1-badge">H1</span>
             </div>
         </div>
@@ -162,7 +164,7 @@ function renderOutline() {
         </div>
 
         <button id="addSectionBtn" class="btn-add-section-outline">
-            <i class="fas fa-plus"></i> Thêm tiêu đề
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Thêm tiêu đề
         </button>
     `;
 
@@ -175,20 +177,15 @@ function renderOutline() {
 
 function createSectionHTML(section, index, totalWords) {
     const wordCount = section.config?.word_count || 150;
-    const keywords = (section.config?.keywords || []).join(', ');
-    const hasLink = !!section.config?.internal_link;
-    // const uniqueID = section.id; 
-
-    // Expand state could be stored, but for now default to collapsed except maybe first one
     const isExpanded = index === 0 ? 'active' : '';
+    const hasInternalLink = section.config?.internal_link === 'auto' || section.config?.internal_link === true;
 
     return `
         <div class="outline-section ${isExpanded}" data-id="${section.id}">
             <!-- Header Row -->
             <div class="section-header" onclick="toggleSection('${section.id}')">
-                <img src="./images/icon-nha-xuong.png" style="margin-right: 12px;">
                 <div class="header-left">
-                    <span class="chevron-icon"><i class="fas fa-chevron-down"></i></span>
+                    <span class="chevron-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span>
                     <input type="text" 
                            class="h2-input" 
                            value="${escapeHtml(section.title)}" 
@@ -198,8 +195,12 @@ function createSectionHTML(section, index, totalWords) {
                     <span class="level-badge">H2</span>
                 </div>
                 <div class="header-right">
-                    <button class="btn-icon" title="Chỉnh sửa"><img src="./images/icon-sua.png" style="margin-right: 12px;"><i class="fas fa-pen"></i></button>
-                    <button class="btn-icon btn-remove" onclick="event.stopPropagation(); removeSection('${section.id}')" title="Xóa"><img src="./images/icon-xoa.png" style="margin-right: 12px;"><i class="fas fa-times"></i></button>
+                    <button class="btn-icon" title="Chỉnh sửa" onclick="event.stopPropagation();">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn-icon btn-remove" onclick="event.stopPropagation(); removeSection('${section.id}')" title="Xóa">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
             </div>
 
@@ -209,19 +210,19 @@ function createSectionHTML(section, index, totalWords) {
                 <div class="config-row">
                     <div class="config-label">Tỷ lệ độ dài:</div>
                     <div class="slider-container">
-                        <div class="slider-tooltip" style="left: ${(wordCount / 500) * 100}%">
-                            ${totalWords > 0 ? Math.round((wordCount / totalWords) * 100) : 0}%
-                        </div>
                         <input type="range" min="50" max="500" value="${wordCount}" class="range-slider" 
                                oninput="updateWordCount(this, '${section.id}')"
                                onclick="event.stopPropagation();">
+                        <div class="slider-tooltip" style="left: ${(wordCount / 500) * 100}%">
+                            ${totalWords > 0 ? Math.round((wordCount / totalWords) * 100) : 0}%
+                        </div>
                     </div>
                 </div>
 
                 <!-- Row 2: Keywords -->
-                <div class="config-row" style="flex-wrap: wrap; align-items: flex-start;">
-                    <div class="config-label" style="padding-top: 5px;">Keyword tuỳ chỉnh:</div>
-                    <div style="flex: 1;">
+                <div class="config-row">
+                    <div class="config-label">Keyword tuỳ chỉnh:</div>
+                    <div class="config-input-wrapper">
                         <input type="text" class="config-input-line" 
                                placeholder="Nhập từ khóa và nhấn Enter để thêm..."
                                onkeydown="if(event.key === 'Enter') { addKeywordTag(this, '${section.id}'); event.preventDefault(); }"
@@ -234,20 +235,13 @@ function createSectionHTML(section, index, totalWords) {
                     </div>
                 </div>
 
-                <!-- Row 3: Internal Link -->
-                <div class="config-row" style="flex-wrap: wrap; align-items: flex-start;">
-                    <div class="config-label" style="padding-top: 5px;">Liên kết nội bộ:</div>
-                    <div style="flex: 1;">
-                        <input type="text" class="config-input-line" 
-                               placeholder="Nhập đường dẫn và nhấn Enter để thêm..."
-                               onkeydown="if(event.key === 'Enter') { addInternalLinkTag(this, '${section.id}'); event.preventDefault(); }"
-                               onclick="event.stopPropagation();">
-                        <div class="tags-container" id="links-${section.id}">
-                            ${(section.config?.internal_links || []).map(link => `
-                                <span class="tag">${escapeHtml(link)} <span class="close-icon" onclick="removeInternalLinkTag(this, '${section.id}')">×</span></span>
-                            `).join('')}
-                        </div>
-                    </div>
+                <!-- Row 3: Internal Link Toggle -->
+                <div class="config-row">
+                    <div class="config-label">Liên kết nội bộ:</div>
+                    <label class="switch">
+                        <input type="checkbox" ${hasInternalLink ? 'checked' : ''} onchange="toggleInternalLink('${section.id}', this.checked)">
+                        <span class="slider-round"></span>
+                    </label>
                 </div>
             </div>
         </div>
@@ -366,6 +360,16 @@ window.removeInternalLinkTag = function (btn, id) {
             saveToSessionStorage();
             updateTagsUI(id, 'links');
         }
+    }
+}
+
+window.toggleInternalLink = function (id, checked) {
+    const section = outlineData.sections.find(s => s.id === id);
+    if (section) {
+        if (!section.config) section.config = {};
+        section.config.internal_link = checked ? 'auto' : null;
+        saveToSessionStorage();
+        console.log(`🔗 Đã ${checked ? 'bật' : 'tắt'} liên kết nội bộ cho:`, id);
     }
 }
 

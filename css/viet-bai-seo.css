@@ -249,6 +249,14 @@ body {
     color: #1E3A8A;
 }
 
+.ai-refined {
+    background-color: #f0fdf4;
+    border-bottom: 2px solid #22c55e;
+    color: #166534;
+    transition: background-color 0.5s;
+}
+
+
 .ai-floating-tool {
     position: absolute;
     top: 50%;
@@ -542,4 +550,183 @@ body {
 
 .grid-image-item:hover .image-overlay {
     opacity: 1;
+}
+
+/* 4. Floating AI Selection Popup & Trigger */
+.ai-floating-trigger {
+    position: absolute;
+    z-index: 1001;
+    background: #2563eb;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background-color 0.2s;
+    animation: triggerBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes triggerBounce {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.ai-floating-trigger:hover {
+    background: #1d4ed8;
+    transform: scale(1.05);
+}
+
+.ai-floating-trigger::after {
+    content: '=';
+    position: absolute;
+    top: -12px;
+    font-size: 20px;
+    color: #cbd5e1;
+    font-weight: bold;
+}
+
+.ai-selection-popup {
+    position: absolute;
+    z-index: 1000;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 420px;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    animation: popupSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-top: 3px solid #3b82f6;
+}
+
+@keyframes popupSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 12px 12px 0 0;
+}
+
+.popup-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.popup-title::before {
+    content: 'AIS';
+    background: #2563eb;
+    color: white;
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: 800;
+}
+
+.popup-title::after {
+    content: 'EDIT';
+    color: #64748b;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.popup-body {
+    padding: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.popup-content-preview {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.popup-actions-links {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-bottom: 16px;
+}
+
+.popup-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2563eb;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.popup-link:hover {
+    text-decoration: underline;
+}
+
+.popup-footer {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    border-radius: 0 0 12px 12px;
+}
+
+.popup-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.popup-input-wrapper input {
+    width: 100%;
+    padding: 12px 40px 12px 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    color: #1e293b;
+}
+
+.popup-send-btn {
+    position: absolute;
+    right: 5px;
+    background: transparent;
+    border: none;
+    color: #2563eb;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

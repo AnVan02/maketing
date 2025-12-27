@@ -228,10 +228,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Đảm bảo mỗi bài báo trong topNews đều có trường rank trước khi gửi đi
             // TRUNCATE CONTENT để tránh lỗi 413 hoặc Timeout
             const formattedTopNews = (Array.isArray(topNews) ? topNews : []).map((news, index) => ({
-                ...news,
-                content: (news.content || "").substring(0, 3000), // Max 800 chars (Very aggressive truncation)
-                snippet: (news.snippet || "").substring(0, 1000),  // Max 300 chars
-                rank: news.rank || (index + 1)
+                rank: news.rank || (index + 1),
+                title: news.title || "Tin tức liên quan",
+                url: news.url || news.link || "#",
+                images: news.images || [],
+                content_preview: (news.content || news.content_preview || news.summary || "").substring(0, 5000)
             }));
 
             const rawOutline = outline || pipelineData.article_outline || pipelineData.pipeline_results?.article_outline || [];
@@ -242,13 +243,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Helper format item
             const formatItem = (item, idx) => ({
                 id: item.id || `section-${idx + 1}`,
-                level: item.level || 2,
+                level: parseInt(item.level || 2),
                 title: item.title || item.heading || "",
                 order: item.order || (idx + 1),
                 config: {
-                    word_count: parseInt(item.config?.word_count || item.word_count || 300),
+                    word_count: parseInt(item.config?.word_count || item.word_count || 150),
                     keywords: Array.isArray(item.config?.keywords || item.keywords) ? (item.config?.keywords || item.keywords) : [],
-                    tone: config.tone || "Chuyên nghiệp"
+                    tone: item.config?.tone || config.tone || "Chuyên nghiệp",
+                    internal_link: item.config?.internal_link || null
                 }
             });
 
@@ -306,10 +308,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tone: config.tone || config.tone_of_voice || "Chuyên nghiệp",
                     article_length: String(config.article_length || "1500"),
                     article_type: config.article_type || "blog",
-                    custome_instructions: config.custom_instructions || config.custome_instructions || ""
+                    custome_instructions: (config.custom_instructions || config.custome_instructions || "") +
+                        " \n\n# CHỈ THỊ QUAN TRỌNG VỀ CẤU TRÚC BÀI VIẾT:\n" +
+                        "1. Bạn PHẢI sử dụng toàn bộ các tiêu đề H2 và H3 có trong Outline được cung cấp.\n" +
+                        "2. Với mỗi tiêu đề <h3>, bạn PHẢI viết ít nhất 2-3 đoạn văn chi tiết, sử dụng tối đa dữ liệu từ trang web tham khảo (top_news).\n" +
+                        "3. TUYỆT ĐỐI KHÔNG được gộp các mục H3 lại với nhau hoặc bỏ qua bất kỳ mục nào.\n" +
+                        "4. KHÔNG ĐƯỢC để bất kỳ mục tiêu đề nào trống không có nội dung.\n" +
+                        "5. Sử dụng dữ liệu THẬT từ top_news để làm dẫn chứng chi tiết cho từng phần."
                 },
                 outline: outlineForApi
             };
+
+            console.log("📤 PAYLOAD (Full):", JSON.stringify(payload, null, 2));
 
             console.log("📤 Payload gửi đi (Truncated):", JSON.stringify(payload).length, "bytes");
 
@@ -329,7 +339,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error(`API Error (${res.status}): ${errText}`);
             }
             const data = await res.json();
-            console.log("✅ Phản hồi từ AI:", data);
+            console.log("✅ RAW AI RESPONSE:", data);
+
+            if (data.article && data.article.html_content) {
+                const h3Count = (data.article.html_content.match(/<h3/g) || []).length;
+                console.log(`📊 AI HTML check: Found ${h3Count} <h3> tags.`);
+            }
 
             // Kiểm tra cấu trúc response
             if (data.success) {

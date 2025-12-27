@@ -100,7 +100,18 @@ function createDefaultOutline() {
                     keywords: ["AI", "công nghệ", "xu hướng"],
                     internal_link: "auto"
                 },
-                subsections: []
+                subsections: [
+                    {
+                        id: `h3-demo-1-1`,
+                        title: `Định nghĩa ${mainKeyword} là gì?`,
+                        config: { word_count: 150, keywords: [], tone: null, internal_link: null }
+                    },
+                    {
+                        id: `h3-demo-1-2`,
+                        title: `Tầm quan trọng trong thời đại số`,
+                        config: { word_count: 150, keywords: [], tone: null, internal_link: null }
+                    }
+                ]
             },
             {
                 id: `h2-demo-2`,
@@ -110,7 +121,19 @@ function createDefaultOutline() {
                     keywords: ["tăng trưởng", "tiết kiệm", "tự động hóa"],
                     internal_link: null
                 },
-                subsections: []
+                
+                subsections: [
+                    {
+                        id: `h3-demo-2-1`,
+                        title: `Tối ưu hóa quy trình làm việc`,
+                        config: { word_count: 200, keywords: [], tone: null, internal_link: null }
+                    },
+                    {
+                        id: `h3-demo-2-2`,
+                        title: `Tiết kiệm chi phí vận hành`,
+                        config: { word_count: 200, keywords: [], tone: null, internal_link: null }
+                    }
+                ]
             },
             {
                 id: `h2-demo-3`,
@@ -131,9 +154,7 @@ function createDefaultOutline() {
 // 2. RENDER GIAO DIỆN
 // ============================================
 
-// ============================================
-// STATE TRACKING FOR UI
-// ============================================
+
 let expandedSections = new Set(); // Stores IDs of expanded sections
 
 function renderOutline() {
@@ -212,13 +233,26 @@ function createSectionHTML(section, index) {
                            value="${escapeHtml(section.title)}" 
                            placeholder="Nhập tiêu đề mục..."
                            onclick="event.stopPropagation();"
+                           oninput="handleH2Change(event)"
                            data-section-id="${section.id}">
                     <span class="level-badge">H2</span>
                 </div>
                 <div class="header-right">
                     <button class="btn-icon" title="Chỉnh sửa"><img src="./images/icon-sua.png" style="margin-right: 12px;"><i class="fas fa-pen"></i></button>
-                    <button class="btn-icon btn-remove" onclick="event.stopPropagation(); removeSection('${section.id}')" title="Xóa"><img src="./images/icon-xoa.png" style="margin-right: 12px;"><i class="fas fa-times"></i></button>
+                    <button class="btn-icon btn-remove" onclick="event.stopPropagation(); removeSection('${section.id}')" title="Xóa"><i class="fas fa-times"></i></button>
                 </div>
+            </div>
+
+            <!-- Subsection List (H3s) -->
+            <div class="sub-sections-container" id="sub-sections-${section.id}">
+                ${(section.subsections || []).map((sub, subIdx) => createSubsectionHTML(sub, section.id, subIdx)).join('')}
+            </div>
+
+            <!-- Add H3 Button -->
+            <div style="padding: 0 0 15px 45px;">
+                <button class="btn-add-sub-outline" onclick="event.stopPropagation(); addNewSubsection('${section.id}')">
+                    <i class="fas fa-plus"></i> Thêm tiêu đề phụ (H3)
+                </button>
             </div>
 
             <!-- Config Body -->
@@ -269,6 +303,31 @@ function createSectionHTML(section, index) {
         </div>
     `;
 }
+
+function createSubsectionHTML(sub, parentId, index) {
+    return `
+        <div class="outline-subsection" data-id="${sub.id}">
+            <div class="subsection-header">
+                <i class="fas fa-level-up-alt fa-rotate-90" style="color: #94a3b8; margin-right: 10px;"></i>
+                <div class="header-left">
+                    <input type="text" 
+                           class="h3-input" 
+                           value="${escapeHtml(sub.title)}" 
+                           placeholder="Nhập tiêu đề phụ..."
+                           oninput="handleH3Change(event, '${parentId}', '${sub.id}')"
+                           data-h3-id="${sub.id}">
+                    <span class="level-badge h3-badge">H3</span>
+                </div>
+                <div class="header-right">
+                    <button class="btn-icon btn-remove" onclick="removeSubsection('${parentId}', '${sub.id}')" title="Xóa">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 
 // ============================================
 // 3. XỬ LÝ SỰ KIỆN & LOGIC
@@ -450,6 +509,51 @@ function removeSection(sectionId) {
     }
 }
 
+// Subsection Management
+window.addNewSubsection = function (parentId) {
+    const section = outlineData.sections.find(s => s.id === parentId);
+    if (section) {
+        if (!section.subsections) section.subsections = [];
+        const newH3 = {
+            id: `h3-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            title: "",
+            config: {
+                word_count: 100,
+                keywords: [],
+                tone: null,
+                internal_link: null
+            }
+        };
+        section.subsections.push(newH3);
+        renderOutline();
+
+        // Focus vào input mới
+        setTimeout(() => {
+            const inputs = document.querySelectorAll(`.outline-subsection[data-id="${newH3.id}"] .h3-input`);
+            if (inputs.length > 0) inputs[0].focus();
+        }, 50);
+    }
+}
+
+window.removeSubsection = function (parentId, h3Id) {
+    const section = outlineData.sections.find(s => s.id === parentId);
+    if (section && section.subsections) {
+        section.subsections = section.subsections.filter(sub => sub.id !== h3Id);
+        renderOutline();
+    }
+}
+
+window.handleH3Change = function (e, parentId, h3Id) {
+    const section = outlineData.sections.find(s => s.id === parentId);
+    if (section && section.subsections) {
+        const h3 = section.subsections.find(sub => sub.id === h3Id);
+        if (h3) {
+            h3.title = e.target.value;
+            saveToSessionStorage();
+        }
+    }
+}
+
 // ============================================
 // 4. LƯU TRỮ & CHUYỂN ĐỔI
 // ============================================
@@ -495,6 +599,13 @@ function convertToPipelineFormat() {
 
         if (section.subsections) {
             section.subsections.forEach(subsection => {
+                result.push({
+                    id: subsection.id,
+                    level: 3,
+                    title: subsection.title,
+                    order: order++,
+                    config: subsection.config || { word_count: 100, keywords: [], tone: null, internal_link: null }
+                });
             });
         }
     });

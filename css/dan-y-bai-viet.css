@@ -130,6 +130,12 @@
     white-space: nowrap;
 }
 
+.h3-badge {
+    background: #FEF3C7;
+    color: #D97706;
+    border-color: #FCD34D;
+}
+
 .header-right {
     display: flex;
     gap: 0px;
@@ -137,7 +143,6 @@
     transition: opacity 0.2s;
     opacity: 1 !important;
 }
-
 
 .outline-section:hover .header-right {
     opacity: 1;
@@ -160,11 +165,10 @@
     color: #ef4444;
 }
 
-/* 3. Config Accordion Body */
+
 .section-config-area {
     display: none;
     padding: 20px 20px 20px 45px;
-    /* Indent to align with text */
     background-color: #fbfbfb;
     border-top: 1px solid #A2B7FF;
 }
@@ -352,4 +356,100 @@ input:checked+.slider-round:before {
 
 .tag .close-icon:hover {
     color: #1E40AF;
+}
+
+/* =========================================
+   5. Subsection (H3) Styles - ADDED
+   ========================================= */
+
+.sub-sections-container {
+    margin-top: 15px;
+    padding-left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-left: 2px dashed #E2E8F0;
+    display: none;
+    /* Hidden by default */
+}
+
+.outline-section.active .sub-sections-container {
+    display: flex;
+    /* Show when section is active */
+}
+
+.outline-subsection {
+    background: #FAFAFA;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    transition: all 0.2s;
+    margin-left: 10px;
+}
+
+.outline-subsection:hover {
+    border-color: #CBD5E1;
+    background: #F8FAFC;
+}
+
+.subsection-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+}
+
+.subsection-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.h3-input {
+    border: none !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    color: #475569;
+    width: 100%;
+    font-weight: 500 !important;
+}
+
+.h3-input:focus {
+    outline: none;
+    color: #2563EB;
+}
+
+.h3-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #FEF3C7;
+    color: #D97706;
+    border: 1px solid #FCD34D;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* Add H3 Button */
+.btn-add-sub-outline {
+    background: transparent;
+    border: none;
+    color: #2563eb;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    transition: all 0.2s;
+    margin-top: 8px;
+}
+
+.btn-add-sub-outline:hover {
+    text-decoration: underline;
+    color: #1d4ed8;
+}
+
+.btn-add-sub-outline i {
+    font-size: 12px;
 }

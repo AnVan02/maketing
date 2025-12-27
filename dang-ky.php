@@ -14,9 +14,6 @@
     <!-- Top Header -->
     <header>
         <div class="header-left">
-            <button class="menu-toggle">
-                <img src="./images/menu.png" alt="Menu" style="width: 24px;">
-            </button>
             <div class="logo">
                 <img src="./images/AIS.png" alt="AIS Logo">
             </div>

@@ -53,14 +53,14 @@
                                 <select id="config_template">
                                     <option value="tin-tuc-seo">Tin tức SEO</option>
                                     <option value="bai-chuyen-sau">Bài chuyên sâu</option>
-                                    <option value="add-new">+ Thêm mẫu cấu hình</option>
+                                    <option src="mau-cau-hinh.php" value="add-new">+ Thêm mẫu cấu hình</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="bottom-action">
                             <button class="btn-generate" id="btn-continue">
-                                Tiếp tục
+                                Tạo dàn ý bài viết
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M5 12h14M12 5l7 7-7 7" />
                                 </svg>
@@ -181,6 +181,11 @@
                         }
                     });
                 }
+                document.getElementById('config_template').addEventListener('change', function() {
+                    if (this.value === 'add-new') {
+                        window.location.href = 'mau-cau-hinh.php';
+                    }
+                });
             </script>
 
             <!-- Right Column: Preview/Outline -->
@@ -189,11 +194,16 @@
                     <button class="guide-btn">Hướng dẫn</button>
 
                     <div id="defaultPreview">
-                        <div class="video-container">
-                            <!-- Assuming the image stats-img-1 or similar as placeholder -->
-                            <img src="./images/banner-1.png" alt="Guide Video">
-                            <div class="play-icon"></div>
+                        <div class="video-wrapper">
+                            <iframe
+                                src="https://www.youtube.com/embed/Uzqpwc5hpCE?si=xPtN0u8EW6KOsQ_J"
+                                title="YouTube video player"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                            </iframe>
                         </div>
+
 
                         <div class="placeholder-content">
                             <h3>Dàn ý của bạn sẽ hiển thị tại đây</h3>
@@ -222,7 +232,9 @@
                         <!-- Actions after outline generation -->
                         <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
                             <button id="btn-back" style="padding: 10px 20px; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer;">Quay lại</button>
-                            <button id="createArticleBtn" style="padding: 10px 25px; background: var(--primary-blue); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Tạo bài viết →</button>
+                            <button id="createArticleBtn" style="padding: 10px 25px; background: var(--primary-blue); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                Tạo bài viết <img src="./images/icon-mui-ten.png" alt="">
+                            </button>
                         </div>
                     </div>
                 </section>

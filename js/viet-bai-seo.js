@@ -20,8 +20,104 @@ document.addEventListener('DOMContentLoaded', () => {
     setupToolbar();
     setupFloatingTool();
     setupSectionAccordions();
+    setupSectionAccordions();
+    setupImageHandlers(); // Handles Delete & Drag-Drop
     setupDebugTool(); // Add debug button to UI
 });
+
+let draggedElement = null;
+
+function setupImageHandlers() {
+    const container = document.getElementById('sectionsContainer');
+    if (!container) return;
+
+    // 1. DELETE & CLICK Handler
+    container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-image-btn')) {
+            const wrapper = e.target.closest('.draggable-image');
+            if (wrapper) {
+                if (confirm('Bạn có chắc chắn muốn xóa ảnh này không?')) {
+                    wrapper.nextElementSibling?.tagName === 'BR' ? wrapper.nextElementSibling.remove() : null;
+                    wrapper.remove();
+                    showNotification('Đã xóa ảnh!', 'success');
+                }
+            }
+        }
+    });
+
+    // 2. DRAG START
+    container.addEventListener('dragstart', (e) => {
+        const wrapper = e.target.closest('.draggable-image');
+        if (wrapper) {
+            draggedElement = wrapper;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', wrapper.outerHTML);
+            wrapper.style.opacity = '0.4';
+        }
+    });
+
+    // 3. DRAG END (Cleanup)
+    container.addEventListener('dragend', (e) => {
+        const wrapper = e.target.closest('.draggable-image');
+        if (wrapper) wrapper.style.opacity = '1';
+        draggedElement = null;
+    });
+
+    // 4. DRAG OVER (Allow Drop)
+    container.addEventListener('dragover', (e) => {
+        e.preventDefault(); // Essential to allow dropping
+        e.dataTransfer.dropEffect = 'move';
+    });
+
+    // 5. DROP
+    container.addEventListener('drop', (e) => {
+        e.preventDefault();
+
+        // Only handle internal image drops
+        if (!draggedElement) return;
+
+        // Find drop target (must be inside a content-editor)
+        const editor = e.target.closest('.content-editor');
+        if (editor) {
+
+            // Try to use Range from event (Standard approach)
+            let range = null;
+            if (document.caretRangeFromPoint) { // Chrome/Webkit
+                range = document.caretRangeFromPoint(e.clientX, e.clientY);
+            } else if (document.caretPositionFromPoint) { // Firefox
+                const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+                range = document.createRange();
+                range.setStart(pos.offsetNode, pos.offset);
+                range.collapse(true);
+            }
+
+            if (range) {
+                // Remove original first (move operation)
+                if (draggedElement && draggedElement.parentNode) {
+                    draggedElement.parentNode.removeChild(draggedElement);
+                }
+
+                // Insert at new position
+                const newWrapperStr = e.dataTransfer.getData('text/html');
+                const fragment = document.createRange().createContextualFragment(newWrapperStr);
+
+                // Ensure the inserted element is fresh and draggable
+                const newEl = fragment.firstElementChild;
+
+                range.insertNode(newEl);
+                range.insertNode(document.createElement('br')); // Insert spacer
+
+                // Cleanup
+                draggedElement = null;
+
+                // Re-focus
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+    });
+}
 
 function setupDebugTool() {
     const headerRight = document.querySelector('.header-right');
@@ -39,12 +135,261 @@ function setupDebugTool() {
     }
 }
 
+let selectedText = "";
+let selectedRange = null;
+let lastPopupResult = "";
+
 function setupFloatingTool() {
-    const tool = document.querySelector('.ai-floating-tool');
-    if (tool) {
-        tool.addEventListener('click', () => {
-            alert("Tính năng AI Rewrite đang được kích hoạt!");
-        });
+    const trigger = document.getElementById('ai-floating-trigger');
+    const popup = document.getElementById('ai-selection-popup');
+    const container = document.getElementById('sectionsContainer');
+
+    if (!trigger || !popup || !container) return;
+
+    // Detect selection
+    container.addEventListener('mouseup', (e) => {
+        setTimeout(() => {
+            const selection = window.getSelection();
+            const text = selection.toString().trim();
+
+            if (text.length > 0) {
+                selectedText = text;
+                selectedRange = selection.getRangeAt(0);
+                const rect = selectedRange.getBoundingClientRect();
+
+                // Show trigger
+                trigger.style.display = 'flex';
+                trigger.style.top = `${rect.top + window.scrollY - 45}px`;
+                trigger.style.left = `${rect.left + window.scrollX + (rect.width / 2) - 25}px`;
+
+                // Hide popup if it was open
+                popup.style.display = 'none';
+            } else {
+                if (!trigger.contains(e.target) && !popup.contains(e.target)) {
+                    trigger.style.display = 'none';
+                    popup.style.display = 'none';
+                }
+            }
+        }, 10);
+    });
+
+    // Handle trigger click
+    trigger.addEventListener('click', () => {
+        const rect = selectedRange.getBoundingClientRect();
+
+        // Show popup
+        popup.style.display = 'block';
+        popup.style.top = `${rect.top + window.scrollY - popup.offsetHeight - 15}px`;
+        popup.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (popup.offsetWidth / 2)}px`;
+
+        // Populate preview with current text
+        const preview = document.getElementById('popup-content-preview');
+        if (preview) preview.innerHTML = selectedText;
+
+        trigger.style.display = 'none';
+        lastPopupResult = ""; // Reset result
+    });
+
+    // Close buttons
+    const closeBtn = popup.querySelector('.close-popup');
+    if (closeBtn) {
+        closeBtn.onclick = () => popup.style.display = 'none';
+    }
+
+    // Action links
+    const copyBtn = document.getElementById('popup-copy-btn');
+    const replaceBtn = document.getElementById('popup-replace-btn');
+
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            const textToCopy = lastPopupResult || selectedText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showNotification("Đã sao chép vào bộ nhớ tạm!", "success");
+            });
+        };
+    }
+
+if (replaceBtn) {
+    replaceBtn.onclick = () => {
+        if (lastPopupResult && selectedRange) {
+            const fragment = document.createRange().createContextualFragment(lastPopupResult);
+
+            // Giữ data-block-id cũ cho tất cả phần tử mới
+            const blockElement = selectedRange.commonAncestorContainer;
+            const parentBlock = blockElement.nodeType === Node.ELEMENT_NODE
+                ? blockElement.closest('[data-block-id]')
+                : blockElement.parentElement?.closest('[data-block-id]');
+
+            if (parentBlock) {
+                const blockId = parentBlock.getAttribute('data-block-id');
+                fragment.querySelectorAll('*').forEach(el => {
+                    el.setAttribute('data-block-id', blockId);
+                });
+            }
+
+            // Xóa nội dung cũ và chèn fragment mới
+            selectedRange.deleteContents();
+            selectedRange.insertNode(fragment);
+
+            // Đóng popup
+            popup.style.display = 'none';
+            showNotification("Đã thay thế thành công bằng nội dung AI!", "success");
+
+            // lưu lại
+            saveCurrentArticleToSession();
+
+            // Reset
+            selectedText = "";
+            selectedRange = null;
+            lastPopupResult = "";
+        } else {
+            showNotification("Không có nội dung AI để thay thế.", "info");
+        }
+    };
+}
+
+    // Send button
+    const sendBtn = document.getElementById('popup-send-btn');
+    const input = document.getElementById('popup-chat-input');
+    if (sendBtn && input) {
+        sendBtn.onclick = () => {
+            const val = input.value.trim();
+            if (val) {
+                handleAIAction('custom', val);
+                input.value = '';
+            }
+        };
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        };
+    }
+}
+
+
+async function handleAIAction(action, instruction) {
+    if (!selectedText || !selectedRange) {
+        showNotification("Vui lòng bôi đen đoạn văn cần chỉnh sửa!", "info");
+        return;
+    }
+    const originalText = selectedRange.cloneContents().textContent || selectedText;
+
+
+    const popup = document.getElementById('ai-selection-popup');
+    const preview = document.getElementById('popup-content-preview');
+    const sendBtn = document.getElementById('popup-send-btn');
+    if (!preview || !sendBtn) return;
+
+    // 1️⃣ Tìm block chứa selection
+    let container = selectedRange.commonAncestorContainer;
+    if (container.nodeType !== Node.ELEMENT_NODE) {
+        container = container.parentNode;
+    }
+
+    let blockElement = container.closest('[data-block-id]');
+    if (!blockElement) {
+        blockElement = container.closest('p, h1, h2, h3, h4, h5, h6, div, li, blockquote');
+    }
+
+    if (!blockElement) {
+        showNotification("Không xác định được đoạn văn để rewrite!", "error");
+        return;
+    }
+
+    // 2️⃣ Đảm bảo block có ID
+    let selectedBlockId = blockElement.getAttribute('data-block-id');
+    if (!selectedBlockId) {
+        selectedBlockId = `block-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        blockElement.setAttribute('data-block-id', selectedBlockId);
+    }
+
+    // 3️⃣ Loading UI
+    preview.innerHTML = `<div style="text-align:center;padding:20px">
+        <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+    </div>`;
+    sendBtn.disabled = true;
+
+    try {
+        // 4️⃣ Lấy danh sách blocks
+        let blocks = collectCurrentBlocks();
+
+        // 5️⃣ BẮT BUỘC phải có block đang chọn
+        if (!blocks.some(b => b.id === selectedBlockId)) {
+            blocks.push({
+                id: selectedBlockId,
+                tag: blockElement.tagName.toLowerCase(),
+                text: blockElement.innerHTML || selectedText
+            });
+        }
+
+        // 6️⃣ Gọi API rewrite
+        const response = await fetch(
+            "https://caiman-warm-swan.ngrok-free.app/api/v1/ai/contents/rewrite",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "ngrok-skip-browser-warning": "true"
+                },
+                body: JSON.stringify({
+                    blocks,
+                    selected_block_id: selectedBlockId,
+                    instruction: instruction || "Viết lại đoạn này theo phong cách chuyên nghiệp, chuẩn SEO"
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Server lỗi ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.message || "Rewrite thất bại");
+        }
+
+        // 7️⃣ Hiển thị kết quả
+        lastPopupResult = data.rewriting_content.trim();
+       lastPopupResult = data.rewriting_content.trim();
+        preview.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:16px; font-size:14px; line-height:1.7;">
+
+                <!-- ĐOẠN GỐC -->
+                <div style="
+                    background:#f3f4f6;
+                    padding:12px;
+                    border-radius:8px;
+                    color:#9A9A9A;
+                ">
+                    ${escapeHtml(originalText)}
+                </div>
+
+                <!-- ĐOẠN AI -->
+                <div style="
+                    background:#ffffff;
+                    padding:12px;
+                    border-radius:8px;
+                    border:1px solid #e5e7eb;
+                    color:#151515;
+                    font-weight:500;
+                ">
+                    ${escapeHtml(lastPopupResult)}
+                </div>
+            </div>
+        `;
+
+
+        showNotification("AI đã viết lại thành công!", "success");
+
+    } catch (err) {
+        console.error("❌ Rewrite Error:", err);
+        preview.innerHTML = `
+            <div style="color:red;background:#fee;padding:10px">
+                <strong>Lỗi:</strong> ${escapeHtml(err.message)}
+            </div>
+        `;
+        showNotification("Rewrite thất bại", "error");
+    } finally {
+        sendBtn.disabled = false;
     }
 }
 
@@ -52,111 +397,173 @@ function setupFloatingTool() {
 // MAIN FUNCTION: LOAD ARTICLE DATA FROM API
 // ============================================================
 function loadArticleData() {
+    const container = document.getElementById('sectionsContainer');
     const finalArticleDataJson = sessionStorage.getItem('finalArticleData');
-    if (!finalArticleDataJson) {
-        console.warn("Không tìm thấy dữ liệu bài viết trong sessionStorage");
-        console.log("Các keys có trong sessionStorage:", Object.keys(sessionStorage));
-        return;
-    }
+
+    if (!finalArticleDataJson || !container) return;
 
     try {
-        const articleData = JSON.parse(finalArticleDataJson);
-        console.log("📄 Dữ liệu bài viết đầy đủ:", articleData);
-        console.log("🔍 Keys trong articleData:", Object.keys(articleData));
+        const responseData = JSON.parse(finalArticleDataJson);
 
-        const article = (typeof articleData.finalArticle === 'string')
-            ? { content: articleData.finalArticle }
-            : (articleData.finalArticle || {});
+        // ✅ Ưu tiên lấy từ responseData.article (cấu trúc API mới)
+        const article = responseData.article || responseData.finalArticle || responseData;
 
-        // 2. Find HTML content from multiple sources
-        const htmlContent = article.content ||
-            article.html ||
-            article.result ||
-            article.text ||
-            article.text_content ||
-            article.body ||
-            article.article_content ||
-            article.full_content ||
-            article.html_content ||
-            article.meta_description ||
-            articleData.final_content ||
-            articleData.content ||
-            articleData.article?.content ||
-            articleData.article?.html ||
-            articleData.result ||
-            articleData.text_content || '';
+        console.log("📊 Article data structure:", {
+            hasBlocks: !!article.blocks,
+            blocksLength: article.blocks?.length || 0,
+            hasHtmlContent: !!article.html_content,
+            title: article.title
+        });
 
-        const sourceKey = getContentSource(article, articleData);
-        console.log("📄 Nguồn content dự kiến:", sourceKey);
-        console.log("📄 HTML Content tìm được (length):", htmlContent ? htmlContent.length : 0);
-
-        if (!htmlContent) {
-            console.warn("⚠️ Không tìm thấy nội dung bài viết qua các key thông thường.");
+        // 1. Đổ tiêu đề bài viết
+        const titleInput = document.getElementById('articleTitle');
+        if (titleInput) {
+            titleInput.value = article.title || responseData.final_title || "";
+            console.log("✅ Set title:", titleInput.value);
         }
 
-        // 1. Set Article Title
-        setArticleTitle(articleData, article);
-
-        // 3. Render Article Sections
-        let finalSource = htmlContent;
-
-        if (!finalSource || finalSource.length < 250) {
-            console.log("🔍 Đang tìm kiếm nội dung sâu hơn trong articleData...");
-            const longestResult = findLongestStringWithKey(articleData);
-            if (longestResult.content && longestResult.content.length > (finalSource ? finalSource.length : 0)) {
-                console.log(`✨ Đã tìm thấy nội dung tốt hơn tại: "${longestResult.path}" (Length: ${longestResult.content.length})`);
-                finalSource = longestResult.content;
-            } else if (!finalSource) {
-                console.warn("⚠️ Không tìm thấy nội dung nào đáng kể.");
-            }
+        // 2. Đổ mô tả ngắn (Meta Description)
+        const descriptionTextarea = document.querySelector('.short-description-section textarea');
+        if (descriptionTextarea) {
+            descriptionTextarea.value = article.meta_description || "";
+            console.log("✅ Set meta description");
         }
+        // 3. Xử lý hiển thị các ô nội dung
+        container.innerHTML = ''; // Xóa sạch để nạp mới
 
-        // LAST RESORT: Try to recompose from sources (selected_news)
-        if (!finalSource || finalSource.length < 200) {
-            console.warn("⚠️ Vẫn chưa có nội dung, thử dùng dữ liệu từ nguồn (Selected News)...");
-            const sources = articleData.pipeline_results?.selected_news || articleData.top_news || [];
-            if (sources.length > 0) {
-                finalSource = "<h2>Thông tin tổng hợp từ nguồn</h2>" +
-                    sources.map(s => `<h3>${s.title}</h3><p>${s.content_preview || s.snippet || s.anchor || "Không có đoạn trích"}</p>`).join('\n');
-            }
-        }
-
-        if (articleData.article_outline && articleData.article_outline.length > 0) {
-            console.log("📋 Rendering from Outline using source length:", finalSource ? finalSource.length : 0);
-            renderSectionsFromOutline(articleData.article_outline, finalSource, articleData);
-        } else if (finalSource) {
-            console.log("📋 Rendering raw content (No Outline)");
-            renderArticleSections(finalSource);
+        // ✅ FIX: Ưu tiên hiển thị từ html_content (vì chứa đầy đủ H2, H3 sau khi AI viết)
+        // Blocks thường chỉ là outline ban đầu (thiếu H3)
+        if (article.html_content) {
+            console.log("📋 Rendering from 'html_content' (Priority Source)");
+            renderArticleSections(article.html_content, responseData);
+        } else if (article.blocks && article.blocks.length > 0) {
+            console.log("📋 Rendering from 'blocks' (Fallback Source)");
+            renderFromBlocks(article.blocks, container);
         } else {
-            console.error("❌ ABSOLUTELY NO CONTENT FOUND!");
-            const container = document.getElementById('sectionsContainer');
-            if (container) container.innerHTML = `<div style="padding:20px; color:#991b1b; background:#fef2f2; border:1px solid #fee2e2; border-radius:8px;">
-                <b>Lỗi:</b> Không tìm thấy nội dung bài viết. Hãy thử nhấn "Viết bài" để tạo lại.
-            </div>`;
+            console.warn("⚠️ No content found. Auto-triggering content generation...");
+            // Kiểm tra tránh lặp vô tận hoặc gọi khi không có dữ liệu gốc
+            if (responseData.article_outline || responseData.main_keyword) {
+                ContentGeneration();
+            } else {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:60px; color:#9CA3AF; background: #F9FAFB; border-radius: 12px; border: 2px dashed #E5E7EB;">
+                        <img src="./images/icon-ai-bot.png" style="width: 64px; opacity: 0.5; margin-bottom: 20px;">
+                        <p style="font-size: 16px;">Không tìm thấy dữ liệu để bắt đầu viết bài.</p>
+                    </div>
+                `;
+            }
         }
 
-        // 4. Set Article Content
-        setArticleContent(article);
+        // 4. Đổ các phần phụ khác
+        renderReferences(responseData);
+        renderImages(responseData);
+        attachImageHandlers();
 
-        // 5. Set Short Description
-        setShortDescription(article);
+        // 5. Lưu toàn bộ HTML vào input ẩn (nếu có yêu cầu từ UI)
+        const hiddenInput = document.getElementById('article-contens');
+        if (hiddenInput && article.html_content) {
+            hiddenInput.value = article.html_content;
+        }
 
-        // 6. Render References
-        renderReferences(articleData);
-
-        // 7. Render SEO Score
-        renderSEOScore(article);
-
-        // 8. Render Images
-        renderImages(articleData);
-
-        console.log("✅ Đã load xong tất cả dữ liệu từ API!");
-
+        // ✅ TỰ ĐỘNG BỐ SUNG H3 CHO OUTLINE NẾU THIẾU (Đồng bộ với dan-y-bai-viet.js)
+        if (responseData.article_outline) {
+            ensureH3SubsectionsForData(responseData.article_outline);
+            // Lưu lại để các hàm generator sau này thấy H3
+            sessionStorage.setItem('finalArticleData', JSON.stringify(responseData));
+        }
     } catch (error) {
-        console.error("❌ Lỗi khi parse dữ liệu:", error);
-        alert("Lỗi khi tải dữ liệu bài viết: " + error.message);
+        console.error("❌ Lỗi hiển thị bài viết:", error);
+        showNotification("Lỗi khi tải dữ liệu bài viết!", "error");
     }
 }
+
+// Hàm bổ trợ để nhóm các blocks vào từng ô UI
+function renderFromBlocks(blocks, container) {
+    let currentSection = null;
+    let sectionCount = 0;
+    let h2Count = 0;
+    let h3Count = 0;
+
+    console.log(`📦 renderFromBlocks: Processing ${blocks.length} blocks`);
+
+    blocks.forEach((block, index) => {
+        const tag = (block.tag || 'p').toLowerCase();
+        const blockText = block.text || block.content || "";
+
+        // CHỈ TẠO Ô MỚI CHO H2 (Và H1 nếu chưa có section nào)
+        // H3, H4,... sẽ ở trong nội dung của H2
+        if (tag === 'h2' || (tag === 'h1' && sectionCount === 0)) {
+            // Nếu là H1 đầu tiên, thường là tiêu đề bài viết -> cập nhật Title Input thay vì tạo ô riêng
+            if (tag === 'h1') {
+                const titleInput = document.getElementById('articleTitle');
+                if (titleInput && blockText) {
+                    titleInput.value = blockText;
+                    console.log("  ✅ Set H1 as article title");
+                }
+                return;
+            }
+
+            sectionCount++;
+            h2Count++;
+            currentSection = createSectionElement(blockText, sectionCount, block.id);
+            container.appendChild(currentSection);
+            console.log(`  ✅ Created H2 section #${h2Count}`);
+        } else {
+            // Nếu là đoạn văn (p) hoặc H3, H4... nhét vào ô hiện tại
+            if (!currentSection) {
+                // Trường hợp có văn bản trước khi có tiêu đề H2 (Giới thiệu)
+                sectionCount++;
+                currentSection = createSectionElement("Giới thiệu", sectionCount, "intro-section");
+                container.appendChild(currentSection);
+                console.log("  ✅ Created default 'Giới thiệu' section");
+            }
+
+            const editor = currentSection.querySelector('.content-editor');
+            if (!editor) {
+                console.error("❌ No content-editor found in current section!");
+                return;
+            }
+
+            const el = document.createElement(tag);
+            el.innerHTML = blockText;
+
+            // Gắn data-block-id để giống hệt cấu trúc API/File mẫu
+            if (block.id) {
+                el.setAttribute('data-block-id', block.id);
+            }
+
+            editor.appendChild(el);
+
+            // Log H3 specifically
+            if (tag === 'h3') {
+                h3Count++;
+                console.log(`  ➡️  Added H3 #${h3Count}: "${blockText.substring(0, 40)}..." (ID: ${block.id})`);
+            }
+        }
+    });
+
+    console.log(`📊 Summary: ${h2Count} H2 sections, ${h3Count} H3 elements rendered`);
+    console.log(`🔍 Verify: ${container.querySelectorAll('.content-editor h3').length} H3 elements in DOM`);
+}
+// Hàm tạo cấu trúc HTML cho một ô Section (giống giao diện của bạn)
+function createSectionElement(title, index, id) {
+    const div = document.createElement('div');
+    div.className = 'section-item active'; // Mặc định mở
+    if (id) div.setAttribute('data-id', id);
+
+    div.innerHTML = `
+        <div class="section-header" style="cursor: pointer;">
+            <span class="chevron"><img src="./images/icon-nha-xuong.png" style="margin-right: 12px; transform: rotate(180deg);"></span>
+            <input type="text" class="section-title-input" value="${escapeHtml(title)}" style="flex:1; font-weight:bold; border:none; background:transparent;">
+        </div>
+        <div class="section-body" style="display: block; padding: 15px;">
+            <div class="content-editor" contenteditable="true" style="min-height: 50px; outline: none; color:20px"></div>
+        </div>
+    `;
+    return div;
+}
+
+
 
 // ============================================================
 // SET ARTICLE TITLE (Fixed priority)
@@ -189,12 +596,50 @@ function setArticleTitle(articleData, article) {
     }
 
     titleInput.value = title;
-    console.log("✅ Đã set tiêu đề thành công:", titleInput.value);
+}
+
+/**
+ * Đảm bảo outline có các mục H3 (Đồng bộ logic với dan-y-bai-viet.js)
+ */
+
+function ensureH3SubsectionsForData(outline) {
+    if (!Array.isArray(outline) || outline.length === 0) return;
+
+    const hasH3 = outline.some(item => item.level === 3);
+    if (!hasH3) {
+        console.log("⚡ [viet-bai-seo] Dàn ý thiếu H3, đang tự động bổ sung...");
+
+        const newItems = [];
+        outline.forEach((item, idx) => {
+            newItems.push(item);
+
+            if (item.level === 2) {
+                const titleLower = item.title.toLowerCase();
+                if (titleLower.includes("kết luận") || titleLower.includes("lời kết")) return;
+
+                // Tạo 2 H3 mẫu
+                for (let i = 1; i <= 2; i++) {
+                    newItems.push({
+                        id: `h3-auto-${idx}-${i}-${Date.now()}`,
+                        level: 3,
+                        title: `${item.title} - Phân tích chi tiết ${i}`,
+                        order: 0,
+                        config: { word_count: 150, keywords: [], tone: null, internal_link: null }
+                    });
+                }
+            }
+        });
+
+        // Cập nhật lại mảng outline (vì array pass by reference)
+        outline.length = 0;
+        newItems.forEach(item => outline.push(item));
+    }
 }
 
 // ============================================================
 // RENDER SECTIONS FROM OUTLINE (Improved)
 // ============================================================
+
 function renderSectionsFromOutline(outline, htmlContent, articleData) {
     const container = document.getElementById('sectionsContainer');
     if (!container) return;
@@ -222,6 +667,7 @@ function renderSectionsFromOutline(outline, htmlContent, articleData) {
     if (Object.keys(contentMap).length === 0 && htmlContent) {
         console.warn("⚠️ All parsers failed to find headings. Using raw content for first section.");
         contentMap = { "Giới thiệu": htmlContent };
+        
     }
 
     console.log("📋 Content Map Keys Prepared:", Object.keys(contentMap));
@@ -284,7 +730,7 @@ function renderSectionsFromOutline(outline, htmlContent, articleData) {
         // Auto-insert image if missing
         if (content && !content.includes('<img') && imagePool.length > 0) {
             const imgData = imagePool[imageIndex % imagePool.length];
-            const imgHtml = `<div style="text-align:center; margin: 20px 0;"><img src="${imgData.url}" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" title="Nguồn: ${escapeHtml(imgData.source)}"></div>`;
+            const imgHtml = createDraggableImageHtml(imgData.url, imgData.source);
             content = imgHtml + content;
             imageIndex++;
         }
@@ -327,6 +773,9 @@ function parseContentByHeadings(htmlContent) {
     if (introContent.length > 0) {
         contentMap["Giới thiệu"] = introContent.join('');
     }
+    
+    
+    
 
     // Bước 2: Duyệt qua từng Heading và lấy nội dung sau đó cho tới Heading tiếp theo
     headings.forEach((heading, index) => {
@@ -411,11 +860,28 @@ function createSectionWithSubsections(section, sectionIndex, content) {
     const contentEditor = document.createElement('div');
     contentEditor.className = 'content-editor';
     contentEditor.contentEditable = true;
-    contentEditor.innerHTML = content || `<p style="color:gray">Nhấn để nhập nội dung cho: ${escapeHtml(section.title)}</p>`;
+
+    // Parse content để tách H3 và render chúng rõ ràng
+    if (content) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+
+        // Count H3 elements for logging
+        const h3Elements = tempDiv.querySelectorAll('h3');
+        if (h3Elements.length > 0) {
+            console.log(`📌 Section "${section.title}": Found ${h3Elements.length} H3 elements`);
+        }
+
+        // Set content (giữ nguyên HTML structure)
+        contentEditor.innerHTML = content;
+    } else {
+        contentEditor.innerHTML = `<p style="color:gray">Nhấn để nhập nội dung cho: ${escapeHtml(section.title)}</p>`;
+    }
 
     sectionBody.appendChild(contentEditor);
     sectionDiv.appendChild(sectionHeader);
     sectionDiv.appendChild(sectionBody);
+
     return sectionDiv;
 }
 
@@ -484,91 +950,285 @@ function findFuzzyContentMatch(sectionTitle, contentMap) {
 }
 
 // ============================================================
-// CONTENT GENERATION (Added validation)
+// HÀM VIẾT BÀI 
 // ============================================================
 async function ContentGeneration() {
+    const container = document.getElementById('sectionsContainer');
     const finalArticleDataJson = sessionStorage.getItem('finalArticleData');
-    if (!finalArticleDataJson) {
-        alert("Không tìm thấy dữ liệu bài viết!");
-        return;
+    if (!finalArticleDataJson) return alert("Không tìm thấy dữ liệu!");
+
+    // Hiển thị loading
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:50px;">
+                <i class="fas fa-spinner fa-spin fa-3x" style="color:#4F46E5;"></i>
+                <p style="margin-top:15px; font-weight:bold;">AI đang viết bài...</p>
+            </div>`;
     }
 
     try {
         const articleData = JSON.parse(finalArticleDataJson);
-        const article = articleData.finalArticle || {};
-
-        // ✅ Validation
         const titleInput = document.getElementById('articleTitle');
-        const title = article.title || titleInput?.value || "";
-        if (!title.trim()) {
-            alert("Chưa có tiêu đề bài viết. Vui lòng nhập tiêu đề trước!");
-            return;
+        const mainTitle = titleInput?.value || articleData.final_title || "Tiêu đề bài viết";
+
+        // 1. Lấy outline từ UI sections
+        const sections = document.querySelectorAll('.section-item');
+        let outline = [];
+        let orderCounter = 1;
+
+        // Bắt đầu bằng H1 (Tiêu đề chính)
+        outline.push({
+            id: "h1-1",
+            level: 1,
+            title: mainTitle,
+            order: orderCounter++,
+            config: null
+        });
+
+        // Thêm H2-1 (Tổng quan)
+        outline.push({
+            id: "h2-1",
+            level: 2,
+            title: "Tổng quan về " + mainTitle,
+            order: orderCounter++,
+            config: {
+                word_count: 100,
+                keywords: [extractKeyword(mainTitle)],
+                tone: null,
+                internal_link: null
+            }
+        });
+
+        if (sections.length > 0) {
+            let h2Idx = 2;
+            sections.forEach((sec) => {
+                const titleInput = sec.querySelector('.section-title-input');
+                const dataId = sec.getAttribute('data-id');
+                const contentEditor = sec.querySelector('.content-editor');
+
+                // Bỏ qua các mục đặc biệt đã được xử lý (H1, H2-1 cố định)
+                if (dataId === 'h1-1' || dataId === 'h2-1' || dataId === 'h1-main' || dataId === 'section_intro') return;
+
+                const sectionTitle = titleInput ? titleInput.value : `Mục chưa đặt tên`;
+                const h2Id = dataId || `h2-${h2Idx++}`;
+
+                // Thêm mục H2
+                outline.push({
+                    id: h2Id,
+                    level: 2,
+                    title: sectionTitle,
+                    order: orderCounter++,
+                    config: {
+                        word_count: 200,
+                        keywords: [extractKeyword(sectionTitle)],
+                        tone: "Chuyên nghiệp",
+                        internal_link: null
+                    }
+                });
+
+                // ✅ TÌM H3 TRONG EDITOR CỦA SECTION NÀY
+                if (contentEditor) {
+                    const h3sInEditor = contentEditor.querySelectorAll('h3');
+                    if (h3sInEditor.length > 0) {
+                        h3sInEditor.forEach((h3, subIdx) => {
+                            outline.push({
+                                id: `${h2Id}-h3-${subIdx + 1}`,
+                                level: 3,
+                                title: h3.textContent.trim(),
+                                order: orderCounter++,
+                                config: {
+                                    word_count: 150,
+                                    keywords: [],
+                                    tone: "Chuyên sâu",
+                                    internal_link: null
+                                }
+                            });
+                        });
+                    }
+                }
+            });
         }
 
-        if (!articleData.article_outline || !articleData.article_outline.length) {
-            alert("Chưa có outline bài viết. Vui lòng tạo outline trước!");
-            return;
+        // ✅ SYNC VỚI OUTLINE GỐC ĐỂ LẤY LẠI H3 (Rất quan trọng để đảm bảo AI viết đủ các mục đã lên kế hoạch)
+        if (articleData.article_outline) {
+            console.log("🔄 Syncing UI outline with original planned outline...");
+            outline = addH3ToOutline(outline, articleData.article_outline);
         }
 
+        // 1.5 Tự động bổ sung H3 mẫu nếu toàn bộ outline VẪN thiếu H3 (Phục vụ SEO tối thiểu)
+        const hasH3 = outline.some(item => item.level === 3);
+        if (!hasH3) {
+            console.log("🔍 No H3 found after sync, auto-generating default H3 subsections...");
+            const newOutline = [];
+            let h3GlobalCounter = 1;
+
+            outline.forEach((item) => {
+                newOutline.push(item);
+                if (item.level === 2 && !item.title.toLowerCase().includes("kết luận") && !item.title.toLowerCase().includes("lời kết")) {
+                    for (let i = 1; i <= 2; i++) {
+                        newOutline.push({
+                            id: `h3-auto${h3GlobalCounter++}`,
+                            level: 3,
+                            title: `${item.title} - Phân tích chi tiết ${i}`,
+                            order: 0,
+                            config: { word_count: 150, keywords: [], tone: "Chuyên sâu", internal_link: null }
+                        });
+                    }
+                }
+            });
+            outline = newOutline.map((item, idx) => ({ ...item, order: idx + 1 }));
+        } else {
+            // Re-order lại cho chắc chắn sau khi đã merge H3
+            outline = outline.map((item, idx) => ({ ...item, order: idx + 1 }));
+        }
+
+        // 2. Lấy dữ liệu từ các nguồn khác
+        const topNews = articleData.pipeline_results?.selected_news || articleData.crawledArticles || [];
+        const mainKeyword = articleData.main_keyword || (articleData.seo_config ? articleData.seo_config.main_keyword : "") || "Thiết kế website";
+        const secondaryKeywords = articleData.secondary_keywords || (articleData.seo_config ? articleData.seo_config.secondary_keywords : []) || ["web responsive", "UI/UX", "tối ưu SEO"];
+
+        // 3. Xây dựng payload (Khớp 100% format mẫu của USER)
         const payload = {
-            top_news: articleData.pipeline_results?.selected_news || [],
+            top_news: topNews.slice(0, 10).map((news, idx) => ({
+                rank: idx + 1,
+                title: news.title || "Tin tức liên quan",
+                url: news.url || news.link || "#",
+                images: news.images || [],
+                content_preview: (news.content || news.content_preview || news.summary || "Nội dung tham khảo cho bài viết.").substring(0, 5000)
+            })),
             target_language: articleData.target_language || "Tiếng Việt",
             config: {
-                bot_id: "GPT-4.1",
-                article_length: article.word_count ? String(article.word_count) : "1500",
-                tone: article.tone || "Chuyên nghiệp",
-                article_type: "blog",
-                custome_instructions: articleData.custome_instructions || null
+                bot_id: articleData.config?.bot || articleData.config?.bot_id || articleData.config?.model || "GPT-4.1",
+                article_length: String(articleData.config?.article_length || "500"),
+                tone: articleData.config?.tone || articleData.config?.tone_of_voice || "Chuyên nghiệp",
+                article_type: articleData.config?.article_type || "blog",
+                custome_instructions: (articleData.config?.custom_instructions || articleData.config?.custome_instructions || "") +
+                    " \n\n# CHỈ THỊ QUAN TRỌNG VỀ CẤU TRÚC BÀI VIẾT:\n" 
+            
             },
-            title: title,
-            outline: articleData.article_outline || [],
-            main_keyword: article.main_keyword || "",
-            secondary_keywords: article.secondary_keywords || []
+            title: mainTitle,
+            outline: outline,
+            main_keyword: mainKeyword,
+            secondary_keywords: secondaryKeywords
         };
 
-        console.log("🚀 REQUEST ContentGeneration:", payload);
+        console.log("🚀 PAYLOAD CHI TIẾT:", JSON.stringify(payload, null, 2));
 
-        // Show loading
-        const container = document.getElementById('sectionsContainer');
-        if (container) {
-            container.innerHTML = `
-                <div style="text-align: center; color: #9CA3AF; padding: 40px;">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
-                    <p style="margin-top: 10px;">Đang viết bài, vui lòng chờ...</p>
-                </div>
-            `;
-        }
-
+        // 5. Gọi API
         const response = await fetch("https://caiman-warm-swan.ngrok-free.app/api/v1/ai/contents", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true",
+                "Accept": "application/json"
+            },
             body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("✅ RESPONSE ContentGeneration:", data);
+        console.log("✅ RESPONSE:", data);
 
-        let newContent = data.content || data.html || data.result || (typeof data === 'string' ? data : '');
-        if (newContent) {
-            if (!articleData.finalArticle) articleData.finalArticle = {};
-            articleData.finalArticle.content = newContent;
-            sessionStorage.setItem('finalArticleData', JSON.stringify(articleData));
+        if (data.success && data.article) {
+            // ✅ MERGE DATA để không mất article_outline và các config khác
+            const mergedData = {
+                ...articleData,
+                article: data.article,
+                success: true
+            };
+            sessionStorage.setItem('finalArticleData', JSON.stringify(mergedData));
             loadArticleData();
-            alert("Đã viết bài thành công!");
+            showNotification(`✅ Đã viết xong bài viết với ${outline.length} mục!`, "success");
         } else {
-            alert("API trả về nhưng không tìm thấy nội dung bài viết.");
+            const errorMsg = data.error || data.message || "API lỗi";
+            showNotification(`❌ ${errorMsg}`, "error");
+            console.error("API Error:", data);
+            loadArticleData();
         }
 
     } catch (error) {
-        console.error("❌ Lỗi khi viết bài:", error);
-        alert("Lỗi khi viết bài: " + error.message);
+        console.error("❌ Lỗi khi gọi API:", error);
+        showNotification(`❌ Lỗi: ${error.message}`, "error");
         loadArticleData();
     }
 }
+
+// ============================================================
+// HÀM BỔ TRỢ
+// ============================================================
+
+function extractKeyword(title) {
+    if (!title) return "chủ đề";
+
+    const commonKeywords = ["thiết kế website", "du lịch", "SEO", "marketing", "công nghệ", "ẩm thực", "...",];
+
+    for (const keyword of commonKeywords) {
+        if (title.toLowerCase().includes(keyword.toLowerCase())) {
+            return keyword;
+        }
+    }
+
+    // Lấy từ đầu tiên
+    const words = title.split(' ');
+    return words.length > 0 ? words[0] : "chủ đề";
+}
+
+function addH3ToOutline(outline, originalOutline) {
+    if (!outline || !originalOutline || originalOutline.length === 0) return outline;
+
+    const newOutline = [];
+
+    outline.forEach((item) => {
+        newOutline.push(item);
+
+        // Nếu là H2, tìm các H3 đi theo nó trong outline gốc
+        if (item.level === 2) {
+            const normalize = s => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '').trim();
+            const itemNorm = normalize(item.title);
+
+            // Tìm index của H2 tương ứng trong outline gốc
+            // Ưu tiên match theo ID, sau đó mới fuzzy match theo Title
+            const originalH2Index = originalOutline.findIndex(orig => {
+                if (orig.level !== 2) return false;
+                if (item.id && orig.id && item.id === orig.id) return true;
+
+                const origNorm = normalize(orig.title);
+                return origNorm === itemNorm || origNorm.includes(itemNorm) || itemNorm.includes(origNorm);
+            });
+
+            if (originalH2Index !== -1) {
+                // Lấy tất cả H3 thuộc H2 này (dừng khi gặp H1/H2 tiếp theo)
+                for (let i = originalH2Index + 1; i < originalOutline.length; i++) {
+                    const nextItem = originalOutline[i];
+                    if (nextItem.level === 3) {
+                        // Kiểm tra xem H3 này đã có trong outline chưa để tránh duplicate
+                        const alreadyExists = newOutline.some(o => o.level === 3 && normalize(o.title) === normalize(nextItem.title));
+                        if (!alreadyExists) {
+                            newOutline.push({
+                                ...nextItem,
+                                id: nextItem.id || `h3-${item.id}-${i}-${Date.now()}`,
+                                order: 0 // Sẽ được re-index ở cuối
+                            });
+                        }
+                    } else if (nextItem.level <= 2) {
+                        break;
+                    }
+                }
+            }
+        }
+    });
+    console.log("🚀 NEW OUTLINE WITH H3s:", newOutline);
+
+    // Cập nhật lại order cho toàn bộ outline
+    return newOutline.map((item, idx) => ({
+        ...item,
+        order: idx + 1
+    }));
+}
+
 
 // ============================================================
 // EXTRACT CONTENT FOR SECTION (Fixed - single version)
@@ -603,82 +1263,82 @@ function extractContentForSection(sectionTitle, htmlContent) {
 }
 
 // ============================================================
-// RENDER ARTICLE SECTIONS (Fallback)
+// RENDER ARTICLE SECTIONS –
 // ============================================================
-function renderArticleSections(htmlContent) {
+// ============================================================
+// RENDER ARTICLE SECTIONS – FIX 100% KHÔNG MẤT NỘI DUNG SAU F5 (LẦN CUỐI THẬT SỰ!)
+// ============================================================
+function renderArticleSections(htmlContent, articleData) {
     const container = document.getElementById('sectionsContainer');
     if (!container) return;
 
-    console.log("🔍 Đang parse HTML content (fallback)...");
     container.innerHTML = '';
+
+    if (!htmlContent) {
+        console.warn("Không có html_content để render");
+        return;
+    }
 
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
 
-    const sections = [];
     let currentSection = null;
+    let currentEditor = null;
+    let sectionCount = 0;
+    let buffer = []; // Lưu nội dung trước khi gặp H2 đầu tiên
 
-    Array.from(tempDiv.children).forEach(child => {
-        if (child.tagName === 'H2' || child.tagName === 'H1') {
-            if (currentSection) sections.push(currentSection);
-            currentSection = {
-                id: 'section_' + sections.length,
-                title: child.textContent.trim(),
-                content: document.createElement('div')
-            };
-        } else {
-            if (!currentSection) {
-                currentSection = {
-                    id: 'section_intro',
-                    title: "Giới thiệu",
-                    content: document.createElement('div')
-                };
+    Array.from(tempDiv.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) return;
+
+        const tag = node.tagName ? node.tagName.toUpperCase() : '';
+
+        if (tag === 'H2') {
+            // Đổ buffer vào section hiện tại
+            if (buffer.length > 0) {
+                if (!currentEditor) {
+                    sectionCount++;
+                    currentSection = createSectionElement("Giới thiệu", sectionCount, "intro-section");
+                    currentSection.classList.add('active');
+                    container.appendChild(currentSection);
+                    currentEditor = currentSection.querySelector('.content-editor');
+                }
+                buffer.forEach(n => currentEditor.appendChild(n.cloneNode(true)));
+                buffer = [];
             }
-            currentSection.content.appendChild(child.cloneNode(true));
+
+            // Tạo section mới
+            sectionCount++;
+            const title = node.textContent.trim() || `Mục ${sectionCount}`;
+            currentSection = createSectionElement(title, sectionCount, `section_${sectionCount}`);
+            if (sectionCount === 1) currentSection.classList.add('active');
+            container.appendChild(currentSection);
+            currentEditor = currentSection.querySelector('.content-editor');
+        } else if (tag === 'H1') {
+            const titleInput = document.getElementById('articleTitle');
+            if (titleInput) titleInput.value = node.textContent.trim();
+        } else {
+            if (currentEditor) {
+                currentEditor.appendChild(node.cloneNode(true));
+            } else {
+                buffer.push(node);
+            }
         }
     });
 
-    if (currentSection) sections.push(currentSection);
+    // Đổ buffer còn lại
+    if (buffer.length > 0) {
+        if (!currentEditor) {
+            sectionCount++;
+            currentSection = createSectionElement("Giới thiệu", sectionCount, "intro-section");
+            currentSection.classList.add('active');
+            container.appendChild(currentSection);
+            currentEditor = currentSection.querySelector('.content-editor');
+        }
+        buffer.forEach(n => currentEditor.appendChild(n.cloneNode(true)));
+    }
 
-    console.log(`📋 Tìm thấy ${sections.length} sections`);
-
-    sections.forEach((section, index) => {
-        const sectionItem = createSimpleSection(section, index === 0);
-        container.appendChild(sectionItem);
-    });
-}
-
-function createSimpleSection(section, isExpanded) {
-    const sectionDiv = document.createElement('div');
-    sectionDiv.className = 'section-item';
-    if (isExpanded) sectionDiv.classList.add('active');
-
-    const sectionHeader = document.createElement('div');
-    sectionHeader.className = 'section-header';
-    sectionHeader.style.cssText = 'display: flex; align-items: center; padding: 15px; cursor: pointer; border-bottom: 1px solid #E5E7EB;';
-
-    sectionHeader.innerHTML = `
-        <span class="chevron" style="margin-right: 15px;">
-            <img src="./images/icon-nha-xuong.png" alt="" style="margin-right: 12px;">
-        </span>
-        <span class="section-title" style="flex: 1; font-weight: 600; font-size: 16px;">${escapeHtml(section.title)}</span>
-    `;
-
-    const sectionBody = document.createElement('div');
-    sectionBody.className = 'section-body';
-    sectionBody.style.display = isExpanded ? 'block' : 'none';
-    sectionBody.style.padding = '15px';
-
-    const contentEditor = document.createElement('div');
-    contentEditor.className = 'content-editor';
-    contentEditor.contentEditable = true;
-    contentEditor.innerHTML = section.content.innerHTML || '';
-    contentEditor.style.cssText = 'min-height: 100px; padding: 15px; outline: none; line-height: 1.6; border: 1px solid #E5E7EB; border-radius: 4px;';
-
-    sectionBody.appendChild(contentEditor);
-    sectionDiv.appendChild(sectionHeader);
-    sectionDiv.appendChild(sectionBody);
-    return sectionDiv;
+    setupSectionAccordions();
+    console.log(`✅ ĐÃ RENDER LẠI THÀNH CÔNG – ${sectionCount} section giữ nguyên sau F5!`);
 }
 
 // ============================================================
@@ -730,10 +1390,16 @@ function setShortDescription(article) {
 // ============================================================
 function renderReferences(articleData) {
     let references = [];
-    if (articleData.pipeline_results?.selected_news) {
+
+    // Ưu tiên lấy từ cấu trúc API mới
+    const article = articleData.article || articleData.finalArticle || articleData;
+
+    if (article.references && Array.isArray(article.references)) {
+        references = article.references;
+    } else if (articleData.pipeline_results?.selected_news) {
         references = articleData.pipeline_results.selected_news;
-    } else if (articleData.finalArticle?.sources) {
-        references = articleData.finalArticle.sources;
+    } else if (article.sources) {
+        references = article.sources;
     }
 
     if (references.length === 0) return;
@@ -894,19 +1560,37 @@ function setupTabs() {
             const targetContent = document.getElementById(`${tabId}-tab`);
             if (targetContent) {
                 targetContent.classList.add('active');
+
+              
             }
         });
     });
+
+    // Optional: Trigger lần đầu nếu tab Media đang active mặc định
+    const defaultActive = document.querySelector('.tab-btn.active');
+    if (defaultActive) defaultActive.click();
 }
 
 function setupToolbar() {
     const toolBtns = document.querySelectorAll('.tool-btn');
     toolBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const command = btn.getAttribute('data-command');
+            const value = btn.getAttribute('data-value');
+
+            if (command) {
+                document.execCommand(command, false, value);
+                // Maintain focus in the active section if possible
+                const activeSection = document.querySelector('.section-item.active .content-editor');
+                if (activeSection) activeSection.focus();
+            }
+
             btn.classList.toggle('active-tool');
         });
     });
 }
+
 
 window.toggleAccordion = function (headerElement) {
     const content = headerElement.nextElementSibling;
@@ -968,7 +1652,6 @@ function getImagePool(articleData) {
             }
         });
     }
-
     return images;
 }
 
@@ -978,11 +1661,11 @@ function getImagePool(articleData) {
 function renderImages(articleData) {
     const imageGrid = document.getElementById('imageGrid');
     if (!imageGrid) {
-        console.warn("⚠️ Không tìm thấy element #imageGrid");
+        console.warn(" Không tìm thấy element #imageGrid");
         return;
     }
 
-    console.log("🖼️ Đang render danh sách ảnh...");
+    console.log(" Đang render danh sách ảnh...");
     imageGrid.innerHTML = '';
 
     // 1. Lọc ảnh từ selected_news (pipeline kết quả crawl)
@@ -1021,9 +1704,10 @@ function renderImages(articleData) {
     }
 
 
-    // 2. Thử lấy từ finalArticle.images (nếu có)
-    if (articleData.finalArticle?.images && Array.isArray(articleData.finalArticle.images)) {
-        articleData.finalArticle.images.forEach(img => {
+    // 2. Thử lấy từ config mới của AI (article.images)
+    const article = articleData.article || articleData.finalArticle || articleData;
+    if (article.images && Array.isArray(article.images)) {
+        article.images.forEach(img => {
             const url = typeof img === 'string' ? img : img.url;
             if (url && !images.some(existing => existing.url === url)) {
                 images.push({
@@ -1063,6 +1747,20 @@ function renderImages(articleData) {
     });
 }
 
+// helper tạo ảnh có thể kéo và xoá 
+function createDraggableImageHtml(url, source = '') {
+    return `
+    <div class="draggable-image" contenteditable="false" draggable="true" title="Nguồn: ${escapeHtml(source)}">
+      <img src="${url}" alt="Ảnh bài viết">
+      <button class="delete-image-btn" type="button" title="Xóa ảnh">×</button>
+    </div>
+    <p><br></p>`; // Thêm dòng trống phía sau để dễ nhập văn bản tiếp theo
+}
+
+
+
+
+
 function insertImageToActiveSection(url) {
     // Tìm section đang active hoặc section đầu tiên
     let targetEditor = document.querySelector('.section-item.active .content-editor');
@@ -1071,16 +1769,358 @@ function insertImageToActiveSection(url) {
     }
 
     if (targetEditor) {
-        const imgHtml = `<div style="text-align:center; margin: 20px 0;"><img src="${url}" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div><p></p>`;
+        const imgHtml = createDraggableImageHtml(url, 'User Inserted');
 
         // Chèn vào vị trí con trỏ hoặc cuối editor
         targetEditor.focus();
         document.execCommand('insertHTML', false, imgHtml);
-
         showNotification("Đã chèn ảnh vào bài viết!", "success");
     } else {
         alert("Vui lòng chọn một đoạn nội dung để chèn ảnh.");
     }
 }
+
+// ============================================================
+// ATTACH IMAGE HANDLERS FOR MEDIA TAB
+// ============================================================
+function attachImageHandlers() {
+    const imageGrid = document.getElementById('imageGrid');
+    if (!imageGrid) return;
+
+    // Xử lý khi click vào ảnh
+    imageGrid.addEventListener('click', (e) => {
+        const imgItem = e.target.closest('.grid-image-item');
+        if (!imgItem) return;
+
+        const img = imgItem.querySelector('img');
+        if (!img || !img.src) return;
+
+        // 1. Hiển thị xác nhận
+        const confirmInsert = confirm("Bạn muốn chèn ảnh này vào bài viết?");
+        if (!confirmInsert) return;
+
+        // 2. Tìm editor đang active
+        let targetEditor = document.querySelector('.section-item.active .content-editor');
+        if (!targetEditor) {
+            targetEditor = document.querySelector('.content-editor');
+        }
+
+        if (targetEditor) {
+            const imgHtml = `
+                <div style="text-align:center; margin:20px 0;">
+                    <img src="${img.src}" 
+                         style="max-width:100%; border-radius:8px; 
+                                box-shadow:0 4px 6px rgba(0,0,0,0.1);"
+                         alt="Ảnh minh họa">
+                    <p style="font-size:12px; color:#666; margin-top:8px; font-style:italic;">
+                        Nguồn: ${imgItem.title.replace('Nguồn: ', '')}
+                    </p>
+                </div>
+                <p></p>
+            `;
+
+            // Chèn vào vị trí con trỏ hoặc cuối editor
+            targetEditor.focus();
+
+            // Kiểm tra nếu có selection
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+
+                const div = document.createElement('div');
+                div.innerHTML = imgHtml;
+                const fragment = document.createDocumentFragment();
+                Array.from(div.childNodes).forEach(node => {
+                    fragment.appendChild(node.cloneNode(true));
+                });
+
+                range.insertNode(fragment);
+                range.collapse(false);
+            } else {
+                // Chèn vào cuối
+                document.execCommand('insertHTML', false, imgHtml);
+            }
+
+            showNotification("✅ Đã chèn ảnh vào bài viết!", "success");
+        } else {
+            alert("⚠️ Vui lòng chọn một section để chèn ảnh.");
+        }
+    });
+
+    // Xử lý lỗi ảnh
+    const images = imageGrid.querySelectorAll('img');
+    images.forEach(img => {
+        img.onerror = function () {
+            this.style.opacity = '0.3';
+            this.parentElement.querySelector('.image-overlay').textContent = 'Lỗi tải ảnh';
+            this.parentElement.style.cursor = 'not-allowed';
+        };
+    });
+}
+
+
+// ============================================================
+// SHOW NOTIFICATION
+// ============================================================
+function showNotification(message, type = "info") {
+    // Xóa thông báo cũ nếu có
+    const oldNoti = document.querySelector('.custom-notification');
+    if (oldNoti) oldNoti.remove();
+
+    // Tạo thông báo mới
+    const noti = document.createElement('div');
+    noti.className = `custom-notification ${type}`;
+    noti.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+    `;
+
+    // Thêm CSS animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }h
+        }
+    `;
+    document.head.appendChild(style);
+
+    noti.textContent = message;
+    document.body.appendChild(noti);
+
+    // Tự động xóa sau 3 giây
+    setTimeout(() => {
+        noti.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => noti.remove(), 300);
+    }, 3000);
+}
+
+// lấy range từ toạ độ chuột (cross-browser)
+
+function getCaretRangeFromPoint(x, y) {
+    if (document.caretRangeFromPoint) {
+        return document.caretRangeFromPoint(x, y);
+    } else if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(x, y);
+        const range = document.createRange();
+        range.setStart(pos.offsetNode, pos.offset);
+        range.collapse(true);
+        return range;
+    }
+    return null;
+}
+
+
+// ============================================================
+// COLLECT ALL BLOCKS FROM CURRENT ARTICLE (for AI rewrite)
+// ============================================================
+
+function collectCurrentBlocks() {
+    const blocks = [];
+    const sections = document.querySelectorAll('#sectionsContainer .section-item');
+
+    sections.forEach(section => {
+        const sectionTitle = section.querySelector('.section-title-input')?.value.trim() || "Giới thiệu";
+        const editor = section.querySelector('.content-editor');
+
+        if (!editor) return;
+
+        // Duyệt từng phần tử con trong editor
+        editor.childNodes.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                let text = '';
+
+                if (tagName === 'img') {
+                    // Bỏ qua ảnh, không cần gửi làm block text
+                    return;
+                } else if (tagName === 'div' && node.classList.contains('draggable-image')) {
+                    // Bỏ qua wrapper ảnh
+                    return;
+                } else if (['h1','h2','h3','h4','h5','h6','p','blockquote','ul','ol','li'].includes(tagName)) {
+                    text = node.textContent.trim();
+                } else {
+                    text = node.textContent.trim();
+                }
+
+                if (text) {
+                    let blockId = node.getAttribute('data-block-id');
+                    if (!blockId) {
+                        blockId = `auto-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                        node.setAttribute('data-block-id', blockId); // <-- Quan trọng: gán vào DOM
+                    }
+                    blocks.push({
+                        id: blockId,
+                        tag: tagName,
+                        text: text
+                    });
+
+                    // Gắn tạm data-block-id để lần sau dùng lại (nếu chưa có)
+                    if (!node.hasAttribute('data-block-id')) {
+                        node.setAttribute('data-block-id', blockId);
+                    }
+                }
+            } else if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.textContent.trim();
+                if (text) {
+                    const blockId = `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                    blocks.push({
+                        id: blockId,
+                        tag: 'p',
+                        text: text
+                    });
+                }
+            }
+        });
+    });
+
+    console.log("📦 Collected blocks for rewrite:", blocks.length, blocks);
+    return blocks;
+}
+// ============================================================
+// TỰ ĐỘNG LƯU THAY ĐỔI ĐỂ KHI F5 VẪN GIỮ NGUYÊN NỘI DUNG MỚI
+// ============================================================
+
+function saveCurrentArticleToSession() {
+    const container = document.getElementById('sectionsContainer');
+    if (!container) return;
+
+    let html = '';
+
+    container.querySelectorAll('.section-item').forEach(section => {
+        const titleInput = section.querySelector('.section-title-input');
+        const editor = section.querySelector('.content-editor');
+
+        if (!editor) return;
+
+        const title = titleInput?.value?.trim();
+        if (title) {
+            html += `<h2>${title}</h2>\n`;
+        }
+        html += editor.innerHTML + '\n';
+    });
+
+    const data = JSON.parse(sessionStorage.getItem('finalArticleData') || '{}');
+
+    if (!data.article) data.article = {};
+    data.article.html_content = html;
+
+    sessionStorage.setItem('finalArticleData', JSON.stringify(data));
+
+    console.log("💾 Đã lưu html_content mới vào sessionStorage");
+}
+
+
+// Lắng nghe mọi thay đổi trong bài viết và lưu tự động
+document.getElementById('sectionsContainer')?.addEventListener('input', () => {
+    setTimeout(saveCurrentArticleToSession, 500); // chờ DOM cập nhật xong
+});
+
+document.getElementById('articleTitle')?.addEventListener('input', saveCurrentArticleToSession);
+document.querySelector('.short-description-section textarea')?.addEventListener('input', saveCurrentArticleToSession);
+
+// Đặc biệt: Lưu ngay sau khi nhấn "Thay thế" từ popup AI
+const replaceBtn = document.getElementById('popup-replace-btn');
+if (replaceBtn) {
+    replaceBtn.addEventListener('click', () => {
+        setTimeout(saveCurrentArticleToSession, 100);
+    });
+}
+
+// ==== Tìm kiếm hinh ảnh thuộc bài viết đó =====
+const imageInput = document.getElementById("imageSearchInput");
+const imageGrid = document.getElementById("imageGrid");
+const searchLoading = document.getElementById("searchLoading");
+
+// Enter để search
+imageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        searchImages();
+    }
+});
+
+async function searchImages() {
+    const keyword = imageInput.value.trim();
+    if (!keyword) return;
+
+    imageGrid.innerHTML = "";
+    searchLoading.style.display = "block";
+
+    try {
+        const response = await fetch(
+            "https://caiman-warm-swan.ngrok-free.app/api/v1/crawl/images",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "ngrok-skip-browser-warning": "true"
+                },
+                body: JSON.stringify({
+                    query: keyword,
+                    num_results: 12
+                })
+            }
+        );
+
+        const data = await response.json();
+        searchLoading.style.display = "none";
+
+        if (!data.success) {
+            imageGrid.innerHTML = `<p style="color:red;">${data.message}</p>`;
+            return;
+        }
+
+        if (!data.images || data.images.length === 0) {
+            imageGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;">Không tìm thấy ảnh</p>`;
+            return;
+        }
+
+        data.images.forEach(img => {
+            const imgWrap = document.createElement("div");
+            imgWrap.style.cursor = "pointer";
+
+            const imgEl = document.createElement("img");
+            imgEl.src = img.image_url;
+            imgEl.style.width = "100%";
+            imgEl.style.borderRadius = "8px";
+            imgEl.style.objectFit = "cover";
+
+            // click để chèn vào editor
+            imgEl.onclick = () => insertImageToEditor(img.image_url);
+
+            imgWrap.appendChild(imgEl);
+            imageGrid.appendChild(imgWrap);
+        });
+
+    } catch (err) {
+        searchLoading.style.display = "none";
+        imageGrid.innerHTML = `<p style="color:red;">Lỗi gọi API</p>`;
+        console.error(err);
+    }
+}
+
+function insertImageToEditor(url) {
+    const editor = document.querySelector(".content-editor");
+    if (!editor) return;
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.style.maxWidth = "100%";
+    img.style.display = "block";
+    img.style.margin = "12px 0";
+
+    editor.appendChild(img);
+}
+
 
 

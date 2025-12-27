@@ -13,10 +13,14 @@
             <h1 class="page-title">Cấu hình bài viết</h1>
         </div>
         <div class="header-right">
+            <button onclick="ContentGeneration()" class="btn-primary-ai" style="padding: 10px 20px; background: #4F46E5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-right: 15px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-magic"></i> Viết bài AI
+            </button>
             <span class="step-indicator">Bước 3/3</span>
         </div>
     </div>
 
+    <meta name="description" content="" />
     <div class="tip-bar">
         <span class="tip-icon"><img src="./images/icon-meo.png" alt=""></span>
         <span class="tip-text"><b>Mẹo:</b> Từ khóa chính càng cụ thể, AI sẽ tạo nội dung càng phù hợp với mục tiêu SEO của bạn.</span>
@@ -25,7 +29,7 @@
     <div class="editor-container">
         <!-- Cột trái: Editor -->
         <div class="editor-main">
-            <div class="short-description-section">
+            <div class="articleTitle">
                 <textarea id="articleTitle" class="article-title-input" placeholder="Tiêu đề bài viết..."></textarea>
             </div>
 
@@ -34,15 +38,69 @@
                 <div class="toolbar-group">
                     <button class="tool-btn"><i class="fas fa-undo"></i></button>
                     <button class="tool-btn"><i class="fas fa-redo"></i></button>
-                    <button class="tool-btn"><i class="fas fa-font"></i></button>
                 </div>
 
                 <div class="toolbar-separator"></div>
+
                 <div class="toolbar-group">
-                    <button class="tool-btn"><i class="fas fa-bold"></i></button>
-                    <button class="tool-btn"><i class="fas fa-italic"></i></button>
-                    <button class="tool-btn"><i class="fas fa-link"></i></button>
-                    <button class="tool-btn"><i class="far fa-image"></i></button>
+                    <select class="font-family-select">
+                        <option value="Arial">Arial</option>
+                        <option value="Inter">Inter</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Montserrat">Montserrat</option>
+                    </select>
+
+                    <select class="font-size-select">
+                        <option value="1">8</option>
+                        <option value="2">10</option>
+                        <option value="3">12</option>
+                        <option value="4">14</option>
+                        <option value="5">18</option>
+                        <option value="6">24</option>
+                        <option value="7">36</option>
+                    </select>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" data-command="bold" title="In đậm"><i class="fas fa-bold"></i></button>
+                    <button class="tool-btn" data-command="italic" title="In nghiêng"><i class="fas fa-italic"></i></button>
+                    <button class="tool-btn" data-command="underline" title="Gạch chân"><i class="fas fa-underline"></i></button>
+                    <button class="tool-btn" data-command="strikeThrough" title="Gạch ngang"><i class="fas fa-strikethrough"></i></button>
+
+                    <!-- <div class="color-picker-wrapper">
+                        <button class="tool-btn color-btn" title="Màu chữ">
+                            <i class="fas fa-font"></i>
+                            <div class="color-indicator" style="background-color: #000000;"></div>
+                        </button>
+                        <input type="color" class="color-input" id="textColorPicker" value="#000000">
+                    </div> -->
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" data-command="justifyLeft" title="Căn trái"><i class="fas fa-align-left"></i></button>
+                    <button class="tool-btn" data-command="justifyCenter" title="Căn giữa"><i class="fas fa-align-center"></i></button>
+                    <button class="tool-btn" data-command="justifyRight" title="Căn phải"><i class="fas fa-align-right"></i></button>
+                    <button class="tool-btn" data-command="justifyFull" title="Căn đều"><i class="fas fa-align-justify"></i></button>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" data-command="insertOrderedList" title="Danh sách số"><i class="fas fa-list-ol"></i></button>
+                    <button class="tool-btn" data-command="insertUnorderedList" title="Danh sách gạch đầu dòng"><i class="fas fa-list-ul"></i></button>
+                    <button class="tool-btn" data-command="indent" title="Thụt lề phải"><i class="fas fa-indent"></i></button>
+                    <button class="tool-btn" data-command="outdent" title="Thụt lề trái"><i class="fas fa-outdent"></i></button>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" data-command="createLink" title="Chèn liên kết"><i class="fas fa-link"></i></button>
+                    <button class="tool-btn" id="insertImageBtn" title="Chèn ảnh"><i class="far fa-image"></i></button>
                 </div>
             </div>
 
@@ -68,9 +126,8 @@
         <div class="editor-sidebar">
             <div class="sidebar-tabs">
                 <button class="tab-btn active" data-tab="media"><img src="./images/icon-media.png" alt="" style="width: 14px; height: 14px;">Media</button>
-                <button class="tab-btn" data-tab="smart-edit"><img src="./images/icon-sua-tt.png" alt="" style="width: 14px; height: 14px;"> Smart Edit</button>
+                <button class="tab-btn" data-tab="smart-edit"><img src="./images/icon-sua-tt.png" alt="" style="width: 14px; height: 14px;">Sữa thông minh</button>
             </div>
-
             <div id="smart-edit-tab" class="tab-content active">
                 <div class="ai-chat-area">
                     <div class="ai-message">
@@ -80,18 +137,26 @@
 
                     <div class="chat-input-wrapper">
                         <input type="text" placeholder="Nhập yêu cầu chỉnh sửa...">
-                        <button class="send-btn"><i class="fas fa-paper-plane"></i></button>
+                        <button class="send-btn"><img src="./images/icon-gui.png" alt=""></button>
                     </div>
                 </div>
             </div>
 
             <div id="media-tab" class="tab-content">
                 <div class="image-search-box" style="margin-bottom: 15px; position: relative;">
-                    <input type="text" id="imageSearchInput" placeholder="Tìm hình theo từ khóa" style="width: 89%; padding: 10px 10px 10px 35px; border: 1px solid #E2E8F0; border-radius: 8px; outline: none;">
-                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #94A3B8;"></i>
+                    <input type="text" id="imageSearchInput" placeholder="Tìm hình theo từ khóa(vd:máy tính ai)" style="width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #E2E8F0; border-radius: 8px; outline: none; font-size: 14px;">
+                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 14px; color: #94A3B8;"></i>
                 </div>
+
+                <div id="searchLoading" style="text-align:center; padding:30px; display:none;">
+                    <i class="fas fa-spinner fa-spin fa-2x" style="color:#4F46E5;"></i>
+                    <p style="margin-top:10px; color:#666;">Đang tìm kiếm ảnh đẹp từ Pexels...</p>
+                </div>
+
                 <div class="image-grid" id="imageGrid">
-                    <!-- Images will be here -->
+                    <p style="grid-column: 1 / -1; text-align:center; color:#9CA3AF; padding:40px;">
+                        Nhập từ khóa và nhấn Enter để tìm hàng triệu ảnh miễn phí chất lượng cao!
+                    </p>
                 </div>
             </div>
 
@@ -113,9 +178,38 @@
                 <div class="accordion-content"></div>
             </div>
         </div>
-    </div>
-</div>
-<script src="./js/viet-bai-seo.js"></script>
-</body>
 
-</html>
+        <!-- Small Floating Trigger for Selection -->
+        <div id="ai-floating-trigger" class="ai-floating-trigger" style="display: none;">
+            <src width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
+                <path d="M12 12L2.7 16.5" />
+                <path d="M12 12l8.5 4.5" />
+                <path d="M12 12V21" />
+            </src>
+        </div>
+
+        <!-- Floating AI Chat Popup for Selection -->
+        <div id="ai-selection-popup" class="ai-selection-popup" style="display: none;">
+            <div class="popup-header">
+                <span class="popup-title"><img src="./images/logo_chat.png" alt=""></span>
+            </div>
+            <div class="popup-body">
+                <div id="popup-content-preview" class="popup-content-preview"></div>
+                <div class="popup-actions-links">
+                    <span class="popup-link" id="popup-copy-btn">Sao chép</span>
+                    <span class="popup-link" id="popup-replace-btn">Thay vào bài viết</span>
+                </div>
+            </div>
+            <div class="popup-footer">
+                <div class="popup-input-wrapper">
+                    <input type="text" id="popup-chat-input" placeholder="Viết lại đoạn này theo phong cách chuyên nghiệp, chuẩn SEO...">
+                    <button id="popup-send-btn" class="popup-send-btn"><img src="./images/icon-gui.png" alt=""></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="./js/viet-bai-seo.js"></script>
+    </body>
+
+    </html>

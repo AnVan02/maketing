@@ -672,7 +672,11 @@ body {
 }
 
 .ai-floating-trigger::after {
+<<<<<<< HEAD
     content: url("../images/icon-sua-tt.png");
+=======
+    content: url("../images/icon-chat.png");
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     position: absolute;
     top: 2px;
     font-size: 20px;
@@ -689,7 +693,11 @@ body {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     width: 686px;
     padding: 0;
+<<<<<<< HEAD
     font-family: 'Montserrat';
+=======
+    font-family: 'Inter', sans-serif;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     animation: popupSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     border-top: 3px solid #3b82f6;
 }

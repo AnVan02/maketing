@@ -401,15 +401,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                         "2. Với mỗi tiêu đề <h3>, bạn PHẢI viết ít nhất 2-3 đoạn văn chi tiết, sử dụng tối đa dữ liệu từ trang web tham khảo (top_news).\n" +
                         "3. TUYỆT ĐỐI KHÔNG được gộp các mục H3 lại với nhau hoặc bỏ qua bất kỳ mục nào.\n" +
                         "4. KHÔNG ĐƯỢC để bất kỳ mục tiêu đề nào trống không có nội dung.\n" +
+<<<<<<< HEAD
                         "5. Sử dụng dữ liệu THẬT từ top_news để làm dẫn chứng chi tiết cho từng phần.\n" +
                         "6. Sử dụng CHÍNH XÁC tên các tiêu đề (titles) được cung cấp trong Outline, không được tự ý thay đổi tên hoặc thêm số thứ tự vào tiêu đề."
+=======
+                        "5. Sử dụng dữ liệu THẬT từ top_news để làm dẫn chứng chi tiết cho từng phần."
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                 },
                 outline: outlineForApi
             };
 
+<<<<<<< HEAD
             // Avoid logging huge payloads (can block the UI); log size only and reuse the serialized payload
             const payloadStr = JSON.stringify(payload);
             console.log("📤 PAYLOAD size (bytes):", payloadStr.length);
+=======
+            console.log("📤 PAYLOAD (Full):", JSON.stringify(payload, null, 2));
+
+            console.log("📤 Payload gửi đi (Truncated):", JSON.stringify(payload).length, "bytes");
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
 
             const data = await apiRequest('ai/contents', {
                 method: "POST",
@@ -423,6 +433,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const h3Count = (data.article.html_content.match(/<h3/g) || []).length;
                 console.log(`📊 AI HTML check: Found ${h3Count} <h3> tags.`);
             }
+<<<<<<< HEAD
+=======
+            const data = await res.json();
+            console.log("✅ RAW AI RESPONSE:", data);
+
+            if (data.article && data.article.html_content) {
+                const h3Count = (data.article.html_content.match(/<h3/g) || []).length;
+                console.log(`📊 AI HTML check: Found ${h3Count} <h3> tags.`);
+            }
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
 
             // Kiểm tra cấu trúc response
             if (data.success) {

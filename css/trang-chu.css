@@ -148,8 +148,13 @@ body {
 }
 
 .hero h1 {
+<<<<<<< HEAD
     font-size: 60px;
     font-weight: 600;
+=======
+    font-size: 64px;
+    font-weight: 900;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     line-height: 1.05;
     margin-bottom: 24px;
     letter-spacing: -2px;
@@ -620,17 +625,24 @@ body {
 }
 
 .nav-arrow {
+<<<<<<< HEAD
     color: var(--white);
+=======
+    width: 42px;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     height: 42px;
     background: #f8fafc;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+<<<<<<< HEAD
 /* make header logo visible on dark hero */
 .main-header .logo img {
     filter: brightness(0) invert(1);
 }
+=======
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     font-size: 14px;
     color: #0ea5e9;
     cursor: pointer;
@@ -675,18 +687,31 @@ body {
 }
 
 .faq-item {
+<<<<<<< HEAD
     background: linear-gradient(180deg, #F8FCFF 0%, #FFFFFF 100%);
     border-radius: 18px;
     padding: 22px 36px;
+=======
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 24px 40px;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
     transition: all 0.3s ease;
+<<<<<<< HEAD
     box-shadow: 0 12px 40px rgba(14, 165, 233, 0.06);
     position: relative;
     overflow: visible;
     border: 1px solid rgba(14,165,233,0.06);
+=======
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
 }
 
 .faq-item:hover {
@@ -696,24 +721,41 @@ body {
 }
 
 .faq-item span {
+<<<<<<< HEAD
     font-weight: 700;
     font-size: 17px;
     color: #0f172a;
+=======
+    font-weight: 600;
+    font-size: 18px;
+    color: #4b5563;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     z-index: 2;
 }
 
 .faq-arrow {
     width: 44px;
     height: 44px;
+<<<<<<< HEAD
     background: linear-gradient(180deg,#ffffff,#F0FBFF);
+=======
+    background: #FFFFFF;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 16px;
+<<<<<<< HEAD
     color: #06b6d4;
     box-shadow: 0 8px 24px rgba(3, 105, 161, 0.08);
     transition: all 0.28s ease;
+=======
+    color: #22d3ee;
+    /* Light cyan color */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
     z-index: 2;
 }
 
@@ -721,6 +763,7 @@ body {
 .faq-item::after {
     content: '';
     position: absolute;
+<<<<<<< HEAD
     right: 24px;
     top: 50%;
     transform: translateY(-50%);
@@ -731,6 +774,18 @@ body {
     transition: opacity 0.28s ease;
     pointer-events: none;
     z-index: 0;
+=======
+    right: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
 }
 
 .faq-item:hover::after {

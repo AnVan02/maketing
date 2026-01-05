@@ -57,7 +57,11 @@
 
                 <!-- CTA Actions -->
                 <div class="hero-actions">
+<<<<<<< HEAD
                     <a href="dang-nhap.php" class="btn-pill btn-blue">Dung thử miễn phí</a>
+=======
+                    <a href="#" class="btn-pill btn-blue">Dung thử miễn phí</a>
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                     <a href="" class="btn-pill btn-outline">Bảng giá</a>
                 </div>
 
@@ -185,10 +189,17 @@
                         </div>
                     </div>
                     <div class="sub-feature-item img-item">
+<<<<<<< HEAD
                         <img src="images/banner-face.png" alt="Google Mockup">
                     </div>
                     <div class="sub-feature-item img-item">
                         <img src="images/banner-face1.png" alt="Facebook Mockup">
+=======
+                        <img src="images/mobile_seo_app_mockup_1766599275284.png" alt="Google Mockup">
+                    </div>
+                    <div class="sub-feature-item img-item">
+                        <img src="images/fb_mobile_mockup_1766599561991.png" alt="Facebook Mockup">
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                     </div>
                 </div>
             </div>

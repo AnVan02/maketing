@@ -717,19 +717,42 @@ async function fetchTitleSuggestions(query, titleInputId, containerId) {
             language: language
         };
 
+<<<<<<< HEAD
         console.log("📤 [API Request] ai/titles");
         console.log("   Payload:", payload);
 
         const data = await apiRequest('ai/titles', {
             method: "POST",
+=======
+        console.log("📤 [API Request]");
+        console.log("   URL:", `${API_BASE_URL}/ai/titles`);
+        console.log("   Payload:", payload);
+
+        const res = await fetch(`${API_BASE_URL}/ai/titles`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true",
+            },
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
             body: JSON.stringify(payload)
         });
 
         console.log("📥 [API Response]");
+<<<<<<< HEAD
         container.innerHTML = '';
 
         if (data) {
 
+=======
+        console.log("   Status:", res.status);
+        console.log("   OK:", res.ok);
+
+        container.innerHTML = '';
+
+        if (res.ok) {
+            const data = await res.json();
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
             console.log("✅ Response Data:", data);
 
             // Kiểm tra cấu trúc response
@@ -775,13 +798,28 @@ async function fetchTitleSuggestions(query, titleInputId, containerId) {
                     });
                     return;
                 }
+<<<<<<< HEAD
+=======
+            }
+        } else {
+            const errorText = await res.text();
+            console.error("❌ API Error Response:", errorText);
+            try {
+                const errorData = JSON.parse(errorText);
+                showNotification(`Lỗi API: ${errorData.message || errorData.detail}`, 'error');
+            } catch {
+                showNotification(`Lỗi API: ${res.status} ${res.statusText}`, 'error');
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
             }
         } else {
             console.error("❌ API Error: No data received");
             showNotification("Lỗi API: Không nhận được dữ liệu", 'error');
         }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
         // Fallback/Mock nếu API fails
         console.log("ℹ️ Using mock titles as fallback");
         const mockTitles = [

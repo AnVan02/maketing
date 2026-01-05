@@ -81,7 +81,11 @@ body {
 /* --- GRID LAYOUT --- */
 .grid-layout {
      display: grid;
+<<<<<<< HEAD
      grid-template-columns: 670px 1fr;
+=======
+     grid-template-columns: 620px 1fr;
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
      gap: 30px;
      align-items: start;
 }
@@ -353,6 +357,7 @@ select {
 }
 
 /* Phần video  */
+<<<<<<< HEAD
 .video-wrapper iframe {
      position: absolute;
      top: 0;
@@ -377,3 +382,29 @@ select {
           border-radius: 12px;
      }
 }
+=======
+ .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 20px;
+ }
+
+ @media (max-width: 768px) {
+      .video-container {
+           padding: 20px 10px;
+      }
+
+      .video-wrapper {
+           max-width: 100%;
+           border-radius: 12px;
+      }
+
+      .video-wrapper iframe {
+           border-radius: 12px;
+      }
+ }
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6

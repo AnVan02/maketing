@@ -13,9 +13,15 @@
             <h1 class="page-title">Cấu hình bài viết</h1>
         </div>
         <div class="header-right">
+<<<<<<< HEAD
             <!-- <button onclick="ContentGeneration()" class="btn-primary-ai" style="padding: 10px 20px; background: #4F46E5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-right: 15px; display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-magic"></i>Viết bài AI
             </button> -->
+=======
+            <button onclick="ContentGeneration()" class="btn-primary-ai" style="padding: 10px 20px; background: #4F46E5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-right: 15px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-magic"></i> Viết bài AI
+            </button>
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
             <span class="step-indicator">Bước 3/3</span>
         </div>
     </div>
@@ -38,6 +44,7 @@
                 <div class="toolbar-group">
                     <button class="tool-btn"><i class="fas fa-undo"></i></button>
                     <button class="tool-btn"><i class="fas fa-redo"></i></button>
+<<<<<<< HEAD
                 </div>
 
                 <div class="toolbar-separator"></div>
@@ -77,10 +84,63 @@
                     <button class="tool-btn" data-command="justifyCenter" title="Căn giữa"><i class="fas fa-align-center"></i></button>
                     <button class="tool-btn" data-command="justifyRight" title="Căn phải"><i class="fas fa-align-right"></i></button>
                     <button class="tool-btn" data-command="justifyFull" title="Căn đều"><i class="fas fa-align-justify"></i></button>
+=======
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                 </div>
 
                 <div class="toolbar-separator"></div>
+
                 <div class="toolbar-group">
+<<<<<<< HEAD
+=======
+                    <select class="font-family-select">
+                        <option value="Arial">Arial</option>
+                        <option value="Inter">Inter</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Montserrat">Montserrat</option>
+                    </select>
+
+                    <select class="font-size-select">
+                        <option value="1">8</option>
+                        <option value="2">10</option>
+                        <option value="3">12</option>
+                        <option value="4">14</option>
+                        <option value="5">18</option>
+                        <option value="6">24</option>
+                        <option value="7">36</option>
+                    </select>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" data-command="bold" title="In đậm"><i class="fas fa-bold"></i></button>
+                    <button class="tool-btn" data-command="italic" title="In nghiêng"><i class="fas fa-italic"></i></button>
+                    <button class="tool-btn" data-command="underline" title="Gạch chân"><i class="fas fa-underline"></i></button>
+                    <button class="tool-btn" data-command="strikeThrough" title="Gạch ngang"><i class="fas fa-strikethrough"></i></button>
+
+                    <!-- <div class="color-picker-wrapper">
+                        <button class="tool-btn color-btn" title="Màu chữ">
+                            <i class="fas fa-font"></i>
+                            <div class="color-indicator" style="background-color: #000000;"></div>
+                        </button>
+                        <input type="color" class="color-input" id="textColorPicker" value="#000000">
+                    </div> -->
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" data-command="justifyLeft" title="Căn trái"><i class="fas fa-align-left"></i></button>
+                    <button class="tool-btn" data-command="justifyCenter" title="Căn giữa"><i class="fas fa-align-center"></i></button>
+                    <button class="tool-btn" data-command="justifyRight" title="Căn phải"><i class="fas fa-align-right"></i></button>
+                    <button class="tool-btn" data-command="justifyFull" title="Căn đều"><i class="fas fa-align-justify"></i></button>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                     <button class="tool-btn" data-command="insertOrderedList" title="Danh sách số"><i class="fas fa-list-ol"></i></button>
                     <button class="tool-btn" data-command="insertUnorderedList" title="Danh sách gạch đầu dòng"><i class="fas fa-list-ul"></i></button>
                     <button class="tool-btn" data-command="indent" title="Thụt lề phải"><i class="fas fa-indent"></i></button>
@@ -88,6 +148,7 @@
                 </div>
 
                 <div class="toolbar-separator"></div>
+<<<<<<< HEAD
                 <div class="toolbar-group">
                     <button class="tool-btn" data-command="createLink" title="Chèn liên kết"><i class="fas fa-link"></i></button>
                     <button class="tool-btn" id="insertImageBtn" title="Chèn ảnh"><i class="far fa-image"></i></button>
@@ -95,6 +156,12 @@
 
                 <div class="toolbar-color">
                     <input type="color" id="fontColorPicker" title="Màu chữ">
+=======
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" data-command="createLink" title="Chèn liên kết"><i class="fas fa-link"></i></button>
+                    <button class="tool-btn" id="insertImageBtn" title="Chèn ảnh"><i class="far fa-image"></i></button>
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                 </div>
             </div>
             <!-- Nơi hiển thị nội dung chi tiết -->
@@ -131,8 +198,13 @@
                     </div>
 
                     <div class="chat-input-wrapper">
+<<<<<<< HEAD
                         <input type="text" id="smart-edit-input" placeholder="Hỏi về bài viết hoặc yêu cầu chỉnh sửa...">
                         <button class="send-btn" id="smart-edit-send-btn"><img src="./images/icon-gui.png" alt=""></button>
+=======
+                        <input type="text" placeholder="Nhập yêu cầu chỉnh sửa...">
+                        <button class="send-btn"><img src="./images/icon-gui.png" alt=""></button>
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                     </div>
                 </div>
             </div>
@@ -189,7 +261,10 @@
             <div class="popup-header">
                 <span class="popup-title"><img src="./images/logo_chat.png" alt=""></span>
             </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
             <div class="popup-body">
                 <div id="popup-content-preview" class="popup-content-preview"></div>
                 <div class="popup-actions-links">
@@ -197,7 +272,10 @@
                     <span class="popup-link" id="popup-replace-btn">Thay vào bài viết</span>
                 </div>
             </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
             <div class="popup-footer">
                 <div class="popup-input-wrapper">
                     <input type="text" id="popup-chat-input" placeholder="Viết lại đoạn này theo phong cách chuyên nghiệp, chuẩn SEO...">

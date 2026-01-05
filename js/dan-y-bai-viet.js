@@ -121,7 +121,11 @@ function createDefaultOutline() {
                     keywords: ["tăng trưởng", "tiết kiệm", "tự động hóa"],
                     internal_link: null
                 },
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> 9611f99083b433c2fc2e7a7eb6a320c06d544dd6
                 subsections: [
                     {
                         id: `h3-demo-2-1`,

@@ -158,7 +158,8 @@
 .nav-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 2px;
+    /* Reduced specific gap */
 }
 
 .nav-label {

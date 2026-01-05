@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Post Composer & Preview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            line-height: 1.34;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        h1 {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #1877f2;
+            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .panel {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dadde1;
+            color: #1c1e21;
+        }
+        
+        /* Cột trái - Soạn bài đăng */
+        .composer {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .composer label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #65676b;
+            font-size: 15px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 1px solid #ccd0d5;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: vertical;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+        }
+        
+        .image-upload {
+            margin-top: 15px;
+            border-top: 1px solid #dadde1;
+            padding-top: 20px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccd0d5;
+            border-radius: 6px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            margin-bottom: 15px;
+        }
+        
+        .upload-area:hover {
+            border-color: #1877f2;
+        }
+        
+        .upload-icon {
+            font-size: 40px;
+            color: #1877f2;
+            margin-bottom: 10px;
+        }
+        
+        .upload-text {
+            color: #65676b;
+            font-size: 15px;
+        }
+        
+        .upload-btn {
+            background-color: #e7f3ff;
+            color: #1877f2;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background-color: #d8e9ff;
+        }
+        
+        .image-preview {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .remove-image {
+            background-color: #f0f2f5;
+            color: #65676b;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Cột phải - Xem trước */
+        .preview {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .facebook-post {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .post-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #1877f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 10px;
+            background-image: linear-gradient(135deg, #1877f2, #42b72a);
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #050505;
+            font-size: 15px;
+        }
+        
+        .post-time {
+            color: #65676b;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .post-time i {
+            font-size: 12px;
+        }
+        
+        .post-content {
+            padding: 0 16px 12px;
+            font-size: 15px;
+            line-height: 1.38;
+            color: #050505;
+        }
+        
+        .post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-top: 1px solid #dadde1;
+            border-bottom: 1px solid #dadde1;
+            display: none;
+        }
+        
+        .post-stats {
+            padding: 10px 16px;
+            border-bottom: 1px solid #dadde1;
+            color: #65676b;
+            font-size: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .post-actions {
+            display: flex;
+            padding: 4px 8px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-radius: 4px;
+            color: #65676b;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .action-btn:hover {
+            background-color: #f0f2f5;
+        }
+        
+        .action-btn i {
+            font-size: 18px;
+        }
+        
+        .like-btn i {
+            color: #65676b;
+        }
+        
+        .comment-btn i {
+            color: #65676b;
+        }
+        
+        .share-btn i {
+            color: #65676b;
+        }
+        
+        .empty-preview {
+            text-align: center;
+            padding: 30px;
+            color: #65676b;
+            font-style: italic;
+        }
+        
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            h1 {
+                font-size: 26px;
+            }
+        }
+        
+        .instructions {
+            grid-column: 1 / -1;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            padding: 15px 20px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #65676b;
+            line-height: 1.5;
+        }
+        
+        .instructions strong {
+            color: #1877f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fab fa-facebook" style="margin-right: 10px;"></i> Facebook Post Composer & Preview</h1>
+        
+        <div class="panel composer">
+            <h2 class="panel-title">Soạn bài đăng</h2>
+            
+            <label for="post-content">Nội dung bài viết:</label>
+            <textarea id="post-content" placeholder="Bạn đang nghĩ gì?">Chào mọi người! Hôm nay là một ngày thật tuyệt vời. Tôi vừa hoàn thành một dự án thú vị về mô phỏng giao diện Facebook. Các bạn thấy sao?</textarea>
+            
+            <div class="image-upload">
+                <label>Thêm ảnh vào bài viết (tùy chọn):</label>
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">Kéo thả ảnh vào đây hoặc click để chọn</div>
+                </div>
+                
+                <input type="file" id="image-input" accept="image/*" style="display: none;">
+                <button class="upload-btn" id="upload-btn">
+                    <i class="fas fa-images"></i> Chọn ảnh từ máy tính
+                </button>
+                
+                <div class="image-preview" id="image-preview">
+                    <div>Ảnh đã chọn:</div>
+                    <img id="preview-image" class="preview-image" src="" alt="Preview">
+                    <button class="remove-image" id="remove-image">
+                        <i class="fas fa-times"></i> Xóa ảnh
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel preview">
+            <h2 class="panel-title">Xem trước bài đăng</h2>
+            
+            <div class="facebook-post">
+                <div class="post-header">
+                    <div class="avatar">FB</div>
+                    <div class="user-info">
+                        <div class="user-name">Người dùng Facebook</div>
+                        <div class="post-time">
+                            <i class="fas fa-globe-asia"></i> Vừa xong • <i class="fas fa-user-friends"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="post-content" id="preview-content">
+                    Chào mọi người! Hôm nay là một ngày thật tuyệt vời. Tôi vừa hoàn thành một dự án thú vị về mô phỏng giao diện Facebook. Các bạn thấy sao?
+                </div>
+                
+                <img id="post-image-preview" class="post-image" src="" alt="Post image">
+                
+                <div class="post-stats">
+                    <span>100 lượt thích</span>
+                    <span>10 bình luận • 2 lượt chia sẻ</span>
+                </div>
+                
+                <div class="post-actions">
+                    <div class="action-btn like-btn">
+                        <i class="fas fa-thumbs-up"></i> Thích
+                    </div>
+                    <div class="action-btn comment-btn">
+                        <i class="fas fa-comment"></i> Bình luận
+                    </div>
+                    <div class="action-btn share-btn">
+                        <i class="fas fa-share"></i> Chia sẻ
+                    </div>
+                </div>
+            </div>
+            
+            <div class="empty-preview" id="empty-preview" style="display: none;">
+                Nhập nội dung vào ô bên trái để xem trước bài đăng ở đây...
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <p><strong>Hướng dẫn sử dụng:</strong> Nhập nội dung vào ô soạn thảo bên trái để xem trước bài đăng Facebook ngay lập tức. Bạn cũng có thể tải lên một hình ảnh để xem trước bài đăng có ảnh.</p>
+        </div>
+    </div>
+
+    <script>
+        // Lấy các phần tử DOM
+        const postContent = document.getElementById('post-content');
+        const previewContent = document.getElementById('preview-content');
+        const uploadArea = document.getElementById('upload-area');
+        const imageInput = document.getElementById('image-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImage = document.getElementById('preview-image');
+        const postImagePreview = document.getElementById('post-image-preview');
+        const removeImageBtn = document.getElementById('remove-image');
+        const emptyPreview = document.getElementById('empty-preview');
+        const facebookPost = document.querySelector('.facebook-post');
+        
+        // Cập nhật nội dung xem trước khi người dùng nhập
+        postContent.addEventListener('input', function() {
+            const content = this.value.trim();
+            
+            if (content) {
+                previewContent.textContent = content;
+                emptyPreview.style.display = 'none';
+                facebookPost.style.display = 'block';
+            } else {
+                previewContent.textContent = '';
+                emptyPreview.style.display = 'block';
+                facebookPost.style.display = 'none';
+            }
+        });
+        
+        // Kích hoạt sự kiện input ngay khi tải trang
+        postContent.dispatchEvent(new Event('input'));
+        
+        // Xử lý upload ảnh
+        uploadArea.addEventListener('click', () => imageInput.click());
+        uploadBtn.addEventListener('click', () => imageInput.click());
+        
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    postImagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    postImagePreview.style.display = 'block';
+                };
+                
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        
+        // Xóa ảnh đã chọn
+        removeImageBtn.addEventListener('click', function() {
+            previewImage.src = '';
+            postImagePreview.src = '';
+            imagePreview.style.display = 'none';
+            postImagePreview.style.display = 'none';
+            imageInput.value = '';
+        });
+        
+        // Kéo thả ảnh
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#1877f2';
+            this.style.backgroundColor = '#f0f2f5';
+        });
+        
+        uploadArea.addEventListener('dragleave', function() {
+            this.style.borderColor = '#ccd0d5';
+            this.style.backgroundColor = 'transparent';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ccd0d5';
+            this.style.backgroundColor = 'transparent';
+            
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                const file = e.dataTransfer.files[0];
+                
+                // Kiểm tra xem file có phải là ảnh không
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        postImagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        postImagePreview.style.display = 'block';
+                    };
+                    
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Vui lòng chỉ chọn file ảnh!');
+                }
+            }
+        });
+        
+        // Thêm hiệu ứng cho các nút Like, Comment, Share
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.classList[1]; // like-btn, comment-btn, share-btn
+                
+                // Đổi màu icon và text khi click (chỉ để minh họa)
+                if (action === 'like-btn') {
+                    this.innerHTML = '<i class="fas fa-thumbs-up" style="color: #1877f2;"></i> Đã thích';
+                    this.style.color = '#1877f2';
+                } else if (action === 'comment-btn') {
+                    alert('Chức năng bình luận (chỉ để minh họa)');
+                } else if (action === 'share-btn') {
+                    alert('Chức năng chia sẻ (chỉ để minh họa)');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

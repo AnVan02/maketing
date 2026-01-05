@@ -14,9 +14,6 @@
     <!-- Top Header -->
     <header>
         <div class="header-left">
-            <button class="menu-toggle">
-                <img src="./images/menu.png" alt="Menu">
-            </button>
             <div class="logo">
                 <img src="./images/AIS.png" alt="AIS Logo">
             </div>
@@ -48,7 +45,7 @@
         <div class="login-container">
             <h2>ĐĂNG NHẬP</h2>
 
-            <form action="process-login.php" method="POST">
+            <form action="tong-hop.php" method="POST">
                 <div class="form-group">
                     <input type="text" name="username" placeholder="Tên đăng nhập:" required>
                 </div>

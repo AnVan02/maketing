@@ -1,0 +1,52 @@
+Quy trình hoạt động (workflow) của Content Rewrite API được thiết kế để tối ưu hóa việc chỉnh sửa nội dung bằng AI thông
+qua các bước cụ thể từ yêu cầu của người dùng đến phản hồi của hệ thống:
+1. Gửi yêu cầu từ Frontend: Quy trình bắt đầu khi Frontend gửi một yêu cầu POST đến endpoint /api/v1/contents/rewrite.
+Request body (thân yêu cầu) phải bao gồm đầy đủ ba thành phần:
+◦ blocks: Danh sách toàn bộ các khối nội dung của bài viết để cung cấp ngữ cảnh.
+◦ selected_block_id: ID của khối cụ thể mà người dùng muốn viết lại.
+◦ instruction: Các chỉ dẫn chi tiết về phong cách, mục tiêu SEO hoặc độ dài mong muốn.
+2. Xử lý tại Backend:
+◦ Tiếp nhận và xác định: Backend nhận danh sách các block và sử dụng selected_block_id để xác định chính xác vị trí cần
+chỉnh sửa.
+◦ Xây dựng ngữ cảnh: Hệ thống tiến hành ghép ngữ cảnh bài viết từ các block xung quanh block được chọn. Mặc dù API chỉ
+xử lý một block tại một thời điểm, việc có đầy đủ context là bắt buộc để AI hiểu được nội dung tổng thể.
+◦ Tương tác với AI: Backend áp dụng các chỉ dẫn (instruction) từ người dùng để gọi AI xử lý việc viết lại nội dung.
+3. Trả về kết quả:
+◦ API trả về một phản hồi bao gồm trạng thái thành công (success) và nội dung mới đã được viết lại (rewriting_content)
+dành riêng cho block đã chọn.
+◦ Hệ thống đảm bảo không thay đổi dữ liệu gốc trong suốt quá trình này.
+
+Ví dụ minh họa: Quy trình này giống như việc bạn nhờ một biên tập viên chỉnh sửa một đoạn văn trong một bài báo. Thay vì
+chỉ đưa đúng đoạn văn đó, bạn đưa cho họ toàn bộ tờ báo (danh sách blocks) và chỉ rõ đoạn cần sửa (selected_block_id)
+kèm theo yêu cầu cụ thể như "hãy viết lại đoạn này cho chuyên nghiệp hơn" (instruction). Biên tập viên sẽ đọc các đoạn
+xung quanh để hiểu ý nghĩa bài viết, sau đó đưa cho bạn một mẩu giấy ghi nội dung mới đã sửa mà không làm hỏng bản gốc
+của bạn.
+
+
+1. Endpoint và Phương thức
+• Endpoint: /api/v1/contents/rewrite.
+• Method: POST.
+2. Các trường dữ liệu (Fields) bạn cần gửi
+Trong yêu cầu gửi đi (Request Body), bạn phải đảm bảo có đủ 3 trường sau:
+• blocks (List): Đây là danh sách tất cả các khối nội dung hiện có của bài viết,. Việc gửi toàn bộ danh sách là bắt buộc
+để cung cấp ngữ cảnh cho AI,.
+• selected_block_id (string): Đây chính là "id" của block cụ thể mà người dùng đang chọn để sửa,. Backend sẽ dựa vào ID
+này để tìm đúng vị trí cần xử lý trong danh sách blocks.
+• instruction (string): Câu lệnh hoặc hướng dẫn của người dùng về việc muốn sửa đoạn văn đó như thế nào (ví dụ: "viết
+lại chuyên nghiệp hơn", "tối ưu SEO").
+3. Cấu trúc chi tiết của mỗi Block trong danh sách blocks
+Mỗi đối tượng (BlockItem) trong mảng blocks bạn gửi lên cần có các "fid" (trường) sau:
+• id (string): ID duy nhất của block đó.
+• tag (string): Loại thẻ HTML (ví dụ: p, h2, h3...).
+• text (string): Nội dung văn bản gốc của block đó.
+4. Kết quả nhận về (Response)
+Sau khi gửi yêu cầu, API sẽ trả về cho bạn:
+• success: Trạng thái xử lý (true/false).
+• rewriting_content: Đây là nội dung mới đã được AI viết lại. Bạn sẽ dùng nội dung này để cập nhật vào block có id tương
+ứng trên giao diện mà không làm thay đổi các block khác.
+Tóm lại: "Fid" quan trọng nhất bạn cần quản lý là selected_block_id để định danh đúng đoạn văn cần sửa và mảng blocks
+chứa thông tin chi tiết của toàn bộ bài viết,.
+
+Bạn có thể hình dung quy trình này giống như việc bạn đưa cho hệ thống một danh sách các mảnh ghép (blocks), sau đó bạn
+đưa ra một số thứ tự mảnh ghép cụ thể (selected_block_id) và nói: "Hãy sơn lại mảnh này theo màu xanh" (instruction). Hệ
+thống sẽ nhìn tổng thể các mảnh xung quanh để sơn lại đúng mảnh bạn yêu cầu và đưa lại cho bạn mảnh đã sơn xong.

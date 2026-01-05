@@ -1,4 +1,5 @@
-const API_BASE_URL = window.API_BASE_URL || 'https://caiman-warm-swan.ngrok-free.app/api/v1';
+// API_BASE_URL is now managed by bao-mat.js proxy
+
 
 // 2. HÀM HIỆU ỨNG LOADING (UI)
 function transitionToLoadingState() {
@@ -58,15 +59,11 @@ async function searchNews(query, maxResults = 10) {
     console.log(`🔍 Đang tìm kiếm: ${query}`);
 
     try {
-        const res = await fetch(`${API_BASE_URL}/crawl/news`, {
+        const data = await apiRequest('crawl/news', {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ query: query, max_results: maxResults })
         });
 
-        if (!res.ok) throw new Error(`Lỗi tìm tin tức (${res.status})`);
-
-        const data = await res.json();
 
         if (data.success && data.results?.length > 0) {
             console.log(`✅ Tìm thấy ${data.results.length} bài viết.`);
@@ -85,9 +82,8 @@ async function crawlArticleDetails(articles) {
     console.log("📥 Đang crawl chi tiết bài viết...");
 
     try {
-        const res = await fetch(`${API_BASE_URL}/crawl/crawl`, {
+        const data = await apiRequest('crawl/crawl', {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 articles: articles.map(a => ({
                     url: a.url,
@@ -97,9 +93,6 @@ async function crawlArticleDetails(articles) {
             })
         });
 
-        if (!res.ok) throw new Error(`Lỗi crawl chi tiết (${res.status})`);
-
-        const data = await res.json();
 
         if (data.success && Array.isArray(data.articles)) {
             console.log(`✅ Đã crawl ${data.processed_count} bài viết`);
@@ -144,18 +137,11 @@ async function callGenerateOutlineApi(crawledArticles, mainKeyword, articleTitle
     };
 
     try {
-        const res = await fetch(`${API_BASE_URL}/ai/news-filterings`, {
+        const data = await apiRequest('ai/news-filterings', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"
-            },
             body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error(`Lỗi sinh dàn ý (${res.status})`);
-
-        const data = await res.json();
 
         if (data.success) {
             return {

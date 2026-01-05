@@ -1,4 +1,6 @@
-const API_BASE_URL = 'https://caiman-warm-swan.ngrok-free.app/api/v1';
+// API_BASE_URL is now managed by bao-mat.js proxy
+
+// ----------------------------------------
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Selectors
@@ -6,7 +8,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const stepLines = document.querySelectorAll('.step-line');
     const titleElement = document.querySelector('.thinking-title');
     const timerElement = document.getElementById('countdown-timer');
-
     // Steps Titles
     const titles = [
         'ĐANG NGHIÊN CỨU TỪ KHÓA...',
@@ -25,19 +26,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const pipelineData = JSON.parse(pipelineDataJson);
-    console.log("📦 Dữ liệu xử lý:", pipelineData);
+    // Log minimal info to avoid blocking when pipelineData is large
+    console.log("📦 Dữ liệu xử lý keys:", Object.keys(pipelineData || {}));
+
+    // ============================================================
+    // MAIN PROCESSING LOGIC
+    // ============================================================
+
+
 
     let currentStepIndex = 0;
     updateUI(0);
     startTimer();
 
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
     try {
         // ===================================
-        // BƯỚC 1: NGHIÊN CỨU TỪ KHÓA (Đã có sẵn)
+        // BƯỚC 1: NGHIÊN CỨU TỪ KHÓA
         // ===================================
-        // Giả lập delay một chút cho đẹp
-        await new Promise(r => setTimeout(r, 1500));
-
+        await sleep(1500); // Artificial delay for UX
         currentStepIndex = 1;
         updateUI(1);
 
@@ -46,27 +54,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         // ===================================
         let crawledContent = [];
 
-        // Kiểm tra xem là nguồn Internet hay User Data/Text
+        // Nếu user đã cung cấp dàn ý (outline), ưu tiên dùng dàn ý và BỎ QUA bước crawl
+        if (Array.isArray(pipelineData.article_outline) && pipelineData.article_outline.length > 0) {
+            console.log("ℹ️ Dùng dàn ý từ người dùng, bỏ qua bước crawl và sử dụng outline để tạo bài.");
+            await sleep(1000); // Minimum delay even when skipping
+            // Crawled content sẽ để trống; generateSEOContent sẽ dùng 'outline' để tạo nội dung
 
-        if (pipelineData.pipeline_results && pipelineData.pipeline_results.selected_news && pipelineData.pipeline_results.selected_news.length > 0) {
+        } else if (pipelineData.pipeline_results && pipelineData.pipeline_results.selected_news && pipelineData.pipeline_results.selected_news.length > 0) {
             const firstNews = pipelineData.pipeline_results.selected_news[0];
 
-            // KIỂM TRA: Nếu đã có content rồi thì không crawl lại nữa
             if (firstNews.content && firstNews.content.length > 100) {
                 console.log("✅ Đã có nội dung bài viết, bỏ qua bước crawl lại.");
                 crawledContent = pipelineData.pipeline_results.selected_news;
-                await new Promise(r => setTimeout(r, 1000)); // Delay mô phỏng UI cho mượt
+                await sleep(500);
             } else {
                 console.log("📥 Dữ liệu chưa đủ, thực hiện crawl chi tiết...");
                 crawledContent = await crawlArticles(pipelineData.pipeline_results.selected_news);
                 if (!crawledContent) throw new Error("Không thể thu thập thông tin từ bài viết đã chọn.");
             }
         } else {
-
-            // Nguồn dữ liệu riêng (Files/Text) - Đã có sẵn content text, không cần crawl
-
             console.log("ℹ️ Sử dụng dữ liệu đầu vào trực tiếp (không crawl web).");
-            await new Promise(r => setTimeout(r, 2000)); // Delay mô phỏng
+            await sleep(500);
         }
 
         currentStepIndex = 2;
@@ -74,25 +82,92 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // ===================================
         // BƯỚC 3: PHÁT TRIỂN NỘI DUNG (Generate SEO Content)
+        // - Nếu đã có finalArticle cached hoặc pipelineData.finalArticle -> sử dụng luôn (không gọi API)
+        // - Nếu có outline và config.use_local_render = true -> render tạm local (không tốn token)
+        // - Ngược lại mới gọi API
         // ===================================
-        const finalArticle = await generateSEOContent(
-            crawledContent || [],
-            pipelineData.config,
-            pipelineData.final_title,
-            pipelineData.article_outline,
-            pipelineData.config.main_keyword,
-            pipelineData.config.secondary_keywords
-        );
+        let finalArticle = null;
 
-        if (!finalArticle) throw new Error("AI không thể tạo bài viết.");
+        // 1) Kiểm tra cache trong sessionStorage
+        try {
+            const cached = JSON.parse(sessionStorage.getItem('finalArticleData') || 'null');
+            if (cached && cached.finalArticle && cached.finalArticle.html_content) {
+                finalArticle = cached.finalArticle;
+                console.log("1 Sử dụng finalArticle đã cache, bỏ qua gọi API.");
+            } else if (cached && cached.finalArticleSnippet) {
+                finalArticle = {
+                    title: cached.finalArticleTitle || pipelineData.final_title || pipelineData.config?.main_keyword || 'Bài viết',
+                    html_content: cached.finalArticleSnippet
+                };
+                console.log("ℹ️ Sử dụng finalArticle rút gọn từ cache, bỏ qua gọi API.");
+            }
+        } catch (e) {
+            /* ignore parse errors */
+        }
 
-        // Lưu kết quả cuối cùng
+        // 2) Kiểm tra pipelineData trực tiếp
+        if (!finalArticle && pipelineData.finalArticle && pipelineData.finalArticle.html_content) {
+            finalArticle = pipelineData.finalArticle;
+            console.log("ℹ️ Sử dụng finalArticle có sẵn trong pipelineData, bỏ qua gọi API.");
+        }
+
+        // 3) Nếu có outline và user muốn render local (không tốn token)
+        if (!finalArticle && Array.isArray(pipelineData.article_outline) && pipelineData.article_outline.length > 0 && pipelineData.config?.use_local_render) {
+            finalArticle = generateFromOutline(pipelineData.final_title || pipelineData.config?.main_keyword || 'Bài viết', pipelineData.article_outline);
+            console.log("ℹ️ Tạo bài tạm thời từ outline (không tốn token).");
+        }
+
+        // 4) Nếu vẫn chưa có bài, gọi API
+        if (!finalArticle) {
+            finalArticle = await generateSEOContent(
+                crawledContent || [],
+                pipelineData.config,
+                pipelineData.final_title,
+                pipelineData.article_outline,
+                pipelineData.config.main_keyword,
+                pipelineData.config.secondary_keywords
+            );
+            if (!finalArticle) throw new Error("AI không thể tạo bài viết.");
+        }
+
+        // Lưu kết quả cuối cùng (trimmed để tránh chậm do dữ liệu lớn)
         const finalPayload = {
             ...pipelineData,
-            finalArticle: finalArticle,
-            crawledArticles: crawledContent || []
+            finalArticle: {
+                title: finalArticle.title || '',
+                html_content: finalArticle.html_content || finalArticle.content || '',
+                summary: finalArticle.summary || ''
+            },
+            crawledArticles: (crawledContent || []).map(a => ({
+                title: a.title,
+                url: a.url,
+                snippet: a.content_preview || a.snippet || ''
+            }))
         };
-        sessionStorage.setItem('finalArticleData', JSON.stringify(finalPayload));
+        // Save asynchronously to avoid blocking the UI before navigation.
+        // Use requestIdleCallback when available, otherwise fallback to setTimeout.
+
+        const saveFinalPayload = () => {
+            try {
+                sessionStorage.setItem('finalArticleData', JSON.stringify(finalPayload));
+            } catch (e) {
+                console.warn("⚠️ Không thể lưu full final payload vào sessionStorage (quá lớn), lưu tạm thông tin rút gọn.");
+                const minimalPayload = {
+                    finalArticleTitle: finalArticle.title || '',
+                    finalArticleSnippet: (finalArticle.html_content || '').substring(0, 200)
+                };
+                try {
+                    sessionStorage.setItem('finalArticleData', JSON.stringify(minimalPayload));
+                } catch (e2) {
+                    console.warn("⚠️ Không thể lưu minimalPayload vào sessionStorage.");
+                }
+            }
+        };
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(saveFinalPayload);
+        } else {
+            setTimeout(saveFinalPayload, 0);
+        }
 
         currentStepIndex = 3;
         updateUI(3);
@@ -100,12 +175,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // ===================================
         // BƯỚC 4: KIỂM TRA SƠ BỘ
         // ===================================
-        // Mô phỏng kiểm tra
-        await new Promise(r => setTimeout(r, 2000));
-
+        await sleep(1000); // Artificial delay for checking step
         currentStepIndex = 4;
         updateUI(currentStepIndex);
 
+        await sleep(500);
         finishProcess();
 
     } catch (error) {
@@ -170,14 +244,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function finishProcess() {
         if (titleElement) titleElement.textContent = "QUÁ TRÌNH HOÀN TẤT!";
-
         // Ensure all steps are marked completed
         stepItems.forEach(item => item.classList.add('completed'));
         stepLines.forEach(line => line.classList.add('completed'));
 
-        setTimeout(() => {
-            window.location.href = 'viet-bai-seo.php';
-        }, 1000);
+        window.location.href = 'viet-bai-seo.php';
     }
 
     // ============================================
@@ -197,17 +268,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }))
             };
 
-            const res = await fetch(`${API_BASE_URL}/crawl/crawl`, {
+            const data = await apiRequest('crawl/crawl', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "ngrok-skip-browser-warning": "true"
-                },
                 body: JSON.stringify(payload)
             });
 
-            const data = await res.json();
-            console.log("✅ Crawl response:", data);
+            // Avoid logging huge objects
+            console.log("✅ Crawl response keys:", Object.keys(data || {}), "articles:", (data?.articles?.length) || 0);
 
             if (data.success && data.articles) {
                 return data.articles;
@@ -215,11 +282,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.warn("Crawl returned false success or no articles", data);
                 return null;
             }
-
         } catch (e) {
             console.error("❌ Crawl Articles Error:", e);
             return null;
         }
+    }
+
+    // Khi user muốn tạo bài local (không gọi API), sử dụng helper dưới đây
+    function generateFromOutline(title, rawOutline) {
+        const escapeHtml = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        // Normalize outline into array of sections
+        let sections = [];
+        if (Array.isArray(rawOutline)) sections = rawOutline;
+        else if (rawOutline && Array.isArray(rawOutline.sections)) sections = rawOutline.sections;
+        // Build a simple HTML with headings and short placeholder paragraphs
+        let html = `<h1>${escapeHtml(title || 'Bài viết')}</h1>`;
+        sections.forEach(sec => {
+            const level = parseInt(sec.level || 2);
+            const tag = level === 1 ? 'h1' : (level === 2 ? 'h2' : 'h3');
+            const heading = escapeHtml(sec.title || sec.heading || 'Tiêu đề');
+            html += `<${tag}>${heading}</${tag}>`;
+            // Add 1-2 short paragraphs as placeholder
+            html += `<p>${escapeHtml(sec.config?.summary || 'Nội dung tóm tắt cho phần này.')}</p>`;
+            if (tag === 'h3') html += `<p>${escapeHtml('Chi tiết bổ sung cho phần này.')}</p>`;
+        });
+        return { title: title, html_content: html, summary: 'Bài viết tạm tạo từ outline (không gọi API).' };
     }
 
     async function generateSEOContent(topNews, config, title, outline, mainKeyword, secondaryKeywords) {
@@ -228,10 +315,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Đảm bảo mỗi bài báo trong topNews đều có trường rank trước khi gửi đi
             // TRUNCATE CONTENT để tránh lỗi 413 hoặc Timeout
             const formattedTopNews = (Array.isArray(topNews) ? topNews : []).map((news, index) => ({
-                ...news,
-                content: (news.content || "").substring(0, 3000), // Max 800 chars (Very aggressive truncation)
-                snippet: (news.snippet || "").substring(0, 1000),  // Max 300 chars
-                rank: news.rank || (index + 1)
+                rank: news.rank || (index + 1),
+                title: news.title || "Tin tức liên quan",
+                url: news.url || news.link || "#",
+                images: news.images || [],
+                content_preview: (news.content || news.content_preview || news.summary || "").substring(0, 5000)
             }));
 
             const rawOutline = outline || pipelineData.article_outline || pipelineData.pipeline_results?.article_outline || [];
@@ -242,13 +330,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Helper format item
             const formatItem = (item, idx) => ({
                 id: item.id || `section-${idx + 1}`,
-                level: item.level || 2,
+                level: parseInt(item.level || 2),
                 title: item.title || item.heading || "",
                 order: item.order || (idx + 1),
                 config: {
-                    word_count: parseInt(item.config?.word_count || item.word_count || 300),
+                    word_count: parseInt(item.config?.word_count || item.word_count || 150),
                     keywords: Array.isArray(item.config?.keywords || item.keywords) ? (item.config?.keywords || item.keywords) : [],
-                    tone: config.tone || "Chuyên nghiệp"
+                    tone: item.config?.tone || config.tone || "Chuyên nghiệp",
+                    internal_link: item.config?.internal_link || null
                 }
             });
 
@@ -306,30 +395,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tone: config.tone || config.tone_of_voice || "Chuyên nghiệp",
                     article_length: String(config.article_length || "1500"),
                     article_type: config.article_type || "blog",
-                    custome_instructions: config.custom_instructions || config.custome_instructions || ""
+                    custome_instructions: (config.custom_instructions || config.custome_instructions || "") +
+                        " \n\n# CHỈ THỊ QUAN TRỌNG VỀ CẤU TRÚC BÀI VIẾT:\n" +
+                        "1. Bạn PHẢI sử dụng toàn bộ các tiêu đề H2 và H3 có trong Outline được cung cấp.\n" +
+                        "2. Với mỗi tiêu đề <h3>, bạn PHẢI viết ít nhất 2-3 đoạn văn chi tiết, sử dụng tối đa dữ liệu từ trang web tham khảo (top_news).\n" +
+                        "3. TUYỆT ĐỐI KHÔNG được gộp các mục H3 lại với nhau hoặc bỏ qua bất kỳ mục nào.\n" +
+                        "4. KHÔNG ĐƯỢC để bất kỳ mục tiêu đề nào trống không có nội dung.\n" +
+                        "5. Sử dụng dữ liệu THẬT từ top_news để làm dẫn chứng chi tiết cho từng phần.\n" +
+                        "6. Sử dụng CHÍNH XÁC tên các tiêu đề (titles) được cung cấp trong Outline, không được tự ý thay đổi tên hoặc thêm số thứ tự vào tiêu đề."
                 },
                 outline: outlineForApi
             };
 
-            console.log("📤 Payload gửi đi (Truncated):", JSON.stringify(payload).length, "bytes");
+            // Avoid logging huge payloads (can block the UI); log size only and reuse the serialized payload
+            const payloadStr = JSON.stringify(payload);
+            console.log("📤 PAYLOAD size (bytes):", payloadStr.length);
 
-            const res = await fetch(`${API_BASE_URL}/ai/contents`, {
+            const data = await apiRequest('ai/contents', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "ngrok-skip-browser-warning": "true"
-                },
-                body: JSON.stringify(payload)
+                body: payloadStr
             });
 
-            // Kiểm tra response status
-            if (!res.ok) {
-                const errText = await res.text();
-                // console.error("❌ API Error:", errText); // Logged in catch below
-                throw new Error(`API Error (${res.status}): ${errText}`);
+            // Log a compact summary instead of the full object to prevent UI blocking
+            console.log("✅ RAW AI RESPONSE keys:", Object.keys(data || {}), "article_size:", (data?.article?.html_content?.length) || 0);
+
+            if (data.article && data.article.html_content) {
+                const h3Count = (data.article.html_content.match(/<h3/g) || []).length;
+                console.log(`📊 AI HTML check: Found ${h3Count} <h3> tags.`);
             }
-            const data = await res.json();
-            console.log("✅ Phản hồi từ AI:", data);
 
             // Kiểm tra cấu trúc response
             if (data.success) {

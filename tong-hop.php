@@ -191,3 +191,5 @@ require "thanh-dieu-huong.php";
         });
     });
 </script>
+
+<script src="./js/thanh-dieu-huong.js"></script>

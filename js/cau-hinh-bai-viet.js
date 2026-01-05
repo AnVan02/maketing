@@ -1,9 +1,4 @@
-// ====================================================
-// Biến toàn cục
-// ====================================================
-
-const API_BASE_URL = 'https://caiman-warm-swan.ngrok-free.app/api/v1';
-
+// ============================================
 // DOM Elements chính
 const tabs = document.querySelectorAll(".tab");
 const subButtons = document.querySelectorAll("#private .sub");
@@ -45,20 +40,9 @@ async function loadConfigs() {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '<option value="">Đang tải dữ liệu...</option>';
     });
-
-
     try {
-        const res = await fetch(`${API_BASE_URL}/ui/configs`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"
-            }
-        });
+        const data = await apiRequest('ui/configs');
 
-        if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-        const data = await res.json();
         console.log("✅ Configs loaded:", data);
 
         const populate = (id, items, label) => {
@@ -100,6 +84,7 @@ function createDefaultConfigs() {
         bots: ["GPT-4.1", "Gemini-2.5-flash"]
     };
 
+
     const fill = (id, arr) => {
         const el = document.getElementById(id);
         if (el) {
@@ -124,19 +109,11 @@ async function searchNews(query, maxResults = 10) {
     showNotification("Đang tìm kiếm tin tức liên quan...", "info");
 
     try {
-        const res = await fetch(`${API_BASE_URL}/crawl/news`, {
-
+        const data = await apiRequest('crawl/news', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"  // ✅ THÊM HEADER NÀY
-            },
             body: JSON.stringify({ query: query, max_results: maxResults })
         });
 
-        if (!res.ok) throw new Error(`News API Error: ${res.status}`);
-
-        const data = await res.json();
         console.log("✅ News results:", data);
 
 
@@ -160,12 +137,8 @@ async function crawlArticles(articles) {
     console.log("📥 [API] Crawling articles:", articles.length);
     showNotification("Đang lấy nội dung chi tiết từ các bài viết...", "info");
     try {
-        const res = await fetch(`${API_BASE_URL}/crawl/crawl`, {
+        const data = await apiRequest('crawl/crawl', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true",
-            },
             body: JSON.stringify({
                 articles: articles.map(a => ({
                     url: a.url,
@@ -174,9 +147,7 @@ async function crawlArticles(articles) {
                 }))
             })
         });
-        if (!res.ok) throw new Error(`Crawl API Error: ${res.status}`);
 
-        const data = await res.json();
         console.log("RESPONSE NHẬN VỀ: ", data);
 
         if (data.success && Array.isArray(data.articles)) {
@@ -247,16 +218,11 @@ async function filterNewsAndGenerateOutline(crawledArticles, mainKeyword, second
         console.log("REQUEST ARTICLES COUNT:", validArticles.length);
 
         // API URL theo yêu cầu user
-        const res = await fetch(`${API_BASE_URL}/ai/news-filterings`, {
+        const data = await apiRequest('ai/news-filterings', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true",
-            },
             body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
         console.log("RESPONSE:", data);
 
         // document.getElementById("result").textContent = JSON.stringify(data, null, 2); // User example logic
@@ -367,21 +333,11 @@ async function generateSEOContent(topNews, config, title, outline, mainKeyword, 
 
         console.log("📤 Payload gửi đến /ai/contents:", payload);
 
-        const res = await fetch(`${API_BASE_URL}/ai/contents`, {
+        const data = await apiRequest('ai/contents', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true",
-            },
             body: JSON.stringify(payload)
         });
 
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`AI Content API Error (${res.status}): ${errText}`);
-        }
-
-        const data = await res.json();
         if (data.success && data.article) {
             console.log("✅ SEO article generated:", data.article);
             return data.article;
@@ -417,13 +373,19 @@ function showNotification(message, type = 'info') {
     setTimeout(() => { notification.remove(); }, 3000);
 }
 
+let originalBtnText = "";
 function showLoading(show) { // Hiển thị loading
     const loading = document.getElementById('loading');
     const generateBtn = document.getElementById('generateBtn');
     if (loading) loading.style.display = show ? 'block' : 'none';
     if (generateBtn) {
+        if (show && !originalBtnText) originalBtnText = generateBtn.innerHTML;
         generateBtn.disabled = show;
-        generateBtn.innerHTML = show ? `<span class="edit-icon">⏳</span> Đang xử lý...` : `<span class="edit-icon">📝</span> Tạo dàn ý bài viết <span style="margin-left: 5px;">→</span>`;
+        if (show) {
+            generateBtn.innerHTML = `<span class="edit-icon">⏳</span> Đang xử lý...`;
+        } else if (originalBtnText) {
+            generateBtn.innerHTML = originalBtnText;
+        }
     }
 }
 
@@ -690,28 +652,21 @@ function initializeKeywordTags(inputId, containerId, mainInputId) {
         container.appendChild(loadingTag);
 
         try {
-            const res = await fetch(`${API_BASE_URL}/suggest_keywords`, {
+            const data = await apiRequest('suggest_keywords', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "ngrok-skip-browser-warning": "true",
-                },
                 body: JSON.stringify({ query: query })
             });
 
             loadingTag.remove();
-            if (res.ok) {
-                const data = await res.json();
-                if (data && Array.isArray(data.keywords)) {
-                    data.keywords.forEach(kw => addTag(kw));
-                    showNotification(`Đã tìm thấy ${data.keywords.length} từ khóa liên quan!`, 'success');
-                }
+            if (data && Array.isArray(data.keywords)) {
+                data.keywords.forEach(kw => addTag(kw));
+                showNotification(`Đã tìm thấy ${data.keywords.length} từ khóa liên quan!`, 'success');
             } else {
+                // Fallback for Demo
                 const mockKeywords = [query + " là gì", "lợi ích của " + query, "cách sử dụng " + query];
                 mockKeywords.forEach(kw => addTag(kw));
                 showNotification("Đã tìm thấy từ khóa gợi ý (Demo)", 'info');
             }
-
         } catch (e) {
             loadingTag.remove();
             console.error("Fetch Keywords Error:", e);
@@ -719,73 +674,152 @@ function initializeKeywordTags(inputId, containerId, mainInputId) {
     }
 }
 
+
 async function fetchTitleSuggestions(query, titleInputId, containerId) {
     const container = document.getElementById(containerId);
-    if (!container) return;
+    if (!container) {
+        console.error("❌ Container not found:", containerId);
+        return;
+    }
+
+    console.log("🔍 [fetchTitleSuggestions] Starting...");
+    console.log("   Query:", query);
+    console.log("   Title Input ID:", titleInputId);
+    console.log("   Container ID:", containerId);
 
     container.innerHTML = '<div class="suggestion-item loading">Đang gợi ý tiêu đề... ⏳</div>';
 
     try {
-        // Here we use the suggested endpoint /ai/suggest-titles or fallback to mock
-        const res = await fetch(`${API_BASE_URL}/ai/suggest-titles`, {
+        // Lấy secondary keywords từ tag container tương ứng
+        let secondary_keywords = [];
+        if (containerId === 'internet_titleSuggestions') {
+            // Tab Internet
+            const tags = document.querySelectorAll('#internet_tagContainer .tag');
+            secondary_keywords = Array.from(tags).map(t =>
+                t.textContent.replace('×', '').trim()
+            );
+        } else {
+            // Tab Private
+            const tags = document.querySelectorAll('#tagContainer .tag');
+            secondary_keywords = Array.from(tags).map(t =>
+                t.textContent.replace('×', '').trim()
+            );
+        }
+
+        // Lấy ngôn ngữ từ dropdown (default: Tiếng Việt)
+        const languageSelect = document.getElementById('languages');
+        const language = languageSelect ? languageSelect.value : "Tiếng Việt";
+
+        // Tạo payload theo đúng format API yêu cầu
+        const payload = {
+            main_keyword: query,
+            secondary_keywords: secondary_keywords,
+            language: language
+        };
+
+        console.log("📤 [API Request] ai/titles");
+        console.log("   Payload:", payload);
+
+        const data = await apiRequest('ai/titles', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true",
-            },
-            body: JSON.stringify({ query: query })
+            body: JSON.stringify(payload)
         });
 
+        console.log("📥 [API Response]");
         container.innerHTML = '';
 
-        if (res.ok) {
-            const data = await res.json();
+        if (data) {
+
+            console.log("✅ Response Data:", data);
+
+            // Kiểm tra cấu trúc response
             if (data && Array.isArray(data.titles)) {
+                console.log(`✅ Found ${data.titles.length} titles from API`);
                 data.titles.forEach(title => {
                     const item = document.createElement('div');
                     item.className = 'suggestion-item';
                     item.textContent = title;
                     item.onclick = () => {
                         const titleInput = document.getElementById(titleInputId);
-                        if (titleInput) titleInput.value = title;
+                        if (titleInput) {
+                            titleInput.value = title;
+                            // Trigger input event để cập nhật real-time
+                            titleInput.dispatchEvent(new Event('input'));
+                        }
                         container.innerHTML = ''; // Hide after select
+                        showNotification("✅ Đã chọn tiêu đề: " + title, "success");
                     };
                     container.appendChild(item);
                 });
+
+                if (data.titles.length > 0) {
+                    showNotification(`✅ Đã tìm thấy ${data.titles.length} gợi ý tiêu đề!`, 'success');
+                } else {
+                    showNotification("ℹ️ Không tìm thấy gợi ý tiêu đề phù hợp", 'info');
+                }
                 return;
+            } else {
+                console.warn("⚠️ API response structure unexpected:", data);
+                // Thử parse response theo format khác
+                if (data && data.success && Array.isArray(data.data)) {
+                    data.data.forEach(title => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.textContent = title;
+                        item.onclick = () => {
+                            const titleInput = document.getElementById(titleInputId);
+                            if (titleInput) titleInput.value = title;
+                            container.innerHTML = '';
+                        };
+                        container.appendChild(item);
+                    });
+                    return;
+                }
             }
+        } else {
+            console.error("❌ API Error: No data received");
+            showNotification("Lỗi API: Không nhận được dữ liệu", 'error');
         }
 
-        // Fallback/Mock if API fails or doesn't exist yet
+
+        // Fallback/Mock nếu API fails
+        console.log("ℹ️ Using mock titles as fallback");
         const mockTitles = [
             `Top 10 bí mật về ${query} bạn chưa biết`,
             `Hướng dẫn chi tiết cách sử dụng ${query} hiệu quả`,
             `${query} là gì? Tại sao bạn cần quan tâm ngay hôm nay`,
             `Sự thật đằng sau ${query} và những điều cần lưu ý`
         ];
+
         mockTitles.forEach(title => {
             const item = document.createElement('div');
             item.className = 'suggestion-item';
             item.textContent = title;
             item.onclick = () => {
                 const titleInput = document.getElementById(titleInputId);
-                if (titleInput) titleInput.value = title;
+                if (titleInput) {
+                    titleInput.value = title;
+                    titleInput.dispatchEvent(new Event('input'));
+                }
                 container.innerHTML = '';
+                showNotification("✅ Đã chọn tiêu đề mẫu", "info");
             };
             container.appendChild(item);
         });
 
+        showNotification("ℹ️ Hiển thị gợi ý mẫu (API chưa sẵn sàng)", 'info');
+
     } catch (e) {
-        console.error("Fetch Titles Error:", e);
+        console.error("❌ Fetch Titles Error:", e);
+        console.error("   Error details:", e.message, e.stack);
         container.innerHTML = '';
+        showNotification("Lỗi khi gọi API gợi ý tiêu đề: " + e.message, 'error');
     }
 }
-
 
 function initializeAiSuggest() {
     const btn = document.getElementById('aiSuggestTitleBtn');
     if (!btn) return;
-
     btn.addEventListener('click', (e) => {
         e.preventDefault();
         // Lấy keyword từ internet_user_query (tab Internet)
@@ -826,55 +860,73 @@ function loadDraft() {
     }
 }
 
-
 // ============================================
 // 7. XỬ LÝ GENERATE (UPDATED WITH API PIPELINE)
 // ============================================
 
-const generateBtn = document.getElementById('generateBtn');
-if (generateBtn) {
-    generateBtn.addEventListener('click', async function (e) {
+function setupGenerateButton() {
+    const generateBtn = document.getElementById('generateBtn');
+    if (!generateBtn) {
+        console.warn("⚠️ Không tìm thấy nút generateBtn");
+        return;
+    }
+
+    // Remove old listeners if any by cloning
+    const newBtn = generateBtn.cloneNode(true);
+    generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+
+    newBtn.addEventListener('click', async function (e) {
         e.preventDefault();
-        console.log("🚀 Bắt đầu quy trình tạo bài...");
+        console.log("🚀 [GenerateBtn] Clicked!");
 
         // --- 1. LẤY DỮ LIỆU INPUT ---
-        const activeTab = document.querySelector('.tab.active');
-        const sourceType = activeTab && activeTab.dataset.tab === 'private' ? 'private' : 'internet';
+        const activeTab = document.querySelector('.tab.active, .tab-item.active');
+        const sourceType = activeTab && (activeTab.dataset.tab === 'private' || activeTab.innerText.toLowerCase().includes('riêng')) ? 'private' : 'internet';
+
+        console.log("🔍 Source Type:", sourceType);
 
         let user_query = '', title = '';
-        let secondary_keywords = []; // ✅ Đã định nghĩa ở đây
+        let secondary_keywords = [];
 
-        // Lấy input từ tab Internet
-        if (sourceType === 'internet') {
-            user_query = document.getElementById('internet_user_query')?.value?.trim() || '';
+        // Lấy input từ tab Internet/Step 1
+        const internetQ = document.getElementById('internet_user_query');
+        user_query = internetQ ? internetQ.value.trim() : '';
 
-            const tags = document.querySelectorAll('#internet_tagContainer .tag');
-            secondary_keywords = Array.from(tags).map(t => t.textContent.replace('×', '').trim());
+        const tags = document.querySelectorAll('#internet_tagContainer .tag, #tagContainer .tag');
+        secondary_keywords = Array.from(tags).map(t => t.textContent.replace('×', '').trim());
 
-            title = document.getElementById('internet_articleTitle')?.value?.trim() || '';
-        } else {
-            // Tab Private
-            user_query = document.getElementById('internet_user_query')?.value?.trim() || document.getElementById('user_query')?.value?.trim() || ''; // Fallback for safety
-
-            const tags = document.querySelectorAll('#tagContainer .tag');
-            secondary_keywords = Array.from(tags).map(t => t.textContent.replace('×', '').trim());
-
-            title = document.getElementById('articleTitle')?.value?.trim() || '';
-        }
+        const internetT = document.getElementById('internet_articleTitle') || document.getElementById('articleTitle');
+        title = internetT ? internetT.value.trim() : '';
 
         const content_type = document.getElementById('content_types')?.value;
         const bot = document.getElementById('bots')?.value;
-        const article_length = document.getElementById('article_length')?.value || "1500";
+
+        // Cải thiện lấy độ dài: Ưu tiên từ select 'content_lengths' nếu đã chọn
+        const contentLenSelect = document.getElementById('content_lengths')?.value;
+        let article_length = "1500"; // Mặc định
+
+        if (contentLenSelect && contentLenSelect !== "") {
+            // Thử trích xuất số từ chuỗi như "Mô tả (1200-1500 từ)" -> 1500
+            const match = contentLenSelect.match(/(\d+)/g);
+            if (match && match.length > 0) {
+                article_length = match[match.length - 1]; // Lấy số lớn nhất/cuối cùng
+            } else {
+                article_length = contentLenSelect;
+            }
+        } else {
+            article_length = document.getElementById('article_length')?.value || "1500";
+        }
         const tone = document.getElementById('writing_tones')?.value || "Chuyên nghiệp";
 
         if (!user_query) {
+            console.warn("⚠️ Thiếu từ khóa chính");
             showNotification('Vui lòng nhập từ khóa chính!', 'warning');
             return;
         }
 
         if (!title) title = `Bài viết về ${user_query}`;
 
-        console.log("📋 Input:", { user_query, secondary_keywords, title });
+        console.log("📋 Payload context:", { user_query, secondary_keywords, title, bot, tone });
 
         showLoading(true);
 
@@ -883,23 +935,21 @@ if (generateBtn) {
             const outlineResult = document.getElementById('outlineResult');
 
             if (defaultPreview) defaultPreview.style.display = 'none';
-            // Outline result should be hidden while loading new one
             if (outlineResult) outlineResult.style.display = 'none';
 
             // --- 2. TÌM KIẾM TIN TỨC ---
             console.log("📡 Bước 1: Search News...");
             const newsResults = await searchNews(user_query, 10);
 
-
             if (!newsResults || newsResults.length === 0) {
-                throw new Error("Không tìm thấy tin tức.");
+                throw new Error("Không tìm thấy tin tức liên quan.");
             }
 
             // --- 3. CRAWL NỘI DUNG ---
             console.log("📡 Bước 2: Crawl Content...");
             const crawledArticles = await crawlArticles(newsResults);
             if (!crawledArticles || crawledArticles.length === 0) {
-                throw new Error("Không crawl được nội dung.");
+                throw new Error("Không crawl được nội dung từ các bài viết.");
             }
 
             // --- 4. LỌC & TẠO DÀN Ý ---
@@ -907,20 +957,18 @@ if (generateBtn) {
             const outlineData = await filterNewsAndGenerateOutline(
                 crawledArticles,
                 user_query,
-                secondary_keywords,  // ✅ SỬA: thay tagList → secondary_keywords
+                secondary_keywords,
                 title,
                 5
             );
 
-            if (!outlineData) throw new Error("Lỗi khi tạo dàn ý.");
+            if (!outlineData) throw new Error("Lỗi khi AI phân tích và tạo dàn ý.");
 
             // --- 5. XỬ LÝ KẾT QUẢ ---
             if (outlineData && outlineData.article_outline) {
                 showLoading(false);
-                const defaultPreview = document.getElementById('defaultPreview');
-                if (defaultPreview) defaultPreview.style.display = 'none';
 
-                // ✅ FIX: Lưu outline vào sessionStorage với key đúng mà dan-y-bai-viet.js đọc
+                // Lưu outline vào sessionStorage
                 const outlineForStorage = {
                     outline: outlineData.article_outline,
                     title: title,
@@ -928,22 +976,25 @@ if (generateBtn) {
                     secondary_keywords: secondary_keywords
                 };
                 sessionStorage.setItem('generatedOutline', JSON.stringify(outlineForStorage));
-                console.log('✅ Đã lưu generatedOutline:', outlineForStorage);
+                console.log('✅ Đã lưu generatedOutline');
 
-                // ✅ FIX: Chuyển dữ liệu sang outline editor với outline array
+                // Hiển thị ra UI
                 if (window.outlineEditor) {
                     window.outlineEditor.setOutlineData(outlineData.article_outline);
                     window.outlineEditor.renderOutline();
                 }
 
-                const outlineResult = document.getElementById('outlineResult');
-                if (outlineResult) outlineResult.scrollIntoView({ behavior: 'smooth' });
+                const resArea = document.getElementById('outlineResult');
+                if (resArea) {
+                    resArea.style.display = 'block';
+                    resArea.scrollIntoView({ behavior: 'smooth' });
+                }
 
-                // Lưu vào pipelineData cho các bước tiếp theo
+                // Lưu pipeline data
                 const sessionData = {
                     pipeline_results: pipelineData.filteredNews,
-                    article_outline: outlineData.article_outline,  // ✅ ADD: cần cho viet-bai-seo.js
-                    final_title: title,  // ✅ ADD: cần cho viet-bai-seo.js
+                    article_outline: outlineData.article_outline,
+                    final_title: title,
                     config: {
                         main_keyword: user_query,
                         secondary_keywords: secondary_keywords,
@@ -956,20 +1007,19 @@ if (generateBtn) {
                 };
 
                 sessionStorage.setItem('pipelineData', JSON.stringify(sessionData));
-                console.log("✅ Đã lưu session data:", sessionData);
-
             } else {
                 throw new Error("Dữ liệu dàn ý trả về không hợp lệ.");
             }
 
         } catch (error) {
-            console.error("❌ LỖI:", error);
-            showNotification("Có lỗi xảy ra: " + error.message, "error");
+            console.error("❌ LỖI GENERATE:", error);
+            showNotification(error.message, "error");
         } finally {
             showLoading(false);
         }
     });
 }
+
 
 // Thêm thẻ vào phím Enter cho các từ khóa phụ
 function addTagOnEnter(inputId, containerId) {
@@ -1017,6 +1067,7 @@ async function initializePage() {
     initializeAiSuggest();
     setupDraftSystem();
     loadDraft();
+    setupGenerateButton(); // Added explicit call
 
     // Kích hoạt tab đầu tiên
     const firstSub = document.querySelector('.sub[data-sub="file"]');

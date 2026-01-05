@@ -7,6 +7,8 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="header.css">
+    <!-- Core Security and API Handler -->
+    <script src="./bao-mat.js"></script>
 </head>
 
 <body>
@@ -99,18 +101,18 @@
 
                     <div class="nav-group">
                         <div class="nav-label">AI Facebook</div>
-                        <a href="#" class="nav-item">
+                        <a href="cau-hinh-facebook.php" class="nav-item">
                             <span class="icon">
                                 <img src="./images/icon-viet-seo.png" alt="">
                             </span> Viết bài Facebook
                         </a>
-                        <a href="#" class="nav-item">
+                        <a href="" class="nav-item">
                             <span class="icon">
                                 <img src="./images/icon-danh-sach.png" alt="">
                             </span>
                             Danh sách bài viết
                         </a>
-                        <a href="#" class="nav-item">
+                        <a href="facebook.php" class="nav-item">
                             <span class="icon">
                                 <img src="./images/icon-mau-cau-hinh.png" alt="">
                             </span> Mẫu cấu hình

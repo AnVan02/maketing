@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test API /crawl/crawl</title>
+</head>
+
+<body>
+
+    <h3>Test API /crawl/crawl (Schema Articles)</h3>
+
+    <button onclick="crawlDetail()">Gửi Crawl</button>
+
+    <pre id="result"></pre>
+
+    <script>
+        async function crawlDetail() {
+
+            const payload = {
+                articles: [
+                    {
+                        url: "https://openai.com/vi-VN/index/introducing-gpt-5/",
+                        title: "Xin giới thiệu GPT-5 | OpenAI",
+                        snippet: "Giới thiệu GPT-5 từ OpenAI"
+                    },
+                    {
+                        url: "https://www.thegioididong.com/tin-tuc/kham-pha-gpt-5-phien-ban-chatgpt-manh-nhat-thong-minh-nhat-tu-truoc-toi-nay-1581368",
+                        title: "Tất tần tật về GPT-5",
+                        snippet: "Khám phá GPT-5 phiên bản mạnh nhất"
+                    }
+                ]
+            };
+
+            console.log("REQUEST GỬI ĐI:", payload);
+
+            const response = await fetch("https://caiman-warm-swan.ngrok-free.app/api/v1/crawl/crawl", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            console.log("RESPONSE NHẬN VỀ:", data);
+
+            document.getElementById("result").textContent =
+                JSON.stringify(data, null, 2);
+        }
+    </script>
+
+</body>
+
+</html>

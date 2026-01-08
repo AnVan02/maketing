@@ -1,0 +1,455 @@
+/* Outline Container */
+#outlineResult {
+    background-color: transparent;
+    padding: 0;
+    font-family: 'Montserrat';
+}
+
+/* 1. Header & Title */
+.outline-title-section {
+    margin-bottom: 25px;
+}
+
+.outline-title-section label {
+    font-size: 17px;
+    color: #1037B8;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.outline-main-title-input {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #1037B8;
+    background: transparent;
+    border: none !important;
+    width: 100%;
+    padding: 5px 0;
+    font-family: 'Montserrat';
+}
+
+.outline-main-title-input:focus {
+    outline: none;
+}
+
+.h1-badge {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #E0F2FE;
+    color: #0284C7;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid #BAE6FD;
+}
+
+/* Actions Header */
+.btn-action-outline {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action-outline:hover {
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+/* 2. Outline Card (H2) */
+.outline-section {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    overflow: hidden;
+}
+
+.outline-section:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+/* Header Row */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    background: white;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.chevron-icon {
+    color: #94a3b8;
+    font-size: 12px;
+    transition: transform 0.3s;
+}
+
+.outline-section.active .chevron-icon {
+    transform: rotate(180deg);
+}
+
+.h2-input {
+    border: none !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #1e293b;
+    width: 100%;
+    background: transparent;
+    padding: 0;
+}
+
+.h2-input:focus {
+    outline: none;
+}
+
+.level-badge {
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.h3-badge {
+    background: #FEF3C7;
+    color: #D97706;
+    border-color: #FCD34D;
+}
+
+.header-right {
+    display: flex;
+    gap: 0px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    opacity: 1 !important;
+}
+
+.outline-section:hover .header-right {
+    opacity: 1;
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.btn-icon:hover {
+    color: #334155;
+}
+
+.btn-remove:hover {
+    color: #ef4444;
+}
+
+
+.section-config-area {
+    display: none;
+    padding: 20px 20px 20px 45px;
+    background-color: #fbfbfb;
+    border-top: 1px solid #A2B7FF;
+}
+
+.outline-section.active .section-config-area {
+    display: block;
+}
+
+.config-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.config-row:last-child {
+    margin-bottom: 0;
+}
+
+.config-label {
+    width: 140px;
+    font-size: 14px;
+    color: #475569;
+}
+
+/* Slider */
+.slider-container {
+    flex: 1;
+    position: relative;
+    padding-top: 20px;
+    /* Space for tooltip */
+    margin-right: 20px;
+}
+
+.range-slider {
+    width: 100%;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    appearance: none;
+    outline: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border: 2px solid #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.slider-tooltip {
+    position: absolute;
+    top: -5px;
+    transform: translateX(-50%);
+    background: #3b82f6;
+    color: white;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.slider-tooltip:after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #3b82f6;
+}
+
+/* Inputs */
+.config-input-line {
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+    background: transparent;
+    padding: 5px 0;
+    font-size: 14px;
+    color: #334155;
+}
+
+.config-input-line:focus {
+    outline: none;
+    border-bottom-color: #3b82f6;
+}
+
+/* Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider-round {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider-round:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider-round {
+    background-color: #3b82f6;
+}
+
+input:checked+.slider-round:before {
+    transform: translateX(16px);
+}
+
+/* Add Button */
+.btn-add-section-outline {
+    background: transparent;
+    border: none;
+    color: #2563eb;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 8px;
+}
+
+.btn-add-section-outline:hover {
+    text-decoration: underline;
+}
+
+/* 4. Tags */
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.tag {
+    background: #DBEAFE;
+    color: #1E40AF;
+    border: 1px solid #e2e8f0;
+    padding: 2px 20px;
+    border-radius: 31px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tag .close-icon {
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    color: #94a3b8;
+}
+
+.tag .close-icon:hover {
+    color: #1E40AF;
+}
+
+/* =========================================
+   5. Subsection (H3) Styles - ADDED
+   ========================================= */
+
+.sub-sections-container {
+    margin-top: 15px;
+    padding-left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-left: 2px dashed #E2E8F0;
+    display: none;
+    /* Hidden by default */
+}
+
+.outline-section.active .sub-sections-container {
+    display: flex;
+    /* Show when section is active */
+}
+
+.outline-subsection {
+    background: #FAFAFA;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    transition: all 0.2s;
+    margin-left: 10px;
+}
+
+.outline-subsection:hover {
+    border-color: #CBD5E1;
+    background: #F8FAFC;
+}
+
+.subsection-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+}
+
+.subsection-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.h3-input {
+    border: none !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    color: #475569;
+    width: 100%;
+    font-weight: 500 !important;
+}
+
+.h3-input:focus {
+    outline: none;
+    color: #2563EB;
+}
+
+.h3-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #FEF3C7;
+    color: #D97706;
+    border: 1px solid #FCD34D;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* Add H3 Button */
+.btn-add-sub-outline {
+    background: transparent;
+    border: none;
+    color: #2563eb;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    transition: all 0.2s;
+    margin-top: 8px;
+}
+
+.btn-add-sub-outline:hover {
+    text-decoration: underline;
+    color: #1d4ed8;
+}
+
+.btn-add-sub-outline i {
+    font-size: 12px;
+}

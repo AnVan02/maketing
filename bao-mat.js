@@ -91,8 +91,6 @@
     window.apiRequest = apiRequest;
     window.apiRequestFormData = apiRequestFormData;
 
-    // Legacy support for scripts expecting API_BASE_URL
-    // We set it to empty so they just append to it if needed, 
     // but the best way is to use apiRequest(endpoint)
     window.BACKEND_PROXY = API_PROXY_URL;
 

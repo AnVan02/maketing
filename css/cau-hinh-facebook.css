@@ -12,7 +12,7 @@ body {
 }
 
 .page-body {
-    padding: 20px 30px;
+    /* padding: 20px 30px; */
     margin: 0;
     flex: 1;
     width: 100%;
@@ -94,46 +94,94 @@ body {
 }
 
 /* Video Placeholder Styles */
+/* Card container */
+.right-cpanel-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    position: relative;
+}
+
+/* Guide button */
+.guide-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.guide-btn:hover {
+    background: #1d4ed8;
+}
+
+/* Empty state */
+.empty-state-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Video placeholder */
 .video-placeholder-thumb {
     position: relative;
-    width: 320px;
-    height: 180px;
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 16 / 9;
+    background: #0f172a;
     border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 25px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
 }
 
-.video-thumb-img {
+/* Responsive iframe */
+.video-placeholder-thumb iframe {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    filter: brightness(0.8);
-    /* Darken slightly to make play button pop */
+    border: none;
 }
 
+/* Play overlay */
 .play-button-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 48px;
-    height: 48px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 50%;
+    inset: 0;
     display: flex;
-    align-items: center;
     justify-content: center;
-    color: #2563eb;
-    font-size: 18px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.25);
+    pointer-events: none;
 }
 
-.video-placeholder-thumb:hover .play-button-overlay {
-    transform: translate(-50%, -50%) scale(1.1);
-    background: #fff;
+.play-button-overlay i {
+    font-size: 48px;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 20px 22px;
+    border-radius: 50%;
 }
+
+/* Text styling */
+.empty-state-content h3 {
+    margin-top: 4px;
+}
+
+.empty-state-content p {
+    margin: 0;
+}
+
 
 /* Empty Image Override for previous style removal */
 .empty-image {
@@ -359,9 +407,8 @@ textarea {
 }
 
 /* --- RIGHT PANEL --- */
-/* --- RIGHT PANEL --- */
 .right-cpanel-card {
-    height: 600px;
+    height: 800px;
     display: flex;
     flex-direction: column;
     position: relative;

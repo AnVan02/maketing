@@ -44,22 +44,21 @@ async function getConfigs() {
     });
 }
 
-// ==== test ===== 
-async function getConfigs() {
-    return await apiRequest ('/ui/configs',{
-        method: 'GET'
-    });
-}
-
 // Xử lý sự kiện khi submit form
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.querySelector('#loginForm');
+
+    // Gợi ý/Điền sẵn tài khoản mẫu nếu người dùng chưa nhập
     if (loginForm) {
+        const emailInput = loginForm.querySelector('input[name="email"]');
+        const passwordInput = loginForm.querySelector('input[name="password"]');
+
+        if (emailInput && !emailInput.value) emailInput.value = "user@example.com";
+        if (passwordInput && !passwordInput.value) passwordInput.value = "User123!";
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const emailInput = loginForm.querySelector('input[name="email"]');
-            const passwordInput = loginForm.querySelector('input[name="password"]');
             const submitBtn = loginForm.querySelector('.login-btn');
 
             const email = emailInput.value.trim();
@@ -70,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            
             try {
                 submitBtn.disabled = true;
                 const originalText = submitBtn.textContent;
@@ -79,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const loginResult = await login(email, password);
 
                 if (loginResult && loginResult.access_token) {
-                    // Gọi API lấy cấu hình ngay sau khi đăng nhập thành công
+                    // Gọi API lấy cấu hình ngay sau khi đăng nhập thành công để cache
                     try {
                         const configData = await getConfigs();
                         localStorage.setItem('ui_configs', JSON.stringify(configData));
@@ -100,4 +98,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 

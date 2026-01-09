@@ -8,7 +8,7 @@
 
     <!-- HEADER -->
     <div class="content-header">
-        <h1 class="page-title">Mẫu cấu hình bài viết seo</h1>
+        <h1 class="page-title">Mẫu cấu hình bài seo </h1>
         <a href="#" id="toggleFormBtn" class="add-config-link">+ Tạo cấu hình</a>
     </div>
 
@@ -27,7 +27,7 @@
                             <th style="text-align: left; padding-left: 20px;">Tên cấu hình</th>
                             <th>Model</th>
                             <th>Loại bài viết </th>
-                            <th>Sô bài dược tạo</th>
+                            <th>Số bài dược tạo</th>
                             <th>Ngày tạo</th>
                             <th>Hành động</th>
                         </tr>
@@ -53,8 +53,8 @@
                 </div>
 
                 <div class="tip-box-mini">
-                    <span style="font-size: 18px;"></span><img src="./images/icon-meo.png" alt="">
-                    <p>Mỗi cấu hình sẽ tạo ra phong cách bài viết khác nhau, hãy nghiên cứu và tinh chỉnh phù hợp với nhu cầu của bạn</p>
+                    <i class="fas fa-lightbulb tip-icon-bulb"></i>
+                    <p><strong>Mẹo:</strong> Mỗi cấu hình sẽ tạo ra phong cách bài viết khác nhau, hãy nghiên cứu và tinh chỉnh phù hợp với nhu cầu của bạn</p>
                 </div>
 
                 <div class="form-body">
@@ -96,6 +96,16 @@
                             <select id="languages" class="premium-select"></select>
                         </div>
                     </div>
+
+                    <!-- Thêm Toggle đặt làm mặc định -->
+                    <div class="toggle-row">
+                        <span class="toggle-label">Đặt làm cấu hình mặc định</span>
+                        <label class="switch">
+                            <input type="checkbox" id="is_default">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
                     <button id="saveBtn" class="btn-save-full">LƯU CẤU HÌNH</button>
                 </div>
             </div>
@@ -106,5 +116,5 @@
 </div>
 
 <script src="./js/thanh-dieu-huong"></script>
-<script src="./js/api-helper.js"></script>
-<script src="./js/mau-cau-hinh.js"></script>
+<script src="./js/api-helper.js?v=2.0"></script>
+<script src="./js/mau-cau-hinh.js?v=2.0"></script>

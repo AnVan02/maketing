@@ -3,13 +3,26 @@
 // ============================================
 
 async function apiRequest(endpoint, method = 'GET', body = null) {
-    const url = `api-handler.php?endpoint=${endpoint}`;
+    // Đảm bảo endpoint bắt đầu bằng api/v1/
+    let cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    if (!cleanEndpoint.startsWith('api/v1/')) {
+        cleanEndpoint = 'api/v1/' + cleanEndpoint;
+    }
+
+    const url = `api-handler.php?endpoint=${cleanEndpoint}`;
     const options = {
         method: method,
         headers: {
             'Content-Type': 'application/json'
         }
     };
+
+    // Thêm Token nếu có
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`;
+    }
+
     if (body) {
         options.body = JSON.stringify(body);
     }
@@ -17,8 +30,8 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     try {
         const response = await fetch(url, options);
         if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`API Error ${response.status}: ${errText}`);
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.message || `API Error ${response.status}`);
         }
         return await response.json();
     } catch (error) {
@@ -37,7 +50,7 @@ async function loadConfigs() {
         if (el) el.innerHTML = '<option value="">Đang tải dữ liệu...</option>';
     });
     try {
-        const data = await apiRequest('ui/configs');
+        // const data = await apiRequest('ui/configs');
 
         console.log("✅ Configs loaded:", data);
 

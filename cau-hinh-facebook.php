@@ -47,7 +47,13 @@
                             <div class="play-button-overlay">
                                 <i class="fas fa-play"></i>
                             </div>
-                            <img src="./images/banner-face.png" alt="Video Thumbnail" class="video-thumb-img">
+                            <iframe
+                                src="https://www.youtube.com/embed/Uzqpwc5hpCE?si=xPtN0u8EW6KOsQ_J"
+                                title="YouTube video player"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                            </iframe>
                         </div>
                         <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 10px;">Bản xem trước sẽ hiển thị tại đây</h3>
                         <p style="font-size: 14px; color: #64748b; max-width: 400px; line-height: 1.6;">Công cụ AI được thiết kế để tạo nhiều dạng nội dung khác nhau với chất lượng ổn định và đáng tin cậy.</p>
@@ -133,7 +139,6 @@
             </div>
         </div>
     </div>
-
     <!-- Configuration Section (Hidden by default) -->
     <div id="config-section" style="display: none; max-width: 800px; margin: 0 auto;">
         <div class="page-header-small" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -164,19 +169,17 @@
             </div>
 
             <!-- Creativeness -->
-            <div class="config-row">
-                <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <label for="creativity_level" style="font-weight: 500; color: #64748b; font-size: 14px;">Mức độ sáng tạo</label>
-                        <span id="creativity_val" style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600;">50%</span>
-                    </div>
-                    <input type="range" id="creativity_level" min="0" max="100" value="50" style="width: 100%; accent-color: #3b82f6;">
+            <div class="form-group">
+                <label>Mức độ sáng tạo</label>
+                <div class="slider-wrapper">
+                    <span id="creativity_val" class="slider-value-badge">50%</span>
+                    <input type="range" id="creativity_level" min="0" max="100" class="premium-slider">
                 </div>
             </div>
 
             <!-- Types -->
             <div class="form-group">
-                <label for="content_types" style="font-weight: 500; color: #64748b; font-size: 14px;">Loại bài viết</label>
+                <label>Loại bài viết</label>
                 <div class="custom-select-wrapper">
                     <select id="content_types"></select>
                 </div>
@@ -184,7 +187,7 @@
 
             <!-- Tones -->
             <div class="config-row">
-                <label class="writing-tones" style="font-weight: 500; color: #64748b; font-size: 14px; display: block; margin-bottom: 8px;">Tone giọng</label>
+                <label>Tone giọng</label>
                 <div class="custom-select-wrapper">
                     <select id="writing_tones"></select>
                 </div>
@@ -193,13 +196,13 @@
             <!-- 2 Columns: Model & Language -->
             <div class="config-row two-col">
                 <div>
-                    <label class="bots" style="font-weight: 500; color: #64748b; font-size: 14px; display: block; margin-bottom: 8px;">Model</label>
+                    <label>Model</label>
                     <div class="custom-select-wrapper">
                         <select id="bots"></select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="languages" style="font-weight: 500; color: #64748b; font-size: 14px;">Ngôn ngữ</label>
+                    <label>Ngôn ngữ</label>
                     <div class="custom-select-wrapper">
                         <select id="languages"></select>
                     </div>
@@ -237,13 +240,12 @@
                 <input type="file" id="modal-file-input" hidden accept="image/*">
             </div>
         </div>
+
         <!-- Button -->
         <div style="text-align: center; margin-top: 30px;">
             <button id="save-config-btn" class="save-config-btn">LƯU CẤU HÌNH</button>
         </div>
     </div>
-
-
 </main>
 </div>
 </div>

@@ -99,12 +99,18 @@
                     </div>
 
                     <div class="nav-group">
-                        <div class="nav-label">AI Facebook</div>
                         <a href="cau-hinh-facebook.php" class="nav-item">
                             <span class="icon">
-                                <img src="./images/icon-viet-seo.png" alt="">
-                            </span> Viết bài Facebook
+                                <img src="./images/icon-face.png" alt="">
+                            </span> AI facebook
                         </a>
+
+                        <a href="cau-hinh-facebook.php" class="nav-item">
+                            <span class="icon">
+                                <img src="./images/icon-sua.png" alt="">
+                            </span> Viết bài facebook
+                        </a>
+
                         <a href="" class="nav-item">
                             <span class="icon">
                                 <img src="./images/icon-danh-sach.png" alt="">
@@ -121,18 +127,22 @@
                     <div class="nav-group mt-auto">
                         <a href="#" class="nav-item"><span class="icon">
                                 <img src="./images/icon-tich-hop.png" alt="">
-                            </span> Tích hợp</a>
+                            </span> Tích hợp
+                        </a>
                         <a href="#" class="nav-item"><span class="icon">
                                 <img src="./images/icon-tai-lieu.png" alt="">
-                            </span> Tài liệu</a>
+                            </span> Tài liệu
+                        </a>
                         <a href="#" class="nav-item"><span class="icon">
                                 <img src="./images/icon-cai-dat.png" alt="">
-                            </span> Thiết đặt</a>
-                        <a href="#" class="nav-item" onclick="logout()">
+                            </span> Thiết đặt
+                        </a>
+
+                        <!-- <a href="#" class="nav-item" onclick="logout()">
                             <span class="icon">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                             </span> Đăng xuất
-                        </a>
+                        </a> -->
 
                     </div>
                 </nav>

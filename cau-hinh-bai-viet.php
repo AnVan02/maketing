@@ -77,7 +77,6 @@
                             <select id="content_lengths"></select>
                         </div>
                     </div>
-
                     <div class="form-group">
                         <label for="creativity_level">Mức độ sáng tạo: <span id="creativity_val">50%</span></label>
                         <input type="range" id="creativity_level" min="0" max="100" value="50" style="width: 100%;">
@@ -111,7 +110,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Hidden fields to keep JS compatibility if needed -->
                     <div style="display: none;">
                         <input type="text" id="user_query" value="">
@@ -208,8 +206,6 @@
                         <h3>Dàn ý của bạn sẽ hiển thị tại đây</h3>
                         <p>Xem ví dụ bên trên để hiểu cách quy trình hoạt động và tạo ra nội dung hấp dẫn. Tất cả bài viết trên nền tảng đều được tạo từ công cụ này.</p>
                     </div>
-
-
                 </div>
 
                 <!-- Loading State -->

@@ -176,7 +176,7 @@
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
+    padding: 13px 34px;
     color: #262626;
     text-decoration: none;
     border-radius: var(--radius-md);
@@ -188,6 +188,7 @@
     background-color: #F3F4F6;
     color: var(--text-main);
 }
+
 
 .nav-item.active {
     background-color: #EFF6FF;

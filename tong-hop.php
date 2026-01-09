@@ -193,3 +193,4 @@ require "thanh-dieu-huong.php";
 </script>
 
 <script src="./js/thanh-dieu-huong.js"></script>
+<script src="./js/tong-hop.js"></script>

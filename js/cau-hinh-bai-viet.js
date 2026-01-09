@@ -66,7 +66,7 @@ async function loadConfigs() {
         populate('bots', data.bots, 'Chọn AI Model');
 
         return true;
-
+        
     } catch (e) {
         console.error("❌ Lỗi loadConfigs:", e);
         showNotification("Không kết nối được API. Dùng cấu hình mặc định.", "warning");
@@ -92,6 +92,8 @@ function createDefaultConfigs() {
             arr.forEach(x => el.innerHTML += `<option value="${x}">${x}</option>`);
         }
     }
+    
+    
 
     fill('content_lengths', defaults.content_lengths);
     fill('content_types', defaults.content_types);

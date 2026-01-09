@@ -42,12 +42,26 @@ async function apiRequest(endpoint, options = {}) {
             headers: headers
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Lỗi hệ thống (${response.status})`);
+        // Đọc response text một lần duy nhất
+        const responseText = await response.text();
 
+        if (!response.ok) {
+            let errorData = {};
+            try {
+                errorData = responseText ? JSON.parse(responseText) : {};
+            } catch (e) {
+                // Nếu không parse được JSON, để errorData là object rỗng
+            }
+            throw new Error(errorData.message || `Lỗi hệ thống (${response.status})`);
         }
-        return await response.json();
+
+        // Xử lý response thành công
+        try {
+            return responseText ? JSON.parse(responseText) : { success: true };
+        } catch (e) {
+            console.warn('Response không phải JSON:', responseText);
+            return { success: true, data: responseText };
+        }
     } catch (error) {
         console.error('API Request Error:', error);
         throw error;

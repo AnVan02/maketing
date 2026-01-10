@@ -72,6 +72,8 @@ async function initializePage() {
     safeCall(loadDraft);
 
     // 4. Tự động bấm tab đầu tiên có thể dùng
+    // (Đã tắt để tránh lỗi nhảy trang không mong muốn)
+    /* 
     setTimeout(() => {
         const firstSub = $('.sub[data-sub="file"]');
 
@@ -83,7 +85,8 @@ async function initializePage() {
                 availableTab.click();
             }
         }
-    }, 100);
+    }, 100); 
+    */
 
     // 5. Cập nhật preview độ dài bài viết theo thời gian thực
     const lenInput = $('#article_length');
@@ -103,11 +106,60 @@ async function initializePage() {
         showNotification('Hệ thống đã sẵn sàng!', 'info');
     }
 
+    // 7. Active State & Scroll Persistence (Chống nhảy sidebar)
+    safeCall(initializeSidebarState);
+
     console.log('✅ Hệ thống đã sẵn sàng');
 }
 
 // ============================================
-// 4. XỬ LÝ ĐÓNG / MỞ SIDEBAR
+// 4. QUẢN LÝ TRẠNG THÁI SIDEBAR (Auto Active + Scroll)
+// ============================================
+function initializeSidebarState() {
+    // A. Highlight Active Link (Fallback cho PHP)
+    const currentPath = window.location.pathname;
+    const page = currentPath.split("/").pop();
+    const links = document.querySelectorAll('.sidebar-nav .nav-item');
+
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+
+        // Active logic
+        if (href && href !== '#' && (href === page || currentPath.endsWith(href))) {
+            link.classList.add('active');
+
+            // Prevent reload if clicking current page
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+            });
+        }
+
+        // Save scroll on click
+        link.addEventListener('click', saveSidebarScroll);
+    });
+
+    // B. Restore Scroll Position
+    const sidebar = document.querySelector('.sidebar-nav');
+    const savedScroll = localStorage.getItem('sidebar_scroll_y');
+
+    if (sidebar && savedScroll) {
+        // Restore immediately
+        sidebar.scrollTop = parseInt(savedScroll);
+    }
+
+    // C. Save scroll on unload (cho các trường hợp reload khác)
+    window.addEventListener('beforeunload', saveSidebarScroll);
+}
+
+function saveSidebarScroll() {
+    const sidebar = document.querySelector('.sidebar-nav');
+    if (sidebar) {
+        localStorage.setItem('sidebar_scroll_y', sidebar.scrollTop);
+    }
+}
+
+// ============================================
+// 5. XỬ LÝ ĐÓNG / MỞ SIDEBAR
 // ============================================
 function initializeSidebarToggle() {
     const toggleBtn = $('.menu-toggle');

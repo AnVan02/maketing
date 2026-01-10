@@ -30,10 +30,6 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 async function loadConfigs() {
     console.log("🚀 Đang tải cấu hình hệ thống...");
-    // Không cần load configs nữa vì đã dùng static template
-    return true;
-
-    /*
     const selectIds = ['content_lengths', 'content_types', 'writing_tones', 'languages', 'bots'];
 
     selectIds.forEach(id => {
@@ -75,7 +71,6 @@ async function loadConfigs() {
         createDefaultConfigs();
         return false;
     }
-    */
 }
 
 function createDefaultConfigs() {
@@ -142,20 +137,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (videoContainer) videoContainer.style.display = 'block';
     }
 
-    // 1. Live preview content - Update preview when typing
-    if (inputIdea && previewContent) {
-        inputIdea.addEventListener('input', function () {
-            const text = this.value.trim();
-            if (text === '') {
-                previewContent.innerHTML = 'ROSA chính thức ra mắt dòng laptop made in Vietnam đầu tiên. Đánh dấu bước đi mới trên hành trình chinh phục công nghệ!';
-            } else {
-                previewContent.innerText = text;
-            }
-        });
+    // // 1. Live preview content
+    // if (inputIdea && previewContent) {
+    //     inputIdea.addEventListener('input', function () {
+    //         const text = this.value.trim();
+    //         if (text === '') {
+    //             previewContent.innerHTML = '<span style="color:#888; font-style:italic; font-size:15px;">Nhập nội dung để xem trước bài viết...</span>';
+    //         } else {
+    //             previewContent.innerText = text;
+    //         }
+    //     });
 
-        // "Khi click vào 'Yêu cầu đầu vào' -> ẨN VIDEO – HIỆN PREVIEW FACEBOOK"
-        inputIdea.addEventListener('focus', showFacebookPreview);
-    }
+    //     // "Khi click vào 'Yêu cầu đầu vào' -> ẨN VIDEO – HIỆN PREVIEW FACEBOOK"
+    //     inputIdea.addEventListener('focus', showFacebookPreview);
+    // }
 
     // 2. Button Handlers
 
@@ -319,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 4. Guide / Misc
+    // 4. Guide / Misc                                                                              
     const guideBtns = document.querySelectorAll('.guide-btn, #guide-btn');
     guideBtns.forEach(btn => {
         btn.addEventListener('click', function () {
@@ -342,8 +337,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Initial State - Show Facebook Preview by default
-    showFacebookPreview();
+    // Initial State
+    showVideo();
     loadConfigs();
 
 });

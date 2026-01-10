@@ -8,10 +8,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="header.css">
-    <!-- Core Security and API Handler -->
     <script src="./js/auth-check.js"></script>
     <script src="./bao-mat.js"></script>
+    <style>
+        /* Base style for nav-item to prevent layout shift */
+        .nav-item {
+            border-right: 3px solid transparent; /* Reserve space */
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            background-color: var(--bg-hover, #f0f2f5);
+            color: var(--primary-color, #0d6efd);
+            font-weight: 600;
+            border-right: 3px solid var(--primary-color, #0d6efd);
+        }
+    </style>
 </head>
+
+<?php 
+$current_page = basename($_SERVER['PHP_SELF']);
+function isActive($page, $current_page) {
+    return ($page === $current_page) ? 'active' : '';
+}
+?>
 
 <body>
     <div class="app-container">
@@ -66,12 +86,12 @@
             <aside class="sidebar">
                 <nav class="sidebar-nav">
                     <div class="nav-group">
-                        <a href="tong-hop.php" class="nav-item">
+                        <a href="tong-hop.php" class="nav-item <?php echo isActive('tong-hop.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-google.png" alt="">
                             </span> AI SEO
                         </a>
-                        <a href="cau-hinh-bai-viet.php" class="nav-item">
+                        <a href="cau-hinh-bai-viet.php" class="nav-item <?php echo isActive('cau-hinh-bai-viet.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-viet-seo.png" alt="">
                             </span> Viết bài SEO
@@ -91,7 +111,7 @@
                                 <img src="./images/icon-search.png" alt="">
                             </span> Phân tích từ khóa
                         </a>
-                        <a href="mau-cau-hinh.php" class="nav-item">
+                        <a href="mau-cau-hinh.php" class="nav-item <?php echo isActive('mau-cau-hinh.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-mau-cau-hinh.png" alt="">
                             </span> Mẫu cấu hình
@@ -99,7 +119,7 @@
                     </div>
 
                     <div class="nav-group">
-                        <a href="cau-hinh-facebook.php" class="nav-item">
+                        <a href="cau-hinh-facebook.php" class="nav-item <?php echo isActive('cau-hinh-facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-face.png" alt="">
                             </span> AI facebook
@@ -117,7 +137,7 @@
                             </span>
                             Danh sách bài viết
                         </a>
-                        <a href="facebook.php" class="nav-item">
+                        <a href="facebook.php" class="nav-item <?php echo isActive('facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-mau-cau-hinh.png" alt="">
                             </span> Mẫu cấu hình
@@ -147,3 +167,16 @@
                     </div>
                 </nav>
             </aside>
+            
+            <script>
+                // Immediate Scroll Restoration to prevent jumping (FOUC)
+                (function() {
+                    try {
+                        var sidebar = document.querySelector('.sidebar-nav');
+                        var savedScroll = localStorage.getItem('sidebar_scroll_y');
+                        if (sidebar && savedScroll) {
+                            sidebar.scrollTop = parseInt(savedScroll);
+                        }
+                    } catch (e) {}
+                })();
+            </script>

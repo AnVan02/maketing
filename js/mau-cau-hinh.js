@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
+    
     // Tải danh sách cấu hình người dùng (API 4: GET /api/v1/ui/user/configs)
     async function loadUserConfigs() {
         try {

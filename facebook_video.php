@@ -57,6 +57,8 @@
                         <p style="font-size: 14px; color: #64748b; max-width: 400px; line-height: 1.6;">Công cụ AI được thiết kế để tạo nhiều dạng nội dung khác nhau với chất lượng ổn định và đáng tin cậy.</p>
                     </div>
                 </section>
+
+
                 <div class="card preview-card" id="facebook-preview" style="display: none; height: auto; padding-bottom: 30px;">
                     <div class="preview-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2 class="card-title-manu" style="margin: 0; font-weight: 600; color: #1e40af; border: none;">Xem trước bài viết</h2>
@@ -70,9 +72,9 @@
                         <div class="facebook-post" style="box-shadow: none; border: 1px solid #f0f2f5; max-width: 100%;">
                             <!-- Header -->
                             <div class="post-header">
-                                <img src="./images/trang-face.png" alt="Avatar" class="avatar" style="background: #ef4444; padding: 2px;">
+                                <img src="./images/logo-chat.png" alt="Avatar" class="avatar" style="background: #ef4444; padding: 2px;">
                                 <div class="user-info">
-                                    <div class="user-name">AIS Maketing <i class="fas fa-check-circle" style="color: #1877f2; margin-left: 4px;"></i></div>
+                                    <div class="user-name">ROSA AI Computer <i class="fas fa-check-circle" style="color: #1877f2; margin-left: 4px;"></i></div>
                                     <div class="post-time" style="font-size: 12px; color: #65676b;">
                                         <i class="fas fa-globe-americas"></i> Vừa xong
                                     </div>
@@ -99,22 +101,23 @@
                             <!-- Actions -->
                             <div class="post-actions" style="border-top: 1px solid #f0f2f5; padding: 10px 0; margin: 0 16px; gap: 15px; justify-content: flex-start;">
                                 <div class="action-btn-circle" style="width: 36px; height: 36px; background: #1877f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
-                                    <img src="./images/icon-like.png" alt="">
+                                    <i class="fas fa-thumbs-up"></i>
                                 </div>
                                 <div class="action-btn-circle" style="width: 36px; height: 36px; background: #f0f2f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #65676b;">
-                                    <img src="./images/icon-binh-luan.png" alt="">
+                                    <i class="fas fa-comment-alt"></i>
                                 </div>
                                 <div class="action-btn-circle" style="width: 36px; height: 36px; background: #f0f2f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #65676b;">
-                                    <img src="./images/icon-share.png" alt="">
+                                    <i class="fas fa-share"></i>
                                 </div>
                             </div>
+
                             <!-- Comments -->
                             <div class="comment-section" style="padding: 10px 16px; border-top: 1px solid #f0f2f5;">
                                 <div class="comment-item" style="display: flex; gap: 10px;">
                                     <img src="./images/icon-people.png" style="width: 32px; height: 32px; border-radius: 50%; filter: grayscale(100%);">
                                     <div class="comment-content">
                                         <div style="background: #f0f2f5; padding: 8px 12px; border-radius: 12px;">
-                                            <div style="font-weight: 600; font-size: 13px; color: #050505;">ROSA COMPUTER</div>
+                                            <div style="font-weight: 600; font-size: 13px; color: #050505;">Nguyễn Văn Nam</div>
                                             <div style="font-size: 13px; color: #050505;">Tuyệt vời!</div>
                                         </div>
                                         <div style="display: flex; gap: 10px; font-size: 12px; color: #65676b; margin-top: 4px; margin-left: 4px;">
@@ -134,7 +137,6 @@
             </div>
         </div>
     </div>
-
     <!-- Configuration Section (Hidden by default) -->
     <div id="config-section" style="display: none; max-width: 800px; margin: 0 auto;">
         <div class="page-header-small" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -227,7 +229,6 @@
                 </div>
             </div>
 
-
             <!-- Image Upload Group -->
             <div id="modal-image-group" class="image-upload-wrapper" style="margin-top: 10px;">
                 <div id="modal-upload-trigger" class="file-upload-wrapper" style="border: 1px solid #e2e8f0; background: white; padding: 12px;">
@@ -237,7 +238,6 @@
                 <input type="file" id="modal-file-input" hidden accept="image/*">
             </div>
         </div>
-
 
         <!-- Button -->
         <div style="text-align: center; margin-top: 30px;">

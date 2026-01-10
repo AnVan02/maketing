@@ -21,7 +21,7 @@
         }
 
         body {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Montserrat';
             background: #fff;
             color: #333;
             line-height: 1.6;

@@ -5,7 +5,7 @@
     --text-main: #111827;
     --text-sub: #6B7280;
     --border-color: #FFFFFF;
-    font-family: Montserrat;
+    font-family: 'Montserrat';
 }
 
 .content-area {
@@ -37,14 +37,14 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    font-family: Montserrat;
+    font-family: 'Montserrat';
 }
 
 .card-title {
     font-size: 14px;
     font-weight: 600;
     color: #253888;
-    font-family: Montserrat;
+    font-family: 'Montserrat';
 }
 
 .card-more {
@@ -122,6 +122,7 @@
 .activity-tabs {
     display: flex;
     gap: 8px;
+    align-items: center;
 }
 
 .tab-btn {
@@ -139,6 +140,43 @@
 .tab-btn.active {
     background: #EFF6FF;
     color: var(--primary-blue);
+}
+
+/* Refresh Button */
+.refresh-btn {
+    padding: 8px 16px;
+    border-radius: 99px;
+    border: 1px solid #E5E7EB;
+    background: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+}
+
+.refresh-btn:hover {
+    background: #F9FAFB;
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.refresh-btn:active svg {
+    animation: rotate 0.6s ease-in-out;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .activity-table-container {
@@ -197,6 +235,21 @@
 
 .score-low {
     color: #EF4444;
+}
+
+/* Loading Animation */
+.activity-table tbody svg {
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Analytics Grid */
@@ -284,4 +337,117 @@
 
 .trend-down {
     color: #EF4444;
+}
+
+/* Article Title */
+.article-title a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.article-title a:hover {
+    color: var(--primary-blue);
+    text-decoration: underline;
+}
+
+/* Meta Description */
+.meta-description {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #6B7280;
+    font-size: 13px;
+}
+
+/* SEO Score */
+.seo-score {
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.score-good {
+    background: #ECFDF5;
+    color: #059669;
+}
+
+.score-medium {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.score-low {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+/* Pagination */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #F3F4F6;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #6B7280;
+}
+
+.pagination-info span {
+    font-weight: 600;
+    color: #374151;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #E5E7EB;
+    background: #FFFFFF;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #F9FAFB;
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.pagination-btn.active {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+    padding: 0 8px;
+    color: #9CA3AF;
+    font-size: 14px;
 }

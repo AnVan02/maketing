@@ -190,7 +190,7 @@ body {
     color: var(--white);
     font-size: 17px;
     outline: none;
-    font-family: inherit;
+    font-family: 'Montserrat';
     font-weight: 500;
 }
 

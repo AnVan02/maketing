@@ -127,7 +127,7 @@ body {
      color: var(--text-main);
      background: #fff;
      transition: all 0.2s;
-     font-family: inherit;
+     font-family: 'Montserrat';
      box-sizing: border-box;
 }
 

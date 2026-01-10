@@ -74,7 +74,6 @@ async function loadConfigs() {
         return false;
     }
 }
-
 function createDefaultConfigs() {
     const defaults = {
         content_lengths: ["Ngắn (900-1200 từ)", "Trung bình (1500-1800 từ)", "Dài (2000-2500 từ)"],

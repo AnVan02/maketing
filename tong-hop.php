@@ -5,6 +5,7 @@ require "thanh-dieu-huong.php";
 <link rel="stylesheet" href="./css/tong-hop.css">
 <link rel="stylesheet" href="./css/thanh-dieu-huong.css">
 
+
 <div class="content-area">
     <!-- Stats Grid -->
     <div class="stats-grid">
@@ -16,12 +17,12 @@ require "thanh-dieu-huong.php";
             </div>
             <div class="card-body">
                 <div class="main-stat">
-                    <span class="stat-number">52 bài</span>
+                    <span class="stat-number"></span>
                     <span class="stat-divider">|</span>
-                    <span class="stat-period">30 ngày</span>
+                    <span class="stat-period"></span>
                 </div>
                 <div class="sub-stat">
-                    12 nháp · 52 đã xuất bản
+                    <!-- dữ liệu tổng xuất bản + nháp  -->
                 </div>
             </div>
         </div>
@@ -34,12 +35,12 @@ require "thanh-dieu-huong.php";
             </div>
             <div class="card-body">
                 <div class="main-stat">
-                    <span class="stat-number">36 bài</span>
+                    <span class="stat-number"></span>
                     <span class="stat-divider">|</span>
-                    <span class="stat-period">30 ngày</span>
+                    <span class="stat-period"></span>
                 </div>
                 <div class="sub-stat">
-                    2 nháp · 36 đã xuất bản
+                    <!-- dữ liệu tổng xuất bản + nháp -->
                 </div>
             </div>
         </div>
@@ -52,9 +53,9 @@ require "thanh-dieu-huong.php";
             </div>
             <div class="card-body">
                 <div class="main-stat">
-                    <span class="stat-number">Basic</span>
+                    <span class="stat-number"></span>
                     <span class="stat-divider">|</span>
-                    <span class="stat-period">còn lại 212 ngày</span>
+                    <span class="stat-period"></span>
                 </div>
                 <a href="#" class="manage-link">Quản lý gói của bạn</a>
             </div>
@@ -68,51 +69,41 @@ require "thanh-dieu-huong.php";
             <div class="activity-tabs">
                 <button class="tab-btn active">Bài viết SEO</button>
                 <button class="tab-btn">Bài viết Facebook</button>
+                <button id="refreshBtn" class="refresh-btn" onclick="refreshData()" title="Làm mới dữ liệu">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                    </svg>
+                    Làm mới
+                </button>
             </div>
         </div>
         <div class="activity-table-container">
             <table class="activity-table">
                 <thead>
                     <tr>
+                        <!-- <th>ID</th> -->
                         <th>Tiêu đề bài viết</th>
+                        <th>Khoá chính</th>
+                        <th>Meta-sedecription</th>
                         <th>Trạng thái</th>
                         <th>SEO Score</th>
                         <th>Cập nhật lúc</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>10 Cách tối ưu SEO cho website năm 2025</td>
-                        <td><span class="status-badge status-published">Đã xuất bản</span></td>
-                        <td class="score-cell score-high">92/100</td>
-                        <td>2 giờ trước</td>
-                    </tr>
-                    <tr>
-                        <td>Hướng dẫn viết content marketing hiệu quả</td>
-                        <td><span class="status-badge status-draft">Nháp</span></td>
-                        <td class="score-cell">—</td>
-                        <td>5 giờ trước</td>
-                    </tr>
-                    <tr>
-                        <td>Phân tích từ khóa cho ngành thương mại điện tử</td>
-                        <td><span class="status-badge status-published">Đã xuất bản</span></td>
-                        <td class="score-cell score-high">85/100</td>
-                        <td>1 ngày trước</td>
-                    </tr>
-                    <tr>
-                        <td>Chiến lược link building 2025</td>
-                        <td><span class="status-badge status-published">Đã xuất bản</span></td>
-                        <td class="score-cell score-medium">78/100</td>
-                        <td>2 ngày trước</td>
-                    </tr>
-                    <tr>
-                        <td>Technical SEO: Tối ưu tốc độ trang web</td>
-                        <td><span class="status-badge status-draft">Nháp</span></td>
-                        <td class="score-cell">—</td>
-                        <td>3 ngày trước</td>
-                    </tr>
+                <tbody id="configTableBody">
+                    <!-- dữ liệu bài viết  -->
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Hiển thị <span id="showingFrom">0</span>-<span id="showingTo">0</span> của <span id="totalArticles">0</span> bài viết
+            </div>
+            <div class="pagination-controls" id="paginationControls">
+                <!-- Pagination buttons will be generated here -->
+            </div>
         </div>
     </div>
 
@@ -178,19 +169,7 @@ require "thanh-dieu-huong.php";
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Highlight "AI SEO" in sidebar
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            if (item.textContent.trim().includes('AI SEO')) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-    });
-</script>
 
+<script src="./js/api-helper.js"></script>
 <script src="./js/thanh-dieu-huong.js"></script>
 <script src="./js/tong-hop.js"></script>

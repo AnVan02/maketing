@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // 1. Cấu hình & Dữ liệu đầu vào
-$base_url_backend = "http://172.16.1.78:8080/api/v1";
+$base_url_backend = "https://dvcendpoint.rosachatbot.com/api/v1";
 $request_data = json_decode(file_get_contents('php://input'), true);
 
 // 2. Kiểm tra dữ liệu bắt buộc từ Frontend

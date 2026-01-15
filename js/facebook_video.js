@@ -3,7 +3,7 @@
 // ============================================
 
 async function apiRequest(endpoint, method = 'GET', body = null) {
-    const url = `api-handler.php?endpoint=${endpoint}`;
+    const url = `api-proxy.php?endpoint=${endpoint}`;
     const options = {
         method: method,
         headers: {

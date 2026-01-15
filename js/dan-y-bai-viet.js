@@ -32,11 +32,9 @@ function loadOutlineData() {
         }
     }
 
-    // Tạo outline mặc định
-    console.log('⚠️ Không tìm thấy dữ liệu, tạo outline mặc định');
-    // createDefaultOutline(); // Không tự tạo default nếu không có lệnh, để tránh overwrite khi đang edit? 
-    // Nhưng logic cũ là tạo default.
-    createDefaultOutline();
+    // If no data found, show error
+    console.warn('⚠️ Không tìm thấy dữ liệu dàn ý.');
+    alert("Dữ liệu dàn ý không tồn tại. Vui lòng tạo dàn ý trước.");
     renderOutline();
 }
 
@@ -48,7 +46,6 @@ function convertFromPipelineFormat(apiOutline) {
     if (savedOutline.title) {
         outlineData.title = savedOutline.title;
     } else {
-        // Fallback: Lấy title từ H1 đầu tiên
         const h1Item = apiOutline.find(item => item.level === 1);
         if (h1Item) {
             outlineData.title = h1Item.title || "";
@@ -84,71 +81,6 @@ function convertFromPipelineFormat(apiOutline) {
     console.log('✅ Đã convert outline:', outlineData);
 }
 
-function createDefaultOutline() {
-    const mainKeyword = document.getElementById('user_query')?.value ||
-        document.getElementById('internet_user_query')?.value ||
-        "Máy tính AI";
-
-    outlineData = {
-        title: `${mainKeyword} - Hướng dẫn toàn diện`,
-        sections: [
-            {
-                id: `h2-demo-1`,
-                title: `Tổng quan về ${mainKeyword}`,
-                config: {
-                    word_count: 300,
-                    keywords: ["AI", "công nghệ", "xu hướng"],
-                    internal_link: "auto"
-                },
-                subsections: [
-                    {
-                        id: `h3-demo-1-1`,
-                        title: `Định nghĩa ${mainKeyword} là gì?`,
-                        config: { word_count: 150, keywords: [], tone: null, internal_link: null }
-                    },
-                    {
-                        id: `h3-demo-1-2`,
-                        title: `Tầm quan trọng trong thời đại số`,
-                        config: { word_count: 150, keywords: [], tone: null, internal_link: null }
-                    }
-                ]
-            },
-            {
-                id: `h2-demo-2`,
-                title: `Lợi ích vượt trội cho doanh nghiệp`,
-                config: {
-                    word_count: 500,
-                    keywords: ["tăng trưởng", "tiết kiệm", "tự động hóa"],
-                    internal_link: null
-                },
-
-                subsections: [
-                    {
-                        id: `h3-demo-2-1`,
-                        title: `Tối ưu hóa quy trình làm việc`,
-                        config: { word_count: 200, keywords: [], tone: null, internal_link: null }
-                    },
-                    {
-                        id: `h3-demo-2-2`,
-                        title: `Tiết kiệm chi phí vận hành`,
-                        config: { word_count: 200, keywords: [], tone: null, internal_link: null }
-                    }
-                ]
-            },
-            {
-                id: `h2-demo-3`,
-                title: `Các dòng máy tính AI phổ biến hiện nay`,
-                config: {
-                    word_count: 400,
-                    keywords: ["NPU", "Intel Core Ultra", "Snapdragon X Elite"],
-                    internal_link: null
-                },
-                subsections: []
-            }
-        ]
-    };
-    console.log("Dữ liệu demo đã được tạo:", outlineData);
-}
 
 // ============================================
 // 2. RENDER GIAO DIỆN
@@ -224,7 +156,7 @@ function createSectionHTML(section, index) {
             <!-- Header Row -->
             <div class="section-header" onclick="toggleSection('${section.id}')">
                 <img src="./images/icon-nha-xuong.png" style="margin-right: 12px;">
-                <div class="header-left">
+                <div class="section-header-left">
                     <span class="chevron-icon"><i class="fas fa-chevron-down"></i></span>
                     <input type="text" 
                            class="h2-input" 
@@ -235,7 +167,7 @@ function createSectionHTML(section, index) {
                            data-section-id="${section.id}">
                     <span class="level-badge">H2</span>
                 </div>
-                <div class="header-right">
+                <div class="section-header-right">
                     <button class="btn-icon" title="Chỉnh sửa"><img src="./images/icon-sua.png" style="margin-right: 12px;"><i class="fas fa-pen"></i></button>
                     <button class="btn-icon btn-remove" onclick="event.stopPropagation(); removeSection('${section.id}')" title="Xóa"><i class="fas fa-times"></i></button>
                 </div>
@@ -307,7 +239,7 @@ function createSubsectionHTML(sub, parentId, index) {
         <div class="outline-subsection" data-id="${sub.id}">
             <div class="subsection-header">
                 <i class="fas fa-level-up-alt fa-rotate-90" style="color: #94a3b8; margin-right: 10px;"></i>
-                <div class="header-left">
+                <div class="section-header-left">
                     <input type="text" 
                            class="h3-input" 
                            value="${escapeHtml(sub.title)}" 
@@ -316,7 +248,7 @@ function createSubsectionHTML(sub, parentId, index) {
                            data-h3-id="${sub.id}">
                     <span class="level-badge h3-badge">H3</span>
                 </div>
-                <div class="header-right">
+                <div class="section-header-right">
                     <button class="btn-icon btn-remove" onclick="removeSubsection('${parentId}', '${sub.id}')" title="Xóa">
                         <i class="fas fa-times"></i>
                     </button>
@@ -646,12 +578,6 @@ async function handleCreateArticle() { // Đã được gọi từ nút "Tạo b
     try {
         // 1. Lấy dữ liệu pipeline đã lưu từ sessionStorage
         const savedPipelineData = JSON.parse(sessionStorage.getItem('pipelineData'));
-        if (!savedPipelineData) {
-            // throw new Error("Không tìm thấy dữ liệu pipeline. Vui lòng quay lại Bước 1.");
-            // Allow bypassing if testing
-            console.warn("⚠️ Pipeline Data missing, using Mock Data for navigation");
-        }
-
         const pipelineDataToUse = savedPipelineData || { config: {}, final_title: "" };
 
         // 2. Lấy dàn ý đã được chỉnh sửa (format cho API)
@@ -702,7 +628,6 @@ window.outlineEditor = {
     addNewSection,
     handleCreateArticle,
     saveToSessionStorage,
-    createDefaultOutline,
     updateTitle: function (newTitle) {
         outlineData.title = newTitle;
         const input = document.getElementById('outlineMainTitle');

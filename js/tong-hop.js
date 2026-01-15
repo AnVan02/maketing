@@ -1,14 +1,24 @@
-// Kiểm tra đăng nhập
+/**
+ * PHẦN 1: KIỂM TRA QUYỀN TRUY CẬP (AUTH CHECK)
+ * Đảm bảo người xem đã đăng nhập thành công trước khi hiển thị dữ liệu.
+ * 
+ * Lưu ý: Với HTTP-only cookies, việc kiểm tra chỉ mang tính tham khảo.
+ * Server sẽ tự động kiểm tra cookies khi gọi API. Nếu không hợp lệ sẽ trả về 401.
+ */
 function checkAuth() {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
+    const userInfo = localStorage.getItem('user_info');
+    if (!userInfo) {
+        console.warn('⚠️ Hệ thống: Không tìm thấy thông tin đăng nhập. Đang chuyển hướng...');
         window.location.href = 'dang-nhap.php';
         return false;
     }
     return true;
 }
 
-// Format ngày giờ
+/**
+ * TIỆN ÍCH: Định dạng thời gian cho dễ đọc.
+ * Chuyển dữ liệu thô (2026-01-14T...) thành (14/01/2026 13:50).
+ */
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -20,73 +30,69 @@ function formatDateTime(dateString) {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
-// Biến toàn cục cho pagination
-let currentPage = 1;
-let totalArticles = 0;
-const itemsPerPage = 10;
+/**
+ * PHẦN 2: QUẢN LÝ DỮ LIỆU VÀ PHÂN TRANG (STATE MANAGEMENT)
+ * Lưu trữ trạng thái hiện tại của ứng dụng.
+ */
+let currentPage = 1;      // Trang dữ liệu đang hiển thị hiện tại
+let totalArticles = 0;    // Tổng số bài viết lấy được từ Server
+const itemsPerPage = 10;  // Mỗi trang chỉ hiện tối đa 10 dòng dữ liệu
 
-// Lấy danh sách bài viết từ API với pagination
+/**
+ * PHẦN 3: CÁC HÀM TƯƠNG TÁC API
+ */
+
+// 1. Lấy danh sách bài viết theo từng trang (kéo dữ liệu SEO)
 async function fetchArticles(limit = 10, offset = 0) {
     try {
+        // Gửi yêu cầu lấy dữ liệu bài viết kèm giới hạn (limit) và vị trí bắt đầu (offset)
+        // API sẽ tự động kiểm tra cookies, nếu không hợp lệ sẽ redirect về trang login
         const response = await apiRequest(`/seo/articles?limit=${limit}&offset=${offset}`, {
             method: 'GET'
         });
 
-        console.log('API Response:', response);
-
         if (response.success && response.articles) {
             return {
                 articles: response.articles,
-                // Chỉ trả về total nếu API thực sự có, không fallback về length vì đây là phân trang
-                total: response.total
+                total: response.total // Tổng số bài thực tế đang có trên server
             };
         } else {
-            console.warn('Không có dữ liệu bài viết');
             return { articles: [], total: 0 };
         }
     } catch (error) {
-        console.error('Lỗi khi lấy danh sách bài viết:', error);
-        alert('Lỗi khi tải danh sách bài viết: ' + error.message);
+        console.error('❌ Lỗi lấy danh sách bài:', error);
+        // Nếu lỗi 401, apiRequest đã tự động redirect về login
         return { articles: [], total: 0 };
     }
 }
 
-// Lấy tổng số bài viết để tính pagination
+// 2. Hỏi server tổng cộng có bao nhiêu bài (Để tính số trang 1, 2, 3...)
 async function fetchTotalArticles() {
     try {
         const response = await apiRequest(`/seo/articles?limit=1&offset=0`, {
             method: 'GET'
         });
-
-        if (response.success) {
-            return response.total || 0;
-        }
-        return 0;
+        return response.success ? (response.total || 0) : 0;
     } catch (error) {
-        console.error('Lỗi khi lấy tổng số bài viết:', error);
         return 0;
     }
 }
 
-// Hiển thị danh sách bài viết vào bảng
+/**
+ * PHẦN 4: ĐIỀU KHIỂN GIAO DIỆN BẢNG DỮ LIỆU (UI RENDERING)
+ * Biến mảng dữ liệu thành các thẻ <tr> <td> trong HTML.
+ */
 function renderArticles(articles, isLoading = false) {
-    const tableBody = document.getElementById('configTableBody');
+    const tableBody = document.getElementById('configTableBody'); // "Thân" của bảng dữ liệu
+    if (!tableBody) return;
 
-    if (!tableBody) {
-        console.error('Không tìm thấy element configTableBody');
-        return;
-    }
-
-    // Hiển thị loading
+    // Hiển thị trạng thái đang tải (Loading) nếu dữ liệu chưa về kịp
     if (isLoading) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2">
-                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                        </svg>
-                        <span>Đang tải dữ liệu...</span>
+                    <div class="loader-container">
+                        <span>Đang tải dữ liệu, vui lòng đợi...</span>
                     </div>
                 </td>
             </tr>
@@ -94,122 +100,81 @@ function renderArticles(articles, isLoading = false) {
         return;
     }
 
-    // Xóa dữ liệu cũ
-    tableBody.innerHTML = '';
+    tableBody.innerHTML = ''; // Làm sạch bảng trước khi đổ dữ liệu mới vào
 
+    // Nếu không có bài viết nào
     if (!articles || articles.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
-                    Chưa có bài viết nào
-                </td>
-            </tr>
-        `;
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Chưa có bài viết nào được tạo.</td></tr>';
         return;
     }
 
-
-    // Render từng bài viết
+    // Lặp qua từng bài viết để vẽ từng dòng (row)
     articles.forEach(article => {
         const row = document.createElement('tr');
 
-        // Tính toán trạng thái (published hoặc draft)
-        const status = article.published_at ? 'Đã xuất bản' : 'Nháp';
-        const statusClass = article.published_at ? 'status-published' : 'status-draft';
-
-        // Tạo SEO Score giả (vì API không trả về)
-        const seoScore = Math.floor(Math.random() * 30) + 70; // Random từ 70-100
+        // Tạo Score giả lập cho đẹp giao diện (Thực tế nên lấy từ SEO Tool)
+        const seoScore = Math.floor(Math.random() * 30) + 70;
         const scoreClass = seoScore >= 80 ? 'score-good' : 'score-medium';
 
         row.innerHTML = `
-            <td>
-                <div class="article-title">
-                    <a href="article.php?id=${article.id}" style="color: #333; text-decoration: none;">
-                        ${article.title || 'Không có tiêu đề'}
-                    </a>
-                </div>
-            </td>
-            <td>${article.primary_keyword || 'N/A'}</td>
+            <td><strong>${article.title || 'Bài viết chưa đặt tên'}</strong></td>
+            <td>${article.primary_keyword || '---'}</td>
             <td>
                 <div class="meta-description" title="${article.meta_description || ''}">
-                    ${article.meta_description ?
-                (article.meta_description.length > 80 ?
-                    article.meta_description.substring(0, 80) + '...' :
-                    article.meta_description)
-                : 'N/A'}
+                    ${article.meta_description ? (article.meta_description.substring(0, 60) + '...') : 'Không có mô tả.'}
                 </div>
             </td>
-            <td>
-                <span class="status-badge ${statusClass}">
-                    ${status}
-                </span>
-            </td>
-            <td>
-                <span class="seo-score ${scoreClass}">
-                    ${seoScore}/100
-                </span>
-            </td>
+            <td>${article.word_count ? article.word_count.toLocaleString() : 0} từ</td>
+            <td><span class="seo-score ${scoreClass}">${seoScore}/100</span></td>
             <td>${formatDateTime(article.created_at)}</td>
         `;
-
         tableBody.appendChild(row);
     });
-
-    console.log(`Đã render ${articles.length} bài viết`);
 }
 
-// Cập nhật thống kê
+/**
+ * PHẦN 5: CẬP NHẬT CÁC Ô THỐNG KÊ (STATS CARDS)
+ * Đếm tổng số bài, số bài đã xuất bản, và số bài nháp.
+ */
 async function updateStats() {
     try {
-        console.log('Đang lấy thống kê và tổng số bài viết...');
-        // Lấy tất cả bài viết để tính thống kê (giới hạn 1000 để đếm tổng)
-        const response = await apiRequest(`/seo/articles?limit=1000&offset=0`, {
-            method: 'GET'
-        });
-
-        if (!response.success || !response.articles) {
-            console.warn('Không lấy được dữ liệu thống kê');
-            return;
-        }
+        const response = await apiRequest(`/seo/articles?limit=1000&offset=0`, { method: 'GET' });
+        if (!response.success || !response.articles) return;
 
         const articles = response.articles;
+        totalArticles = articles.length; // Cập nhật tổng số bài toàn cục
 
-        // QUAN TRỌNG: Cập nhật biến toàn cục totalArticles
-        totalArticles = articles.length;
-        console.log('Đã cập nhật totalArticles chính xác:', totalArticles);
-
-        // Đếm số bài đã xuất bản và nháp
         const publishedCount = articles.filter(a => a.published_at).length;
         const draftCount = articles.filter(a => !a.published_at).length;
 
-        // Cập nhật card "Bài viết SEO"
+        // Tìm các phần tử HTML để hiển thị số liệu
         const statNumber = document.querySelector('.stats-card:first-child .stat-number');
         const subStat = document.querySelector('.stats-card:first-child .sub-stat');
 
-        if (statNumber) {
-            statNumber.textContent = `${totalArticles} bài`;
-        }
+        if (statNumber) statNumber.textContent = `${totalArticles} bài`;
+        if (subStat) subStat.textContent = `${draftCount} nháp · ${publishedCount} xuất bản`;
 
-        if (subStat) {
-            subStat.textContent = `${draftCount} nháp · ${publishedCount} đã xuất bản`;
-        }
-
-        // QUAN TRỌNG: Vẽ lại phân trang ngay sau khi có số lượng chính xác
+        // Vẽ lại thanh phân trang bên dưới cho khớp với số bài mới
         updatePaginationInfo();
         renderPagination();
-
     } catch (error) {
-        console.error('Lỗi khi cập nhật thống kê:', error);
+        console.error('❌ Lỗi cập nhật thống kê:', error);
     }
 }
 
-// Cập nhật thông tin pagination
+/**
+ * PHẦN 6: HỆ THỐNG PHÂN TRANG (PAGINATION)
+ * Điều khiển các nút "Trước", "Sau" và các số trang 1, 2, 3...
+ */
+
+// Cập nhật thông tin: "Đang xem bài 1 đến 10 trong tổng số 100 bài"
 function updatePaginationInfo() {
     const showingFrom = document.getElementById('showingFrom');
     const showingTo = document.getElementById('showingTo');
     const totalArticlesElement = document.getElementById('totalArticles');
 
-    // Nếu không có bài viết nào
+    if (!showingFrom || !showingTo || !totalArticlesElement) return;
+
     if (totalArticles === 0) {
         showingFrom.textContent = '0';
         showingTo.textContent = '0';
@@ -218,40 +183,24 @@ function updatePaginationInfo() {
     }
 
     const from = (currentPage - 1) * itemsPerPage + 1;
-    let to = currentPage * itemsPerPage;
-
-    // Nếu to lớn hơn total, lấy total
-    if (to > totalArticles) {
-        to = totalArticles;
-    }
+    const to = Math.min(currentPage * itemsPerPage, totalArticles);
 
     showingFrom.textContent = from;
     showingTo.textContent = to;
     totalArticlesElement.textContent = totalArticles;
 }
 
-// Tạo các nút pagination
+// Vẽ các nút bấm phân trang vào vùng 'paginationControls'
 function renderPagination() {
     const paginationControls = document.getElementById('paginationControls');
-
-    if (!paginationControls) {
-        console.error('Không tìm thấy element paginationControls');
-        return;
-    }
+    if (!paginationControls) return;
 
     paginationControls.innerHTML = '';
-
     const totalPages = Math.ceil(totalArticles / itemsPerPage);
 
-    console.log('Rendering Pagination. Total Pages:', totalPages, 'Total Articles:', totalArticles);
+    if (totalPages <= 1) return; // Chỉ có 1 trang thì không cần hiện nút
 
-
-    if (totalPages <= 1) {
-        return; // Không cần pagination nếu chỉ có 1 trang
-    }
-
-
-    // Nút Previous
+    // Nút "Lùi lại"
     const prevBtn = document.createElement('button');
     prevBtn.className = 'pagination-btn';
     prevBtn.textContent = '‹';
@@ -259,60 +208,16 @@ function renderPagination() {
     prevBtn.onclick = () => goToPage(currentPage - 1);
     paginationControls.appendChild(prevBtn);
 
-    // Logic hiển thị số trang
-    const maxVisiblePages = 7; // Số trang tối đa hiển thị
-    let startPage = 1;
-    let endPage = totalPages;
-
-    if (totalPages > maxVisiblePages) {
-        const halfVisible = Math.floor(maxVisiblePages / 2);
-
-        if (currentPage <= halfVisible) {
-            // Gần đầu
-            endPage = maxVisiblePages - 1;
-        } else if (currentPage >= totalPages - halfVisible) {
-            // Gần cuối
-            startPage = totalPages - maxVisiblePages + 2;
-        } else {
-            // Ở giữa
-            startPage = currentPage - halfVisible + 1;
-            endPage = currentPage + halfVisible - 1;
-        }
+    // Vẽ các số trang (Logic tự động rút gọn dấu ... nếu quá nhiều trang)
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        paginationControls.appendChild(btn);
     }
 
-    // Trang đầu tiên
-    if (startPage > 1) {
-        const pageBtn = createPageButton(1);
-        paginationControls.appendChild(pageBtn);
-
-        if (startPage > 2) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'pagination-ellipsis';
-            ellipsis.textContent = '...';
-            paginationControls.appendChild(ellipsis);
-        }
-    }
-
-    // Các trang ở giữa
-    for (let i = startPage; i <= endPage; i++) {
-        const pageBtn = createPageButton(i);
-        paginationControls.appendChild(pageBtn);
-    }
-
-    // Trang cuối cùng
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'pagination-ellipsis';
-            ellipsis.textContent = '...';
-            paginationControls.appendChild(ellipsis);
-        }
-
-        const pageBtn = createPageButton(totalPages);
-        paginationControls.appendChild(pageBtn);
-    }
-
-    // Nút Next
+    // Nút "Tiến tới"
     const nextBtn = document.createElement('button');
     nextBtn.className = 'pagination-btn';
     nextBtn.textContent = '›';
@@ -321,118 +226,87 @@ function renderPagination() {
     paginationControls.appendChild(nextBtn);
 }
 
-// Tạo nút trang
-function createPageButton(pageNumber) {
-    const btn = document.createElement('button');
-    btn.className = 'pagination-btn';
-    if (pageNumber === currentPage) {
-        btn.classList.add('active');
-    }
-    btn.textContent = pageNumber;
-    btn.onclick = () => goToPage(pageNumber);
-    return btn;
-}
-
-// Chuyển đến trang (gọi API để lấy dữ liệu mới)
+// Hàm thực thi việc chuyển sang một trang khác
 async function goToPage(page) {
-    // Nếu chưa biết total, tạm thời cho phép chuyển
-    const totalPages = totalArticles > 0 ? Math.ceil(totalArticles / itemsPerPage) : 9999;
-
-    if (page < 1 || (totalArticles > 0 && page > totalPages)) {
-        return;
-    }
+    if (page < 1) return;
 
     currentPage = page;
+    renderArticles([], true); // Hiện Loading
 
-    // Hiển thị loading
-    renderArticles([], true);
-
-    // Tính offset cho API
     const offset = (currentPage - 1) * itemsPerPage;
-
-    // Gọi API để lấy bài viết cho trang hiện tại
     const result = await fetchArticles(itemsPerPage, offset);
 
-    // QUAN TRỌNG: Cập nhật totalArticles từ kết quả API nếu có
-    // Chỉ cập nhật nếu API trả về con số cụ thể
-    if (typeof result.total === 'number') {
-        totalArticles = result.total;
-        console.log('Cập nhật totalArticles:', totalArticles);
-    }
-    // Nếu không, giữ nguyên totalArticles đã tính từ updateStats()
-
-    // Hiển thị bài viết
+    if (result.total) totalArticles = result.total;
     renderArticles(result.articles);
-
-    // Cập nhật thống kê nếu cần (để đảm bảo số draft/published đúng)
-    if (totalArticles === 0) {
-        updateStats(); // Thử gọi lại updateStats nếu vẫn chưa có total
-    }
-
-    // Cập nhật pagination UI
     updatePaginationInfo();
     renderPagination();
 
-    // Scroll lên đầu bảng
-    const activitySection = document.querySelector('.activity-section');
-    if (activitySection) {
-        activitySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Cuộn trang lên đầu bảng cho dễ xem
+    const table = document.querySelector('.activity-section');
+    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/**
+ * PHẦN 7: TƯƠNG TÁC GIAO DIỆN KHÁC (TABS, CHARTS)
+ */
+
+// Đổi qua lại giữa tab SEO và tab Facebook
+function setupInteractions() {
+    const cardSeo = document.getElementById('card-seo');
+    const cardFacebook = document.getElementById('card-facebook');
+    const analyticsSeo = document.getElementById('analytics-seo');
+    const analyticsFacebook = document.getElementById('analytics-facebook');
+
+    if (!cardSeo || !cardFacebook) return;
+
+    cardSeo.addEventListener('click', () => {
+        analyticsSeo.style.display = 'block';
+        analyticsFacebook.style.display = 'none';
+        console.log('📈 Đã chuyển sang xem thống kê SEO');
+    });
+
+    cardFacebook.addEventListener('click', () => {
+        analyticsFacebook.style.display = 'block';
+        analyticsSeo.style.display = 'none';
+        console.log('📈 Đã chuyển sang xem thống kê Facebook');
+    });
+}
+
+// Vẽ biểu đồ tăng trưởng (Sử dụng Tool Chart.js)
+function initCharts() {
+    const seoCtx = document.getElementById('seoChart')?.getContext('2d');
+    if (seoCtx) {
+        new Chart(seoCtx, {
+            type: 'line',
+            data: {
+                labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                datasets: [{
+                    label: 'Truy cập SEO',
+                    data: [450, 600, 550, 800, 700, 400, 500],
+                    borderColor: '#3B82F6',
+                    tension: 0.3,
+                    fill: true,
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
     }
 }
 
-// Làm mới dữ liệu (không reload trang)
-async function refreshData() {
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) refreshBtn.classList.add('loading'); // Thêm hiệu ứng nếu muốn
+/**
+ * KHỞI CHẠY (INITIALIZATION)
+ * Chạy toàn bộ hệ thống khi trình duyệt đã sẵn sàng.
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!checkAuth()) return; // Kiểm tra đăng nhập
 
-    console.log('Đang làm mới toàn bộ dữ liệu...');
+    initCharts();        // Vẽ biểu đồ
+    setupInteractions(); // Cài đặt nút bấm
 
-    try {
-        // 1. Cập nhật thống kê và lấy lại tổng số bài viết thực tế
-        await updateStats();
+    // 1. Lấy dữ liệu thống kê tổng quát
+    updateStats();
 
-        // 2. Quay về trang 1 hoặc giữ trang hiện tại nhưng load lại
-        await goToPage(currentPage);
-
-        console.log('Đã làm mới dữ liệu thành công');
-    } catch (error) {
-        console.error('Lỗi khi làm mới dữ liệu:', error);
-    } finally {
-        if (refreshBtn) refreshBtn.classList.remove('loading');
-    }
-}
-
-// Khởi tạo khi trang load
-document.addEventListener('DOMContentLoaded', async function () {
-    console.log('=== Khởi tạo trang Tổng hợp ===');
-
-    if (!checkAuth()) return;
-
-    try {
-        // 1. Lấy thống kê trước (không bắt buộc phải await xong mới render)
-        updateStats();
-
-        // 2. Load trang đầu tiên ngay lập tức
-        console.log(`Đang tải trang ${currentPage} (limit=${itemsPerPage})...`);
-        const result = await fetchArticles(itemsPerPage, 0);
-
-        // Cập nhật totalArticles từ kết quả API nếu có
-        if (result.total && result.total > 0) {
-            totalArticles = result.total;
-            console.log('Cập nhật totalArticles từ API (init):', totalArticles);
-        } else if (result.articles.length > 0) {
-            totalArticles = Math.max(totalArticles, result.articles.length);
-        }
-
-        // Hiển thị dữ liệu
-        renderArticles(result.articles);
-
-        // Cập Nhật Pagination UI
-        updatePaginationInfo();
-        renderPagination();
-
-        console.log('Khởi tạo hoàn tất');
-    } catch (error) {
-        console.error('Lỗi khởi tạo:', error);
-    }
+    // 2. Tải trang dữ liệu đầu tiên
+    await goToPage(1);
 });

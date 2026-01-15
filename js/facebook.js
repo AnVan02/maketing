@@ -45,57 +45,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
+    // 
     // --- DATA MOCKUP CHO DROPDOWNS ---
-    const MOCK_OPTIONS = {
-        lengths: [
-            { value: 'short', label: 'Ngắn (50-200 từ)' },
-           
-        ],
-        types: [
-            { value: 'ads', label: 'Bài quảng cáo' }
-        ],
-        tones: [
-            { value: 'professional', label: 'Chuyên nghiệp, đáng tin cậy' }
-        ],
-        bots: [
-          
-            { value: 'gpt-4o', label: 'GPT-4o' },
-            { value: 'claude-3-sonnet', label: 'Claude 3.5 Sonnet' }
-        ],
-        languages: [
-            { value: 'vi', label: 'Tiếng Việt' },
-           
-        ]
-    };
+
 
     // --- HÀM LOAD OPTIONS ---
     async function loadOptions() {
-        console.log("📥 Loading dropdown options...");
+        try {
+            const data = await apiRequest('/ui/configs');
+            const configData = data.data || data;
 
-        function populate(selectEl, data) {
-            if (!selectEl) return;
-            selectEl.innerHTML = '';
-            data.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.value;
-                opt.textContent = item.label;
-                selectEl.appendChild(opt);
-            });
+            const fill = (selectEl, arr, label = "Chọn...") => {
+                if (!selectEl) return;
+                selectEl.innerHTML = `<option value="">${label}</option>`;
+                if (!arr) return;
+
+                arr.forEach(i => {
+                    const opt = document.createElement('option');
+                    if (typeof i === 'object') {
+                        opt.value = i.id || i.value || i.code || i.name;
+                        opt.textContent = i.name || i.label || i.text || opt.value;
+                    } else {
+                        opt.value = i;
+                        opt.textContent = i;
+                    }
+                    selectEl.appendChild(opt);
+                });
+            };
+
+            if (configData) {
+                fill(lengthSelect, configData.content_lengths);
+                fill(typeSelect, configData.content_types);
+                fill(toneSelect, configData.writing_tones);
+                fill(langSelect, configData.languages);
+                fill(botSelect, configData.bots);
+            }
+        } catch (e) {
+            console.error("❌ Lỗi loadOptions:", e);
         }
-
-        populate(lengthSelect, MOCK_OPTIONS.lengths);
-        populate(typeSelect, MOCK_OPTIONS.types);
-        populate(toneSelect, MOCK_OPTIONS.tones);
-        populate(botSelect, MOCK_OPTIONS.bots);
-        populate(langSelect, MOCK_OPTIONS.languages);
-
-        // Chọn mặc định
-        if (botSelect) botSelect.value = 'gemini-2.5-pro';
-        if (langSelect) langSelect.value = 'vi';
-        if (lengthSelect) lengthSelect.value = 'short';
-        if (typeSelect) typeSelect.value = 'ads';
-        if (toneSelect) toneSelect.value = 'professional';
     }
+
 
     // --- HÀM RENDER TABLE ---
     window.refreshTable = async function () {
@@ -110,20 +99,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Lấy từ API
             let configs = [];
             try {
-                const response = await apiRequest('');
+                const response = await apiRequest('/ui/user/configs');
                 if (response && Array.isArray(response)) configs = response;
                 else if (response.data && Array.isArray(response.data)) configs = response.data;
             } catch (err) {
-                console.warn("API Error, checking cache...", err);
+                console.error("API Error:", err);
             }
 
-            // Fallback cache
-            if (configs.length === 0) {
-                const cached = localStorage.getItem('');
-                if (cached) configs = JSON.parse(cached);
-            } else {
-                localStorage.setItem('', JSON.stringify(configs));
-            }
+            window.userConfigsData = configs;
 
             if (!configs || configs.length === 0) {
                 if (emptyState) emptyState.style.display = 'block';
@@ -199,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Nếu đang edit -> PUT (giả sử có API), nếu không -> POST
                 // Hiện tại API docs chỉ thấy POST /ui/user/configs
 
-                await apiRequest('', {
+                await apiRequest('/ui/user/configs', {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
@@ -226,22 +209,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- CÁC HÀM GLOBAL (được gọi từ HTML) ---
 
     window.useConfig = (id) => {
-        const cached = localStorage.getItem('');
-        if (cached) {
-            const configs = JSON.parse(cached);
-            const found = configs.find(c => c.id == id || c._id == id);
-            if (found) {
-                sessionStorage.setItem('selected_template', JSON.stringify(found));
-                window.location.href = 'cau-hinh-bai-viet.php';
-                // Hoặc trang facebook post nếu có
-            }
+        const configs = window.userConfigsData || [];
+        const found = configs.find(c => c.id == id || c._id == id);
+        if (found) {
+            sessionStorage.setItem('selected_template', JSON.stringify(found));
+            window.location.href = 'cau-hinh-bai-viet.php';
         }
     };
 
     window.editConfig = (id) => {
-        const cached = localStorage.getItem('');
-        if (!cached) return;
-        const configs = JSON.parse(cached);
+        const configs = window.userConfigsData || [];
         const found = configs.find(c => c.id == id || c._id == id);
 
         if (found) {

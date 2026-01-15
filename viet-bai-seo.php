@@ -141,7 +141,7 @@
 
             <div id="media-tab" class="tab-content">
                 <div class="image-search-box" style="margin-bottom: 15px; position: relative;">
-                    <input type="text" id="imageSearchInput" placeholder="Tìm hình theo từ khóa(vd:máy tính ai)" style="width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #E2E8F0; border-radius: 8px; outline: none; font-size: 14px;">
+                    <input type="text" id="imageSearchInput" placeholder="Tìm hình theo từ khóa (vd:máy tính ai)" style="width: 100%; padding: 12px 12px 12px 35px; border: 1px solid #E2E8F0; border-radius: 8px; outline: none; font-size: 14px;">
                     <i class="fas fa-search" style="position: absolute; left: 12px; top: 14px; color: #94A3B8;"></i>
                 </div>
 

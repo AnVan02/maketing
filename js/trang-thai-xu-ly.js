@@ -111,11 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log("ℹ️ Sử dụng finalArticle có sẵn trong pipelineData, bỏ qua gọi API.");
         }
 
-        // 3) Nếu có outline và user muốn render local (không tốn token)
-        if (!finalArticle && Array.isArray(pipelineData.article_outline) && pipelineData.article_outline.length > 0 && pipelineData.config?.use_local_render) {
-            finalArticle = generateFromOutline(pipelineData.final_title || pipelineData.config?.main_keyword || 'Bài viết', pipelineData.article_outline);
-            console.log("ℹ️ Tạo bài tạm thời từ outline (không tốn token).");
-        }
 
         // 4) Nếu vẫn chưa có bài, gọi API
         if (!finalArticle) {
@@ -144,8 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 snippet: a.content_preview || a.snippet || ''
             }))
         };
-        // Save asynchronously to avoid blocking the UI before navigation.
-        // Use requestIdleCallback when available, otherwise fallback to setTimeout.
+        // 
 
         const saveFinalPayload = () => {
             try {
@@ -288,26 +282,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Khi user muốn tạo bài local (không gọi API), sử dụng helper dưới đây
-    function generateFromOutline(title, rawOutline) {
-        const escapeHtml = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        // Normalize outline into array of sections
-        let sections = [];
-        if (Array.isArray(rawOutline)) sections = rawOutline;
-        else if (rawOutline && Array.isArray(rawOutline.sections)) sections = rawOutline.sections;
-        // Build a simple HTML with headings and short placeholder paragraphs
-        let html = `<h1>${escapeHtml(title || 'Bài viết')}</h1>`;
-        sections.forEach(sec => {
-            const level = parseInt(sec.level || 2);
-            const tag = level === 1 ? 'h1' : (level === 2 ? 'h2' : 'h3');
-            const heading = escapeHtml(sec.title || sec.heading || 'Tiêu đề');
-            html += `<${tag}>${heading}</${tag}>`;
-            // Add 1-2 short paragraphs as placeholder
-            html += `<p>${escapeHtml(sec.config?.summary || 'Nội dung tóm tắt cho phần này.')}</p>`;
-            if (tag === 'h3') html += `<p>${escapeHtml('Chi tiết bổ sung cho phần này.')}</p>`;
-        });
-        return { title: title, html_content: html, summary: 'Bài viết tạm tạo từ outline (không gọi API).' };
-    }
 
     async function generateSEOContent(topNews, config, title, outline, mainKeyword, secondaryKeywords) {
         console.log("🚀 [API] Generating Content...");
@@ -373,14 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     outlineForApi.push(formatted);
                 });
             } else {
-                // Trường hợp 3: Rỗng hoặc lỗi -> Tạo dummy
-                console.warn("⚠️ Outline input is invalid, creating default.");
-                outlineForApi = [
-                    { level: 1, title: title || "Bài viết SEO", order: 1 },
-                    { level: 2, title: "Giới thiệu", order: 2, config: { word_count: 200 } },
-                    { level: 2, title: "Nội dung chính", order: 3, config: { word_count: 500 } },
-                    { level: 2, title: "Kết luận", order: 4, config: { word_count: 150 } }
-                ];
+                throw new Error("Không có dữ liệu dàn ý (outline) hợp lệ để tạo bài viết.");
             }
 
             const payload = {
@@ -425,14 +392,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
 
-            // Kiểm tra cấu trúc response
             if (data.success) {
                 if (data.article) return data.article;
-                if (data.content || data.html) return data; // Fallback if it's direct
                 return data; // Return whatever we got
             } else {
                 console.error("❌ API trả về success: false", data);
-                if (data.article || data.content) return data.article || data; // Try to recover
                 throw new Error(data.message || "Server AI từ chối tạo bài viết.");
             }
         } catch (e) {

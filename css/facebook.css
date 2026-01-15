@@ -7,12 +7,11 @@
         padding: 20px 30px;
         margin: 0;
         flex: 1;
-        /* Allow growing in flex container */
         width: 100%;
         box-sizing: border-box;
-        overflow-x: auto;
-        /* Allow scroll if needed */
-        font-family: 'Montserrat',
+        overflow-y: auto;
+        font-family: 'Montserrat';
+
     }
 
 
@@ -23,6 +22,7 @@
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         align-items: start;
         width: 100%;
+        overflow-y: auto;
     }
 
     /* Khi hiển thị Form */
@@ -218,8 +218,8 @@
 
     .tip-box-mini {
         background: #f0f7ff;
-        padding: 15px 18px;
-        border-radius: 16px;
+        padding: 6px 6px;
+        border-radius: 1px;
         display: flex;
         gap: 12px;
         margin-bottom: 30px;

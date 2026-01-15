@@ -1,5 +1,5 @@
 <?php require "thanh-dieu-huong.php" ?>
-<link rel="stylesheet" href="./css/thanh-dieu-huong.css">
+
 <link rel="stylesheet" href="./css/facebook.css">
 
 
@@ -127,6 +127,8 @@
 </div>
 </div>
 
-<script src="./js/thanh-dieu-huong"></script>
+
 <script src="./js/api-helper.js"></script>
 <script src="./js/facebook.js"></script>
+<!-- bảo mật -->
+<!-- <script src="./js/api-secure.js"></script> -->

@@ -2,8 +2,9 @@
 // 1. API HELPER & CONFIGS (GLOBAL SCOPE)
 // ============================================
 
-async function apiRequest(endpoint, method = 'GET', body = null) {
-    const url = `api-handler.php?endpoint=${endpoint}`;
+// Local helper for API calls (renamed to avoid collision with bao-mat.js)
+async function localApiRequest(endpoint, method = 'GET', body = null) {
+    const url = `api-proxy.php?endpoint=${endpoint}`;
     const options = {
         method: method,
         headers: {
@@ -15,6 +16,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     }
 
     try {
+        
         const response = await fetch(url, options);
         if (!response.ok) {
             const errText = await response.text();
@@ -27,323 +29,363 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     }
 }
 
-
 async function loadConfigs() {
     console.log("🚀 Đang tải cấu hình hệ thống...");
-    // Không cần load configs nữa vì đã dùng static template
     return true;
-
-    /*
-    const selectIds = ['content_lengths', 'content_types', 'writing_tones', 'languages', 'bots'];
-
-    selectIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = '<option value="">Đang tải dữ liệu...</option>';
-    });
-    try {
-        const data = await apiRequest('ui/configs');
-
-        console.log("✅ Configs loaded:", data);
-
-        const populate = (id, items, label) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.innerHTML = `<option value="">${label}</option>`;
-            if (items && Array.isArray(items)) {
-                items.forEach(i => {
-                    const opt = document.createElement('option');
-                    opt.value = i;
-                    opt.textContent = i;
-                    el.appendChild(opt);
-                });
-            }
-        };
-
-        populate('content_lengths', data.content_lengths, 'Chọn độ dài bài viết ')
-        populate('content_types', data.content_types, 'Chọn loại bài viết');
-        populate('writing_tones', data.writing_tones, 'Chọn tone giọng');
-        populate('languages', data.languages, 'Chọn ngôn ngữ');
-        populate('bots', data.bots, 'Chọn AI Model');
-
-        return true;
-
-    } catch (e) {
-        console.error("❌ Lỗi loadConfigs:", e);
-        if (typeof showNotification === 'function') {
-            showNotification("Không kết nối được API. Dùng cấu hình mặc định.", "warning");
-        }
-        createDefaultConfigs();
-        return false;
-    }
-    */
-}
-
-function createDefaultConfigs() {
-    const defaults = {
-        content_lengths: ["Ngắn (900-1200 từ)", "Trung bình (1500-1800 từ)", "Dài (2000-2500 từ)"],
-        content_types: ["Blog SEO", "Tin tức", "Hướng dẫn"],
-        writing_tones: ["Chuyên nghiệp", "Thuyết phục", "Sáng tạo"],
-        languages: ["Tiếng Việt", "Tiếng Anh", "Tiếng Thái"],
-        bots: ["GPT-4.1", "Gemini-2.5-flash"]
-    };
-
-
-    const fill = (id, arr) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = '<option value="">Chọn...</option>';
-            arr.forEach(x => el.innerHTML += `<option value="${x}">${x}</option>`);
-        }
-    }
-
-    fill('content_lengths', defaults.content_lengths);
-    fill('content_types', defaults.content_types);
-    fill('writing_tones', defaults.writing_tones);
-    fill('languages', defaults.languages);
-    fill('bots', defaults.bots);
 }
 
 // ============================================
 // 2. MAIN LOGIC (DOM READY)
 // ============================================
 document.addEventListener('DOMContentLoaded', function () {
-    // Elements
+    // Basic elements
     const inputIdea = document.getElementById('input-idea');
     const previewBtn = document.getElementById('preview-btn');
     const resetBtn = document.getElementById('reset-btn');
-    const videoContainer = document.getElementById('video-container');
     const facebookPreview = document.getElementById('facebook-preview');
     const previewContent = document.getElementById('preview-content');
     const previewImage = document.getElementById('preview-image');
 
-    // Optional elements (may not exist in DOM yet)
-    const imageInput = document.getElementById('image-input');
-    const uploadArea = document.getElementById('upload-area');
-    const removeImageBtn = document.getElementById('remove-image-btn');
+    // Persistence for multiple images
+    let allSelectedImages = [];
 
-    // Helper functions
-    function showFacebookPreview() {
-        if (videoContainer) videoContainer.style.display = 'none';
-        if (facebookPreview) facebookPreview.style.display = 'block';
-
-        // Update content from Input Idea if available
-        const inputIdea = document.getElementById('input-idea');
-        const previewContent = document.getElementById('preview-content');
-        if (inputIdea && previewContent) {
-            const val = inputIdea.value.trim();
-            if (val) {
-                previewContent.innerText = val;
-            }
-        }
-    }
-
-    function showVideo() {
-        if (facebookPreview) facebookPreview.style.display = 'none';
-        if (videoContainer) videoContainer.style.display = 'block';
-    }
-
-    // 1. Live preview content - Update preview when typing
-    if (inputIdea && previewContent) {
-        inputIdea.addEventListener('input', function () {
-            const text = this.value.trim();
-            if (text === '') {
-                previewContent.innerHTML = 'ROSA chính thức ra mắt dòng laptop made in Vietnam đầu tiên. Đánh dấu bước đi mới trên hành trình chinh phục công nghệ!';
-            } else {
-                previewContent.innerText = text;
-            }
-        });
-
-        // "Khi click vào 'Yêu cầu đầu vào' -> ẨN VIDEO – HIỆN PREVIEW FACEBOOK"
-        inputIdea.addEventListener('focus', showFacebookPreview);
-    }
-
-    // 2. Button Handlers
-
-    // "Khi click vào ... hoặc bấm 'Xem trước' -> HIỆN CONFIG SECTION"
-    const previewBtnMain = document.getElementById('preview-btn') || document.querySelector('.preview-btn-main');
-    if (previewBtnMain) {
-        previewBtnMain.addEventListener('click', function () {
-            // Hide Main View
-            const mainView = document.getElementById('main-view');
-            if (mainView) mainView.style.display = 'none';
-            // Show Config Section
-            const configSection = document.getElementById('config-section');
-            if (configSection) {
-                configSection.style.display = 'block';
-                // Focus on Name Input
-                const configNameInput = document.getElementById('config_name_input');
-                if (configNameInput) configNameInput.focus();
-            }
-        });
-    }
-
-    // Back to List Button Logic
-    const backListBtn = document.getElementById('back-list-btn');
-    if (backListBtn) {
-        backListBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            // Hide Config Section
-            const configSection = document.getElementById('config-section');
-            if (configSection) configSection.style.display = 'none';
-            // Show Main View
-            const mainView = document.getElementById('main-view');
-            if (mainView) mainView.style.display = 'block';
-        });
-    }
-
-    // Config Section Interactions
+    // UI View Sections
+    const mainView = document.getElementById('main-view');
     const configSection = document.getElementById('config-section');
+
+    // Step 1 - Left Column Elements
+    const toggleImageMain = document.getElementById('toggle-image-main');
+    const mainUploadTrigger = document.getElementById('main-upload-trigger');
+    const mainFileInput = document.getElementById('main-file-input');
+
+    // Modal / Config Section Elements
     const saveConfigBtn = document.getElementById('save-config-btn');
-    const toggleImage = document.getElementById('toggle-image');
+    const toggleImageModal = document.getElementById('toggle-image');
     const modalImageGroup = document.getElementById('modal-image-group');
     const modalUploadTrigger = document.getElementById('modal-upload-trigger');
     const modalFileInput = document.getElementById('modal-file-input');
 
-    // Toggle Image Section Visibility
-    if (toggleImage && modalImageGroup) {
-        toggleImage.addEventListener('change', function () {
+    // Helper: Show Preview Block
+    function updatePreviewVisibility() {
+        if (facebookPreview) facebookPreview.style.display = 'block';
+    }
+
+    // Helper: Sync Text from Left to Right
+    function updateText() {
+        if (!inputIdea || !previewContent) return;
+        const val = inputIdea.value;
+        if (val.trim() === '') {
+            previewContent.innerHTML = '<span style="color:#65676b; font-style:italic;">Nhập nội dung để xem trước bài viết...</span>';
+        } else {
+            // Convert newline to <br> for display
+            previewContent.innerHTML = val.replace(/\n/g, '<br>');
+        }
+        console.log("Preview updated with:", val); // Debug log
+    }
+
+    // Helper: Handle Multiple Images Processing
+    function handleMultipleImages(files) {
+        if (!files || files.length === 0) return;
+
+        const gridContainer = document.getElementById('image-grid-container');
+        if (!gridContainer) return;
+
+        const fileArray = Array.from(files);
+        let loadedCount = 0;
+
+        fileArray.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                allSelectedImages.push(e.target.result);
+                loadedCount++;
+
+                if (loadedCount === fileArray.length) {
+                    renderImageGrid(allSelectedImages);
+                    updatePlaceholderText();
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function updatePlaceholderText() {
+        if (mainUploadTrigger) {
+            const placeholder = mainUploadTrigger.querySelector('.file-upload-placeholder');
+            if (placeholder) {
+                placeholder.innerText = allSelectedImages.length > 0
+                    ? `Đã chọn ${allSelectedImages.length} ảnh (Bấm để thêm...)`
+                    : 'Duyệt hình ảnh của bạn tại đây';
+            }
+        }
+    }
+
+    function removeImage(index) {
+        allSelectedImages.splice(index, 1);
+        renderImageGrid(allSelectedImages);
+        updatePlaceholderText();
+
+        if (allSelectedImages.length === 0) {
+            const gridContainer = document.getElementById('image-grid-container');
+            if (gridContainer) gridContainer.style.display = 'none';
+        }
+    }
+
+    function renderImageGrid(results) {
+        const gridContainer = document.getElementById('image-grid-container');
+        if (!gridContainer) return;
+
+        gridContainer.innerHTML = '';
+        const count = results.length;
+        gridContainer.className = 'facebook-image-grid'; // Reset classes
+
+        if (count === 0) {
+            gridContainer.style.display = 'none';
+            return;
+        }
+
+        if (count === 1) {
+            gridContainer.classList.add('count-1');
+        } else if (count === 2) {
+            gridContainer.classList.add('count-2');
+        } else if (count === 3) {
+            gridContainer.classList.add('count-3');
+        } else if (count === 4) {
+            gridContainer.classList.add('count-4');
+        } else {
+            gridContainer.classList.add('count-more');
+        }
+
+        const displayLimit = count > 4 ? 4 : count;
+
+        for (let i = 0; i < displayLimit; i++) {
+            const wrap = document.createElement('div');
+            wrap.className = 'image-item-wrapper';
+
+            if (i === 3 && count > 4) {
+                wrap.classList.add('more-overlay');
+                wrap.setAttribute('data-more', `+${count - 3}`);
+            }
+
+            const img = document.createElement('img');
+            img.src = results[i];
+            img.onclick = () => openLightbox(results[i]);
+
+            const deleteBtn = document.createElement('span');
+            deleteBtn.className = 'remove-img-btn';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeImage(i);
+            };
+
+            wrap.appendChild(img);
+            wrap.appendChild(deleteBtn);
+            gridContainer.appendChild(wrap);
+        }
+
+        gridContainer.style.display = 'grid';
+        if (previewImage) previewImage.style.display = 'none';
+        updatePreviewVisibility();
+    }
+
+    // Lightbox Logic
+    const lightboxModal = document.getElementById('lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const closeLightbox = document.querySelector('.close-lightbox');
+
+    function openLightbox(src) {
+        if (!lightboxModal || !lightboxImg) return;
+        lightboxImg.src = src;
+        lightboxModal.style.display = "block";
+    }
+
+    if (closeLightbox) {
+        closeLightbox.onclick = function () {
+            lightboxModal.style.display = "none";
+        }
+    }
+
+    if (lightboxModal) {
+        lightboxModal.onclick = function (e) {
+            if (e.target === lightboxModal) {
+                lightboxModal.style.display = "none";
+            }
+        }
+    }
+
+    // --- Interaction for Post Actions ---
+    const btnLike = document.getElementById('btn-like');
+    const btnComment = document.getElementById('btn-comment');
+    const btnShare = document.getElementById('btn-share');
+
+    if (btnLike) {
+        btnLike.addEventListener('click', function () {
+            this.classList.toggle('active');
+            console.log("Liked toggled");
+        });
+    }
+
+    if (btnComment) {
+        btnComment.addEventListener('click', function () {
+            this.classList.toggle('active');
+            // Mock a focus or scrolling to comments
+            const commentBox = document.querySelector('.comment-section-premium');
+            if (commentBox) {
+                commentBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }
+
+    if (btnShare) {
+        btnShare.addEventListener('click', function () {
+            this.classList.toggle('active');
+            alert("Bạn đã nhấn chia sẻ bài viết này!");
+        });
+    }
+
+    // --- 1. TEXTAREA LIVE PREVIEW ---
+    if (inputIdea) {
+        inputIdea.addEventListener('input', updateText);
+        inputIdea.addEventListener('keyup', updateText);
+        inputIdea.addEventListener('change', updateText);
+        // Initial sync
+        updateText();
+    }
+
+    // --- 2. IMAGE UPLOAD & DRAG & DROP (MAIN) ---
+    if (mainUploadTrigger && mainFileInput) {
+        mainUploadTrigger.addEventListener('click', () => mainFileInput.click());
+
+        mainFileInput.addEventListener('change', function () {
+            handleMultipleImages(this.files);
+        });
+
+        mainUploadTrigger.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.style.borderColor = '#2563eb';
+            this.style.backgroundColor = '#eff6ff';
+        });
+
+        mainUploadTrigger.addEventListener('dragleave', function () {
+            this.style.borderColor = '#e2e8f0';
+            this.style.backgroundColor = '#fff';
+        });
+
+        mainUploadTrigger.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.style.borderColor = '#e2e8f0';
+            this.style.backgroundColor = '#fff';
+
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                if (files.length > 0) {
+                    handleMultipleImages(files);
+                } else {
+                    alert('Vui lòng chỉ chọn file hình ảnh!');
+                }
+            }
+        });
+    }
+
+    // Toggle Visibility of Upload Box in Main View
+    if (toggleImageMain && mainUploadTrigger) {
+        toggleImageMain.addEventListener('change', function () {
+            mainUploadTrigger.style.display = this.checked ? 'flex' : 'none';
+        });
+    }
+    // --- 3. CONFIG SECTION (MODAL) LOGIC ---
+    if (previewBtn) {
+        previewBtn.addEventListener('click', function () {
+            if (mainView) mainView.style.display = 'none';
+            if (configSection) {
+                configSection.style.display = 'block';
+                const configNameInput = document.getElementById('config_name_input');
+                if (configNameInput) configNameInput.focus();
+
+                const pageBody = document.querySelector('.page-body');
+                if (pageBody) {
+                    pageBody.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+    }
+
+    const backListBtn = document.getElementById('back-list-btn');
+    if (backListBtn) {
+        backListBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (configSection) configSection.style.display = 'none';
+            if (mainView) {
+                mainView.style.display = 'block';
+                const pageBody = document.querySelector('.page-body');
+                if (pageBody) {
+                    pageBody.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+    }
+
+    if (toggleImageModal && modalImageGroup) {
+        toggleImageModal.addEventListener('change', function () {
             modalImageGroup.style.display = this.checked ? 'block' : 'none';
         });
     }
 
-    // Image Upload
     if (modalUploadTrigger && modalFileInput) {
         modalUploadTrigger.addEventListener('click', () => modalFileInput.click());
         modalFileInput.addEventListener('change', function () {
-            if (this.files && this.files[0]) {
-                const placeholder = modalUploadTrigger.querySelector('.file-upload-placeholder');
-                if (placeholder) placeholder.innerText = this.files[0].name;
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    if (previewImage) {
-                        previewImage.src = e.target.result;
-                    }
-                };
-                reader.readAsDataURL(this.files[0]);
-            }
+            handleMultipleImages(this.files);
         });
     }
 
     if (saveConfigBtn) {
         saveConfigBtn.addEventListener('click', function () {
-            // Validate Name
             const nameInput = document.getElementById('config_name_input');
-            const configName = nameInput ? nameInput.value.trim() : `Cấu hình ${new Date().toLocaleTimeString()}`;
+            const configName = nameInput && nameInput.value.trim() !== '' ? nameInput.value.trim() : `Cấu hình ${new Date().toLocaleTimeString()}`;
 
-            // Collect Data
             const newConfig = {
                 id: Date.now(),
                 name: configName,
                 length: document.getElementById('content_lengths').value,
-                creativity: document.getElementById('creativity_level').value,
                 type: document.getElementById('content_types').value,
                 tone: document.getElementById('writing_tones').value,
                 model: document.getElementById('bots').value,
                 language: document.getElementById('languages').value,
-                // Toggles need specific IDs or query
-                emoji: document.querySelector('.toggle-row:nth-child(1) input') ? document.querySelector('.toggle-row:nth-child(1) input').checked : false,
-                hashtag: document.querySelector('.toggle-row:nth-child(2) input') ? document.querySelector('.toggle-row:nth-child(2) input').checked : false,
-                image: toggleImage ? toggleImage.checked : false,
-                article_count: 0,
                 created_at: new Date().toLocaleDateString('vi-VN')
             };
 
-            // Save to LocalStorage
             const configs = JSON.parse(localStorage.getItem('user_configs')) || [];
             configs.push(newConfig);
             localStorage.setItem('user_configs', JSON.stringify(configs));
-            console.log('Saved new config:', newConfig);
 
-            // 1. Hide Config Section
             if (configSection) configSection.style.display = 'none';
-
-            // 2. Show Main View
-            const mainView = document.getElementById('main-view');
             if (mainView) mainView.style.display = 'block';
+            updatePreviewVisibility();
 
-            // 3. Show Preview (Right Panel logic)
-            showFacebookPreview();
-
-            // 4. Handle Mock Data / Image Visibility
-            if (toggleImage && toggleImage.checked) {
-                if (previewImage && previewImage.src && previewImage.src !== window.location.href) {
-                    previewImage.style.display = 'block';
-                }
-            } else {
-                if (previewImage) previewImage.style.display = 'none';
-            }
-
-            alert("Đã lưu cấu hình và áp dụng!");
+            alert("Đã lưu cấu hình thành công!");
         });
     }
 
-    // "Bấm 'Khôi phục' -> quay lại VIDEO"
+    // --- 4. RESET ACTION ---
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
-            showVideo();
-
-            // Reset content
-            if (inputIdea) inputIdea.value = '';
-            if (previewContent) previewContent.innerHTML = '<span style="color:#65676b; font-style:italic;">Nhập nội dung để xem trước bài viết...</span>';
-            if (previewImage) {
-                previewImage.src = '';
-                previewImage.style.display = 'none';
+            if (inputIdea) {
+                // Đưa về nội dung mặc định của hệ thống
+                inputIdea.value = 'Tri ân Ngày Nhà giáo Việt Nam';
+                updateText();
             }
-            if (imageInput) imageInput.value = '';
+            // Không xóa allSelectedImages để giữ lại hình ảnh đã đăng thêm
+            console.log("Đã khôi phục văn bản mặc định, giữ nguyên danh sách hình ảnh.");
         });
     }
 
-    // 3. Image Upload Logic (Safeguarded)
-    if (uploadArea && imageInput) {
-        uploadArea.addEventListener('click', () => imageInput.click());
-        imageInput.addEventListener('change', function () {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    if (previewImage) {
-                        previewImage.src = e.target.result;
-                        previewImage.style.display = 'block';
-                    }
-                };
-                reader.readAsDataURL(this.files[0]);
-            }
-        });
-    }
-
-    if (removeImageBtn && previewImage && imageInput) {
-        removeImageBtn.addEventListener('click', function () {
-            previewImage.src = '';
-            previewImage.style.display = 'none';
-            imageInput.value = '';
-        });
-    }
-
-    // 4. Guide / Misc
-    const guideBtns = document.querySelectorAll('.guide-btn, #guide-btn');
-    guideBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-            alert('Hướng dẫn sử dụng:\n- Nhập ý tưởng vào ô "Yêu cầu đầu vào"\n- Bấm "Xem trước →" để tạo bài viết bằng AI');
-        });
-    });
-
-    // 5. Facebook Interaction Buttons (Mock)
-    document.querySelectorAll('.action-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const action = this.classList[1];
-            if (action === 'like-btn') {
-                this.innerHTML = '<i class="fas fa-thumbs-up" style="color: #1877f2;"></i> Đã thích';
-                this.style.color = '#1877f2';
-            } else if (action === 'comment-btn') {
-                alert('Chức năng bình luận (chỉ để minh họa)');
-            } else if (action === 'share-btn') {
-                alert('Chức năng chia sẻ (chỉ để minh họa)');
-            }
-        });
-    });
-
-    // Initial State - Show Facebook Preview by default
-    showFacebookPreview();
+    // --- 5. INITIALIZATION ---
+    updatePreviewVisibility();
     loadConfigs();
-
 });

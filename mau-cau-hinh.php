@@ -1,5 +1,5 @@
 <?php require "thanh-dieu-huong.php" ?>
-<link rel="stylesheet" href="./css/thanh-dieu-huong.css">
+
 <link rel="stylesheet" href="./css/mau-cau-hinh.css">
 
 
@@ -27,7 +27,7 @@
                             <th style="text-align: left; padding-left: 20px;">Tên cấu hình</th>
                             <th>Model</th>
                             <th>Loại bài viết </th>
-                            <th>Số bài dược tạo</th>
+                            <th>Số bài được tạo</th>
                             <th>Ngày tạo</th>
                             <th>Hành động</th>
                         </tr>
@@ -37,7 +37,7 @@
                     </tbody>
                 </table>
                 <div id="noDataState" style="display: none; padding: 60px 20px; text-align: center; color: #94a3b8;">
-                    <img src="./images/icon-ai-bot.png" style="width: 64px; opacity: 0.2; margin-bottom: 20px;">
+                    <img src="./images/icon-ai-bot.png" style="width: 64px; opacity: 0.2; margin-bottom: 20px">
                     <p style="font-size: 16px;">Bạn chưa có mẫu nào. Hãy bấm "Thêm mẫu cấu hình" để bắt đầu.</p>
                 </div>
             </div>
@@ -115,6 +115,5 @@
 </div>
 </div>
 
-<script src="./js/thanh-dieu-huong"></script>
-<script src="./js/api-helper.js?v=2.0"></script>
-<script src="./js/mau-cau-hinh.js?v=2.0"></script>
+<script src="./js/api-helper.js"></script>
+<script src="./js/mau-cau-hinh.js"></script>

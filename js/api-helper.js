@@ -1,69 +1,114 @@
-const API_BASE_URL = 'https://caiman-warm-swan.ngrok-free.app/api/v1';
+const API_BASE_URL = 'https://dvcendpoint.rosachatbot.com/api/v1';
+const PROXY_URL = 'proxy.php'; // Sử dụng proxy PHP để tránh lỗi CORS
 
-// Tự động dọn dẹp các dấu vết cũ ngay khi ứng dụng chạy
-(function cleanupStorage() {
-    localStorage.removeItem('token_type');
-    // Dọn dẹp cả bên trong các object lớn
-    ['user_info', 'ui_configs'].forEach(key => {
-        try {
-            const data = localStorage.getItem(key);
-            if (data) {
-                const parsed = JSON.parse(data);
-                if (parsed.token_type) {
-                    delete parsed.token_type;
-                    localStorage.setItem(key, JSON.stringify(parsed));
-                }
-            }
-        } catch (e) { }
-    });
-})();
+/**
+ * PHẦN 1: HÀM API REQUEST (GỬI QUA PROXY)
+ */
 
 async function apiRequest(endpoint, options = {}) {
-    const token = localStorage.getItem('access_token');
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-        ...options.headers
-    };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
+    const method = options.method || 'GET';
+    const body = options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : null;
+
+    // Chuẩn hóa đường dẫn
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+    // Gửi yêu cầu qua file proxy.php thay vì gọi trực tiếp tới backend
+    // Điều này giúp tránh lỗi CORS và bảo mật thông tin API tốt hơn
+    const targetUrl = `${PROXY_URL}?endpoint=${encodeURIComponent(cleanEndpoint)}`;
 
     try {
-        let url = endpoint;
-        if (!endpoint.startsWith('http')) {
-            const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-            const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-            url = `${base}${path}`;
-        }
-        const response = await fetch(url, {
-            ...options,
-            headers: headers
+        const response = await fetch(targetUrl, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            body: method !== 'GET' ? body : null,
+            credentials: 'include' // Quan trọng để gửi HttpOnly Cookies
         });
 
-        // Đọc response text một lần duy nhất
         const responseText = await response.text();
 
         if (!response.ok) {
+            if (response.status === 401) {
+                console.warn('⚠️ Phiên đăng nhập đã hết hạn.');
+                if (!window.location.href.includes('dang-nhap.php')) {
+                    window.location.href = 'dang-nhap.php';
+                }
+                throw new Error('Chưa đăng nhập hoặc phiên đã hết hạn');
+            }
+
             let errorData = {};
             try {
                 errorData = responseText ? JSON.parse(responseText) : {};
-            } catch (e) {
-                // Nếu không parse được JSON, để errorData là object rỗng
-            }
-            throw new Error(errorData.message || `Lỗi hệ thống (${response.status})`);
+            } catch (e) { }
+
+            throw new Error(errorData.detail || errorData.message || `Lỗi từ Server (${response.status})`);
         }
 
-        // Xử lý response thành công
         try {
             return responseText ? JSON.parse(responseText) : { success: true };
         } catch (e) {
-            console.warn('Response không phải JSON:', responseText);
             return { success: true, data: responseText };
         }
     } catch (error) {
-        console.error('API Request Error:', error);
+        console.error('❌ Lỗi kết nối API:', error.message);
         throw error;
     }
 }
+
+/**
+ * PHẦN 2: GỬI DỮ LIỆU DẠNG FORM (TẢI ẢNH/FILE)
+ */
+
+async function apiRequestFormData(endpoint, formData, method = "POST") {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const targetUrl = `${PROXY_URL}?endpoint=${encodeURIComponent(cleanEndpoint)}`;
+
+    try {
+        const response = await fetch(targetUrl, {
+            method: method,
+            body: formData,
+            credentials: 'include'
+        });
+
+        const responseText = await response.text();
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = 'dang-nhap.php';
+                throw new Error('Phiên đã hết hạn');
+            }
+            let errorData = {};
+            try { errorData = JSON.parse(responseText); } catch (e) { }
+            throw new Error(errorData.detail || errorData.message || `Lỗi gửi file (${response.status})`);
+        }
+
+        return responseText ? JSON.parse(responseText) : { success: true };
+    } catch (error) {
+        console.error('❌ Lỗi gửi File:', error);
+        throw error;
+    }
+}
+/**
+ * PHẦN 3: TẢI CẤU HÌNH GIAO DIỆN (UI CONFIGS)
+ */
+
+async function fetchUIConfigs() {
+    try {
+        const response = await apiRequest('/ui/configs', { method: 'GET' });
+
+        if (response && (response.success || response.data)) {
+            const configData = response.data || response;
+            localStorage.setItem('ui_configs', JSON.stringify(configData));
+            console.log('✅ Hệ thống: Cấu hình giao diện đã được cập nhật.');
+            return configData;
+        } else {
+            throw new Error(response.message || 'Không thể lấy cấu hình giao diện.');
+        }
+    } catch (error) {
+        console.error('❌ Lỗi tải UI Config:', error);
+        throw error;
+    }
+}
+

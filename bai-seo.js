@@ -32,7 +32,6 @@ function setupDebugTool() {
         headerRight.prepend(debugBtn);
     }
 }
-
 function setupFloatingTool() {
     const tool = document.querySelector('.ai-floating-tool');
     if (tool) {
@@ -51,12 +50,13 @@ async function loadArticleData() {
     // Hiển thị loading
     if (container) {
         container.innerHTML = `
-<div style="text-align: center; padding: 40px; color: #4F46E5;">
-    <i class="fas fa-spinner fa-spin fa-2x"></i>
-    <p style="margin-top: 10px;">Đang tải nội dung...</p>
-</div>
+    <div style="text-align: center; padding: 40px; color: #4F46E5;">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top: 10px;">Đang tải nội dung...</p>
+    </div>
 `;
     }
+
 
     const finalArticleDataJson = sessionStorage.getItem('finalArticleData');
     if (!finalArticleDataJson) {
@@ -248,15 +248,15 @@ function createSectionElement(section, index, articleData) {
     sectionHeader.style.cssText = 'display: flex; align-items: center; padding: 15px; cursor: pointer; border-bottom: 1px solid #E5E7EB;';
 
     sectionHeader.innerHTML = `
-<span class="chevron" style="margin-right: 15px; transition: transform 0.3s;">
-    <img src="./images/icon-nha-xuong.png" alt="" style="width: 16px; height: 16px; transform: rotate(0deg);">
-</span>
-<input type="text"
-    class="section-title-input"
-    value="${escapeHtml(section.title)}"
-    style="flex: 1; border: none; background: transparent; font-size: 16px; font-weight: 600; outline: none;"
-    placeholder="Nhập tiêu đề section...">
-`;
+    <span class="chevron" style="margin-right: 15px; transition: transform 0.3s;">
+        <img src="./images/icon-nha-xuong.png" alt="" style="width: 16px; height: 16px; transform: rotate(0deg);">
+    </span>
+    <input type="text"
+        class="section-title-input"
+        value="${escapeHtml(section.title)}"
+        style="flex: 1; border: none; background: transparent; font-size: 16px; font-weight: 600; outline: none;"
+        placeholder="Nhập tiêu đề section...">
+    `;
 
     // Section body với content editor
     const sectionBody = document.createElement('div');
@@ -310,6 +310,8 @@ function renderFromOutlineAndContent(articleData) {
         container.innerHTML = '<div class="no-content">Không có nội dung để hiển thị</div>';
     }
 }
+
+
 
 // ============================================================
 // RENDER OUTLINE SECTIONS
@@ -401,18 +403,18 @@ function createOutlineSectionElement(section, index, content, articleData) {
     const paddingLeft = ((section.level || 2) - 1) * 20;
 
     sectionHeader.innerHTML = `
-<span class="chevron" style="margin-right: 15px; transition: transform 0.3s;">
-    <img src="./images/icon-nha-xuong.png" alt="" style="width: 16px; height: 16px; transform: rotate(0deg);">
-</span>
-<span class="section-level-indicator" style="margin-right: 10px; color: #6B7280; font-size: 12px;">
-    H${section.level || 2}
-</span>
-<input type="text"
-    class="section-title-input ${levelClass}"
-    value="${escapeHtml(section.title)}"
-    style="flex: 1; border: none; background: transparent; font-size: ${section.level === 1 ? '18px' : '16px'}; font-weight: ${section.level === 1 ? '700' : '600'}; outline: none; padding-left: ${paddingLeft}px;"
-    placeholder="Nhập tiêu đề section...">
-`;
+    <span class="chevron" style="margin-right: 15px; transition: transform 0.3s;">
+        <img src="./images/icon-nha-xuong.png" alt="" style="width: 16px; height: 16px; transform: rotate(0deg);">
+    </span>
+    <span class="section-level-indicator" style="margin-right: 10px; color: #6B7280; font-size: 12px;">
+        H${section.level || 2}
+    </span>
+    <input type="text"
+        class="section-title-input ${levelClass}"
+        value="${escapeHtml(section.title)}"
+        style="flex: 1; border: none; background: transparent; font-size: ${section.level === 1 ? '18px' : '16px'}; font-weight: ${section.level === 1 ? '700' : '600'}; outline: none; padding-left: ${paddingLeft}px;"
+        placeholder="Nhập tiêu đề section...">
+    `;
 
     // Section body
     const sectionBody = document.createElement('div');
@@ -428,14 +430,14 @@ function createOutlineSectionElement(section, index, content, articleData) {
     let configInfo = '';
     if (section.config) {
         configInfo = `
-<div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 10px; margin-bottom: 15px; font-size: 13px; color: #1e40af;">
-    <strong>📋 Yêu cầu viết:</strong><br>
-    ${section.config.word_count ? `• Số từ: ${section.config.word_count}<br>` : ''}
-    ${section.config.keywords ? `• Từ khóa: ${section.config.keywords.join(', ')}<br>` : ''}
-    ${section.config.tone ? `• Giọng văn: ${section.config.tone}<br>` : ''}
-    ${section.config.internal_link ? `• Link nội bộ: ${section.config.internal_link}` : ''}
-</div>
-`;
+    <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 10px; margin-bottom: 15px; font-size: 13px; color: #1e40af;">
+        <strong>📋 Yêu cầu viết:</strong><br>
+        ${section.config.word_count ? `• Số từ: ${section.config.word_count}<br>` : ''}
+        ${section.config.keywords ? `• Từ khóa: ${section.config.keywords.join(', ')}<br>` : ''}
+        ${section.config.tone ? `• Giọng văn: ${section.config.tone}<br>` : ''}
+        ${section.config.internal_link ? `• Link nội bộ: ${section.config.internal_link}` : ''}
+    </div>
+    `;
     }
 
     contentEditor.innerHTML = configInfo + (content || `<p style="color: #9CA3AF;">Nhập nội dung cho ${escapeHtml(section.title)}...</p>`);
@@ -520,15 +522,11 @@ async function ContentGeneration() {
 `;
         }
 
-        const response = await fetch("https://caiman-warm-swan.ngrok-free.app/api/v1/ai/contents", {
+        const data = await apiRequest("/ai/contents", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: payload
         });
 
-        if (!response.ok) throw new Error(`Lỗi server: ${response.status}`);
-
-        const data = await response.json();
         console.log("✅ KẾT QUẢ API:", data);
 
         // Lưu response vào articleData

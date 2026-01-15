@@ -65,10 +65,10 @@ body {
     color: #060E21;
 }
 
-.nav-links a:hover {
+/* .nav-links a:hover {
     opacity: 1;
     text-shadow: 0 0 10px rgba(0, 209, 255, 0.5);
-}
+} */
 
 .header-actions {
     display: flex;
@@ -78,7 +78,7 @@ body {
 
 .btn-login {
     text-decoration: none;
-    color: var(--white);
+    color: #060E21;
     font-size: 14px;
     font-weight: 600;
     display: flex;
@@ -257,9 +257,9 @@ body {
     display: flex;
     justify-content: center;
     gap: 40px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
+    color: #FFFFFF;
 }
 
 .hero-footer-tags i {
@@ -270,7 +270,7 @@ body {
 /* --- STATS SECTION --- */
 .stats-section {
     padding: 120px 0 60px;
-    background: #FFFFFF;
+    background-image: url('../images/banner.png');
 }
 
 .stats-grid {
@@ -283,10 +283,10 @@ body {
 
 .stats-left h2 {
     font-size: 38px;
-    font-weight: 800;
+    font-weight: 200;
     line-height: 1.2;
     margin-bottom: 50px;
-    color: #0f172a;
+    color: #ffffff;
 }
 
 .stats-numbers {
@@ -297,15 +297,15 @@ body {
 .stat-item .number {
     display: block;
     font-size: 56px;
-    font-weight: 900;
-    color: #0f172a;
+    font-weight: 500;
+    color: #FFF;
     line-height: 1;
     margin-bottom: 10px;
 }
 
 .stat-item .label {
     font-size: 16px;
-    color: var(--text-muted);
+    color:#ffffff;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -324,17 +324,31 @@ body {
     line-height: 1;
     pointer-events: none;
 }
+/* CHỈNH ẢNH */
+.ais-outline-text img {
+    width: 550px;
+    height: auto;
+    line-height: normal;
+    display: block;
+}
 
 /* Feature Showcase Images */
 .feature-showcase {
     display: flex;
-    gap: 30px;
+    gap: 100px;
     justify-content: center;
 }
+.feature-showcase {
+    display: flex;
+    justify-content: center;
+}
+
+
 
 .showcase-card {
     border-radius: 24px;
     overflow: hidden;
+    width:100px;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
     background: #F1F5F9;
     transition: var(--transition);
@@ -366,11 +380,11 @@ body {
 
 .partners-title {
     text-align: center;
-    color: #3b82f6;
-    font-weight: 800;
+    color: #1E40AF;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 3px;
-    font-size: 14px;
+    font-size: 30px;
     margin-bottom: 50px;
 }
 
@@ -401,13 +415,15 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    font-size: 30px;
 }
 
 .logo-item img {
-    height: 40px;
+    height: 60px;
     opacity: 0.9;
     filter: grayscale(0%);
     transition: var(--transition);
+   
 }
 
 /* --- PROPERNESS SECTION --- */
@@ -490,15 +506,15 @@ body {
 }
 
 .timeline-step h3 {
-    font-size: 28px;
-    font-weight: 800;
+    font-size: 40px;
+    font-weight: 600;
     color: #1e293b;
     margin-bottom: 12px;
 }
 
 .timeline-step p {
-    font-size: 16px;
-    color: var(--text-muted);
+    font-size: 20px;
+    color: #525252;
     line-height: 1.6;
 }
 
@@ -527,7 +543,7 @@ body {
 
 .feature-card-text h3 {
     font-size: 38px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.25;
     color: #17365d;
     max-width: 480px;
@@ -598,7 +614,7 @@ body {
 
 .text-item h3 {
     font-size: 28px;
-    font-weight: 800;
+    font-weight: 700;
     color: #17365d;
 }
 
@@ -633,8 +649,7 @@ body {
 
 /* make header logo visible on dark hero */
 .main-header .logo img {
-    filter: brightness(0) invert(1);
-    font-size: 14px;
+    font-size: 17px;
     color: #0ea5e9;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
@@ -661,9 +676,8 @@ body {
 }
 
 .section-title {
-    text-align: center;
     font-size: 38px;
-    font-weight: 800;
+    font-weight: 600;
     margin-bottom: 70px;
     color: #5d6edc;
     /* Matching the purple-blue title color */
@@ -719,7 +733,7 @@ body {
     width: 44px;
     height: 44px;
     background: linear-gradient(180deg, #ffffff, #F0FBFF);
-    background: #FFFFFF;
+    background: #ffffff;
     border-radius: 50%;
     display: flex;
     align-items: center;

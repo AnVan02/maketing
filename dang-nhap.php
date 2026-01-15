@@ -49,6 +49,7 @@
 
     <script src="./js/api-helper.js"></script>
     <script src="./js/dang-nhap.js"></script>
+    <!-- bảo mật -->
     <script>
         // Simple console log for initialization
         console.log("Login page initialized");

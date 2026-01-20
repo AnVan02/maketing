@@ -7,28 +7,16 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="./css/thanh-dieu-huong.css">
+    <link rel="stylesheet" href="./css/header.css">
     <script src="./js/auth-check.js"></script>
     <script src="./bao-mat.js"></script>
-    <style>
-        /* Base style for nav-item to prevent layout shift */
-        .nav-item {
-            border-right: 3px solid transparent; /* Reserve space */
-            transition: all 0.2s ease;
-        }
-
-        .nav-item.active {
-            background-color: var(--bg-hover, #f0f2f5);
-            color: var(--primary-color, #0d6efd);
-            font-weight: 600;
-            border-right: 3px solid var(--primary-color, #0d6efd);
-        }
-    </style>
 </head>
 
-<?php 
+<?php
 $current_page = basename($_SERVER['PHP_SELF']);
-function isActive($page, $current_page) {
+function isActive($page, $current_page)
+{
     return ($page === $current_page) ? 'active' : '';
 }
 ?>
@@ -66,9 +54,9 @@ function isActive($page, $current_page) {
                 <a href="#" class="header-action">
                     <span class="icon"><img src="./images/icon-tu-mau.png" alt=""></span>
                     Chọn từ mẫu
-                </a><br>
-
+                </a>
                 <a href="#" class="header-action">
+
                     <span class="icon"><img src="./images/icon-luu-nhap.png" alt=""></span>
                     Lưu nháp
                 </a>
@@ -91,26 +79,31 @@ function isActive($page, $current_page) {
                                 <img src="./images/icon-google.png" alt="">
                             </span> AI SEO
                         </a>
+
                         <a href="cau-hinh-bai-viet.php" class="nav-item <?php echo isActive('cau-hinh-bai-viet.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-viet-seo.png" alt="">
                             </span> Viết bài SEO
                         </a>
+
                         <a href="#" class="nav-item">
                             <span class="icon">
                                 <img src="./images/icon-chuoi-seo.png" alt="">
                             </span> Viết chuỗi bài SEO
                         </a>
-                        <a href="#" class="nav-item">
+
+                        <a href="danh-sach-bai-viet.php" class="nav-item <?php echo isActive('danh-sach-bai-viet.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-danh-sach.png" alt="">
                             </span> Danh sách bài viết
                         </a>
+
                         <a href="#" class="nav-item">
                             <span class="icon">
                                 <img src="./images/icon-search.png" alt="">
                             </span> Phân tích từ khóa
                         </a>
+
                         <a href="mau-cau-hinh.php" class="nav-item <?php echo isActive('mau-cau-hinh.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-mau-cau-hinh.png" alt="">
@@ -119,41 +112,47 @@ function isActive($page, $current_page) {
                     </div>
 
                     <div class="nav-group">
-                        <a href="cau-hinh-facebook.php" class="nav-item <?php echo isActive('cau-hinh-facebook.php', $current_page); ?>">
+                        <a href="AI-facebook.php" class="nav-item <?php echo isActive('AI-facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-face.png" alt="">
                             </span> AI facebook
                         </a>
 
-                        <a href="cau-hinh-facebook.php" class="nav-item">
+                        <a href="cau-hinh-facebook.php" class="nav-item <?php echo isActive('cau-hinh-facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-sua.png" alt="">
                             </span> Viết bài facebook
                         </a>
 
-                        <a href="" class="nav-item">
+                        <a href="danh-sach-facebook.php" class="nav-item <?php echo isActive('danh-sach-facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-danh-sach.png" alt="">
                             </span>
                             Danh sách bài viết
                         </a>
+
                         <a href="facebook.php" class="nav-item <?php echo isActive('facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-mau-cau-hinh.png" alt="">
                             </span> Mẫu cấu hình
                         </a>
+
+
                     </div>
 
                     <div class="nav-group mt-auto">
-                        <a href="#" class="nav-item"><span class="icon">
+                        <a href="tich-hop.php" class="nav-item <?php echo isActive('tich-hop.php', $current_page); ?>">
+                            <span class="icon">
                                 <img src="./images/icon-tich-hop.png" alt="">
-                            </span> Tích hợp
+                            </span> Tich hợp
                         </a>
+
                         <a href="#" class="nav-item"><span class="icon">
                                 <img src="./images/icon-tai-lieu.png" alt="">
                             </span> Tài liệu
                         </a>
-                        <a href="#" class="nav-item"><span class="icon">
+
+                        <a href="thiet-dat.php" class="nav-item"><span class="icon">
                                 <img src="./images/icon-cai-dat.png" alt="">
                             </span> Thiết đặt
                         </a>
@@ -167,16 +166,4 @@ function isActive($page, $current_page) {
                     </div>
                 </nav>
             </aside>
-            
-            <script>
-                // Immediate Scroll Restoration to prevent jumping (FOUC)
-                (function() {
-                    try {
-                        var sidebar = document.querySelector('.sidebar-nav');
-                        var savedScroll = localStorage.getItem('sidebar_scroll_y');
-                        if (sidebar && savedScroll) {
-                            sidebar.scrollTop = parseInt(savedScroll);
-                        }
-                    } catch (e) {}
-                })();
-            </script>
+            <script src="./js/thanh-dieu-huong.js"></script>

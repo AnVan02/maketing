@@ -1,7 +1,7 @@
 <?php require "thanh-dieu-huong.php" ?>
 <link rel="stylesheet" href="./css/cau-hinh-bai-viet.css">
-<link rel="stylesheet" href="./css/thanh-dieu-huong.css">
 <link rel="stylesheet" href="./css/dan-y-bai-viet.css">
+
 
 <!-- Using Montserrat from thanh-dieu-huong if available, or already in CSS -->
 
@@ -9,7 +9,7 @@
     <!-- Sidebar is included in thanh-dieu-huong.php -->
 
     <div class="page-header">
-        <h1 class="page-title">Cấu hình bài viết</h1>
+        <h1 class="page-title">Viết bài SEO</h1>
         <div class="step-indicator">Bước 1/3</div>
     </div>
 
@@ -56,7 +56,6 @@
                             </select>
                         </div>
                     </div>
-
                     <div class="bottom-action">
                         <button class="btn-generate" id="btn-continue">
                             Tạo dàn ý bài viết
@@ -144,7 +143,7 @@
             const step2 = document.getElementById('step-2-content');
             const btnContinue = document.getElementById('btn-continue');
             const btnBack = document.getElementById('btn-back-step1');
-            const tipBoxParams = document.querySelector('.tip-box p');
+            const tipBoxParams = document.querySelector('.tip-box .tip-text');
 
             // Load existing button logic if any (generateBtn is already handled by khoi-tao-bai-viet.js)
 
@@ -189,7 +188,6 @@
         <div class="column right" id="right-panel">
             <section class="card right-panel-card">
                 <button class="guide-btn">Hướng dẫn</button>
-
                 <div id="defaultPreview">
                     <div class="video-wrapper">
                         <iframe
@@ -201,10 +199,11 @@
                         </iframe>
                     </div>
 
-
                     <div class="placeholder-content">
                         <h3>Dàn ý của bạn sẽ hiển thị tại đây</h3>
-                        <p>Xem ví dụ bên trên để hiểu cách quy trình hoạt động và tạo ra nội dung hấp dẫn. Tất cả bài viết trên nền tảng đều được tạo từ công cụ này.</p>
+                        <p>
+                            Xem ví dụ bên trên để hiểu cách quy trình hoạt động <br> và tạo ra nội dung hấp dẫn. Tất cả bài viết trên nền <br> tảng đều được tạo từ công cụ này.
+                        </p>
                     </div>
                 </div>
 
@@ -225,7 +224,6 @@
                 <!-- Outline Result Area -->
                 <div id="outlineResult" style="display: none; height:none; flex-direction:column ">
                     <div id="outlineList"></div>
-
                     <!-- Actions after outline generation -->
                     <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
                         <button id="btn-back" style="padding: 10px 20px; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer;">Quay lại</button>
@@ -241,6 +239,7 @@
 <!-- Removed redundant closing div -->
 
 <!-- Page specific scripts -->
+<script src="./js/api-helper.js"></script>
 <script src="./js/cau-hinh-bai-viet.js"></script>
 <script src="./js/dan-y-bai-viet.js"></script>
 
@@ -268,16 +267,6 @@
         }
     }
 </style>
-
-<script>
-    // Highlight active sidebar item
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.innerText.includes('Viết bài SEO')) {
-            item.classList.add('active');
-        }
-    });
-</script>
 
 </div> <!-- Close app-body -->
 </div> <!-- Close app-container -->

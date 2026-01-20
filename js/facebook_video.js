@@ -3,7 +3,7 @@
 // ============================================
 
 async function apiRequest(endpoint, method = 'GET', body = null) {
-    const url = `api-handler.php?endpoint=${endpoint}`;
+    const url = `api-proxy.php?endpoint=${endpoint}`;
     const options = {
         method: method,
         headers: {
@@ -78,7 +78,7 @@ function createDefaultConfigs() {
         content_lengths: ["Ngắn (900-1200 từ)", "Trung bình (1500-1800 từ)", "Dài (2000-2500 từ)"],
         content_types: ["Blog SEO", "Tin tức", "Hướng dẫn"],
         writing_tones: ["Chuyên nghiệp", "Thuyết phục", "Sáng tạo"],
-        languages: ["Tiếng Việt", "Tiếng Anh", "Tiếng Thái"],
+        languages: ["Tiếng Việt", "Tiếng Anh"],
         bots: ["GPT-4.1", "Gemini-2.5-flash"]
     };
 

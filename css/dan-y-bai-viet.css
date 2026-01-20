@@ -88,7 +88,7 @@
     background: white;
 }
 
-.header-left {
+.section-header-left {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -136,7 +136,7 @@
     border-color: #FCD34D;
 }
 
-.header-right {
+.section-header-right {
     display: flex;
     gap: 0px;
     opacity: 0;
@@ -144,7 +144,7 @@
     opacity: 1 !important;
 }
 
-.outline-section:hover .header-right {
+.outline-section:hover .section-header-right {
     opacity: 1;
 }
 
@@ -398,7 +398,7 @@ input:checked+.slider-round:before {
     padding: 8px 12px;
 }
 
-.subsection-header .header-left {
+.subsection-header .section-header-left {
     display: flex;
     align-items: center;
     gap: 10px;

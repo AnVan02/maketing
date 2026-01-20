@@ -29,14 +29,6 @@ function $(selector) {
     }
 }
 
-// Parse JSON an toàn
-function safeJSONParse(str, fallback = []) {
-    try {
-        return JSON.parse(str);
-    } catch {
-        return fallback;
-    }
-}
 
 // ============================================
 // 3. KHỞI TẠO TRANG CHÍNH
@@ -57,7 +49,7 @@ async function initializePage() {
     try {
         const savedFiles = localStorage.getItem(STORAGE_KEY);
         if (savedFiles) {
-            selectedFiles = safeJSONParse(savedFiles, []);
+            selectedFiles = JSON.parse(savedFiles);
         }
     } catch (e) {
         console.warn('⚠️ Lỗi localStorage:', e);
@@ -116,7 +108,7 @@ async function initializePage() {
 // 4. QUẢN LÝ TRẠNG THÁI SIDEBAR (Auto Active + Scroll)
 // ============================================
 function initializeSidebarState() {
-    // A. Highlight Active Link (Fallback cho PHP)
+    // A. Highlight Active Link
     const currentPath = window.location.pathname;
     const page = currentPath.split("/").pop();
     const links = document.querySelectorAll('.sidebar-nav .nav-item');

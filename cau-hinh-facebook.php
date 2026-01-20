@@ -1,7 +1,6 @@
 <?php require "thanh-dieu-huong.php" ?>
-
-<link rel="stylesheet" href="./css/thanh-dieu-huong.css">
 <link rel="stylesheet" href="./css/cau-hinh-facebook.css">
+
 
 <main class="page-body">
     <div id="main-view">
@@ -10,54 +9,87 @@
             <div class="step-indicator">Bước 1/3</div>
         </div>
 
-        <div class="tip-box">
-            <img src="./images/icon-meo.png" alt="Tip" class="tip-icon">
-            <p><strong>Mẹo:</strong> Nội dung càng rõ ràng, bài Facebook càng dễ chạm đúng người bạn muốn!</p>
+        <div class="tip-box" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center;">
+                <img src="./images/icon-meo.png" alt="Tip" class="tip-icon">
+                <p><strong>Mẹo:</strong> Nội dung càng rõ ràng, bài Facebook càng dễ chạm đúng người bạn muốn!</p>
+            </div>
+            <div id="facebook-connection-status" style="font-size: 13px; color: #64748b; background: #f1f5f9; padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
+                <i class="fab fa-facebook" style="color: #1877f2;"></i>
+                <span id="connected-page-name">Đang kiểm tra kết nối...</span>
+            </div>
         </div>
 
         <div class="gird-layout">
             <!-- Cột trái -->
             <div class="left-column">
-                <div class="card">
+                <div class="card basic-info-card">
                     <h2 class="card-title">Thông tin cơ bản</h2>
                     <div class="form-group">
-                        <label>Yêu cầu đầu vào<span style="color:red"> *</span></label>
+                        <label>Yêu cầu đầu vào: <span style="color:red"> *</span></label>
                         <textarea id="input-idea" placeholder="Ý tưởng của bạn là gì?"></textarea>
                     </div>
 
+
                     <div class="form-group">
-                        <label>Mẫu cấu hình </label>
+                        <label for="config_template">Chiến dịch quảng cáo</label>
                         <div class="custom-select-wrapper">
-                            <select id="content_lengths"></select>
+                            <select id="config_template">
+                                <option value="">-- Chọn chiến dịch --</option>
+                                <option src="facebook.php" value="add-new">+ Thêm mẫu cấu hình</option>
+                            </select>
                         </div>
                     </div>
-                    <!-- Button Outside Card -->
-                    <button class="preview-btn-main" id="preview-btn">Xem trước <i class="fas fa-arrow-right"></i></button>
+
+                    <div style="margin-top: 20px;">
+                        <!-- Toggles -->
+                        <div class="toggle-row">
+                            <span class="toggle-label" style="color: #374151;">Đi kèm biểu tượng (emoji):</span>
+                            <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label" style="color: #374151;">Đi kèm thẻ bài viết hashtag:</span>
+                            <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                        </div>
+                    </div>
+
+                    <div class="form-group image-toggle-group">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <label id="label-image-toggle" class="toggle-label-text" style="margin-bottom: 0;">Đi kèm hình ảnh:</label>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <a href="#" id="ais-assistant-toggle" class="ais-toggle-link" style="font-size: 15px; text-decoration: none; font-weight:500;display: flex; align-items: center; gap: 4px;">
+                                    <img src="./images/icon-sua-tt.png" alt=""> Tạo ảnh bằng trợ lý AIS
+                                </a>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-image-main" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Image Upload Group -->
+                        <div id="main-upload-trigger" class="file-upload-wrapper-premium">
+                            <span class="file-upload-icon"><i class="fas fa-photo-video"></i></span>
+                            <span class="file-upload-placeholder">Duyệt hình ảnh của bạn tại đây </span>
+                        </div>
+                        <input type="file" id="main-file-input" hidden accept="image/*,video/*" multiple>
+                    </div>
+                </div>
+                <!-- Button Outside Card -->
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="preview-btn-main" id="generate-ai-btn" style="flex: 1; background: #1e40af;">
+                        <img src="./images/icon-mui-ten.png" alt=""> Xem trước
+                    </button>
+
+                    <button class="preview-btn-main" id="publish-btn" style="flex: 1;background: #1e40af">
+                        <i class="fas fa-paper-plane"></i> Đăng bài
+                    </button>
                 </div>
             </div>
 
             <!-- Cột phải -->
             <div class="column right" id="right-panel">
-                <section class="card right-cpanel-card" id="video-container" style="justify-content: center; align-items: center; text-align: center;">
-                    <button class="guide-btn">Hướng dẫn</button>
-                    <div id="defaultPreview" class="empty-state-content">
-                        <div class="video-placeholder-thumb">
-                            <div class="play-button-overlay">
-                                <i class="fas fa-play"></i>
-                            </div>
-                            <iframe
-                                src="https://www.youtube.com/embed/Uzqpwc5hpCE?si=xPtN0u8EW6KOsQ_J"
-                                title="YouTube video player"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                referrerpolicy="strict-origin-when-cross-origin"
-                                allowfullscreen>
-                            </iframe>
-                        </div>
-                        <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 10px;">Bản xem trước sẽ hiển thị tại đây</h3>
-                        <p style="font-size: 14px; color: #64748b; max-width: 400px; line-height: 1.6;">Công cụ AI được thiết kế để tạo nhiều dạng nội dung khác nhau với chất lượng ổn định và đáng tin cậy.</p>
-                    </div>
-                </section>
-                <div class="card preview-card" id="facebook-preview" style="display: none; height: auto; padding-bottom: 30px;">
+                <div class="card preview-card" id="facebook-preview" style="height: auto; padding-bottom: 135px;">
                     <div class="preview-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2 class="card-title-manu" style="margin: 0; font-weight: 600; color: #1e40af; border: none;">Xem trước bài viết</h2>
                         <div style="display: flex; gap: 10px;">
@@ -72,59 +104,95 @@
                             <div class="post-header">
                                 <img src="./images/trang-face.png" alt="Avatar" class="avatar" style="background: #ef4444; padding: 2px;">
                                 <div class="user-info">
-                                    <div class="user-name">AIS Maketing <i class="fas fa-check-circle" style="color: #1877f2; margin-left: 4px;"></i></div>
-                                    <div class="post-time" style="font-size: 12px; color: #65676b;">
+                                    <div class="user-name">AIS Maketing <i class="fas fa-check-circle" style="color: #1877f2; margin-left: 10px; font-size: 15px;"></i></div>
+                                    <div class="post-time" style="font-size: 14px; color: #65676b;">
                                         <i class="fas fa-globe-americas"></i> Vừa xong
                                     </div>
                                 </div>
                                 <div class="post-options">
-                                    <i class="fas fa-star" style="color: #3b82f6; background: #eeffff; padding: 5px; border-radius: 50%; font-size: 10px;"></i>
+                                    <i class="fas fa-star" style="color: #3b82f6; background: #eeffff; padding: 5px; border-radius: 50%; font-size: 15px;"></i>
                                     <i class="fas fa-ellipsis-h" style="margin-left: 10px;"></i>
                                 </div>
                             </div>
 
                             <!-- Content -->
                             <div class="post-content" id="preview-content" style="padding-top: 0;">
-                                ROSA chính thức ra mắt dòng laptop made in Vietnam đầu tiên. Đánh dấu bước đi mới trên hành trình chinh phục công nghệ!
+                                Ý tưởng của bạn là gì ?
                             </div>
+
+                            <!-- Image Grid Layer -->
+                            <div id="image-grid-container" class="facebook-image-grid" style="display: none;"></div>
 
                             <img src="" class="post-image" id="preview-image" alt="Post image" style="display: none; margin-bottom: 10px;">
 
-                            <!-- Stats -->
-                            <div class="post-stats" style="border-bottom: none; padding-bottom: 5px;">
-                                <span style="font-size: 13px;">1 Bình luận. 46 Lượt chia sẻ</span>
-                                <span style="font-size: 13px; margin-left: auto;">361k lượt yêu thích <i class="fas fa-thumbs-up" style="color: white; background: #1877f2; padding: 3px; border-radius: 50%; font-size: 8px;"></i> <i class="fas fa-heart" style="color: white; background: #ef4444; padding: 3px; border-radius: 50%; font-size: 8px;"></i></span>
-                            </div>
+                            <!-- Combined Interaction Row (Buttons Left, Stats Right) -->
+                            <div class="post-interaction-row">
+                                <!-- Action Buttons on the Left -->
+                                <div class="post-actions-premium">
+                                    <div class="action-item">
+                                        <div class="action-btn-circle" id="btn-like">
+                                            <img src="./images/icon-like.png" alt="Like">
+                                        </div>
+                                    </div>
+                                    <div class="action-item">
+                                        <div class="action-btn-circle" id="btn-comment">
+                                            <img src="./images/icon-binh-luan.png" alt="Comment">
+                                        </div>
+                                    </div>
+                                    <div class="action-item">
+                                        <div class="action-btn-circle" id="btn-share">
+                                            <img src="./images/icon-share.png" alt="Share">
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <!-- Actions -->
-                            <div class="post-actions" style="border-top: 1px solid #f0f2f5; padding: 10px 0; margin: 0 16px; gap: 15px; justify-content: flex-start;">
-                                <div class="action-btn-circle" style="width: 36px; height: 36px; background: #1877f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
-                                    <img src="./images/icon-like.png" alt="">
-                                </div>
-                                <div class="action-btn-circle" style="width: 36px; height: 36px; background: #f0f2f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #65676b;">
-                                    <img src="./images/icon-binh-luan.png" alt="">
-                                </div>
-                                <div class="action-btn-circle" style="width: 36px; height: 36px; background: #f0f2f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #65676b;">
-                                    <img src="./images/icon-share.png" alt="">
+                                <!-- Stats text on the Right -->
+                                <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; font-size: 13px; color: #65676b;">
+                                    <span id="like-count-text" style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                        <img src="./images/icon_like.png" alt="like" style="width:50px; height:25px;">
+                                        361k lượt yêu thích
+                                    </span>
+
+                                    <span>•</span>
+                                    <span id="comment-share-stats">2 Bình luận • 46 Lượt chia sẻ</span>
                                 </div>
                             </div>
                             <!-- Comments -->
-                            <div class="comment-section" style="padding: 10px 16px; border-top: 1px solid #f0f2f5;">
-                                <div class="comment-item" style="display: flex; gap: 10px;">
-                                    <img src="./images/icon-people.png" style="width: 32px; height: 32px; border-radius: 50%; filter: grayscale(100%);">
-                                    <div class="comment-content">
-                                        <div style="background: #f0f2f5; padding: 8px 12px; border-radius: 12px;">
-                                            <div style="font-weight: 600; font-size: 13px; color: #050505;">ROSA COMPUTER</div>
-                                            <div style="font-size: 13px; color: #050505;">Tuyệt vời!</div>
+                            <div class="comment-section-premium">
+                                <div class="comment-item">
+                                    <img src="./images/1.png" class="comment-avatar">
+                                    <div class="comment-body">
+                                        <div class="comment-bubble">
+                                            <div class="comment-user"> ROSA AI COMPUTER <i class="fas fa-check-circle" style="color: #1877f2; margin-left: 4px;"></i></div>
+                                            <div class="comment-text">Tuyệt vời!</div>
                                         </div>
-                                        <div style="display: flex; gap: 10px; font-size: 12px; color: #65676b; margin-top: 4px; margin-left: 4px;">
+                                        <div class="comment-actions">
                                             <span>Thích</span>
                                             <span>Trả lời</span>
                                             <span>2 phút trước</span>
                                         </div>
                                     </div>
-                                    <div style="margin-left: auto;">
-                                        <i class="fas fa-ellipsis-v" style="color: #65676b; font-size: 12px;"></i>
+                                    <div class="comment-more">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </div>
+                                </div>
+
+
+                                <div class="comment-item">
+                                    <img src="./images/icon-people.png" class="comment-avatar">
+                                    <div class="comment-body">
+                                        <div class="comment-bubble">
+                                            <div class="comment-user">Tui khoong cos teen</div>
+                                            <div class="comment-text">Tuyệt vời quá!</div>
+                                        </div>
+                                        <div class="comment-actions">
+                                            <span>Thích</span>
+                                            <span>Trả lời</span>
+                                            <span>2 phút trước</span>
+                                        </div>
+                                    </div>
+                                    <div class="comment-more">
+                                        <i class="fas fa-ellipsis-h"></i>
                                     </div>
                                 </div>
                             </div>
@@ -134,7 +202,6 @@
             </div>
         </div>
     </div>
-
     <!-- Configuration Section (Hidden by default) -->
     <div id="config-section" style="display: none; max-width: 800px; margin: 0 auto;">
         <div class="page-header-small" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -150,15 +217,17 @@
         <div class="card" style="margin-bottom: 20px; min-height: auto; padding: 25px 30px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
             <div class="form-group" style="margin-bottom: 0;">
                 <label style="color: #2563eb; font-weight: 500; font-size: 16px; margin-bottom: 15px; display: block;">Tên cấu hình</label>
-                <input type="text" id="config_name_input" placeholder="" class="premium-input" style="width: 100%; border: none; border-bottom: 1px solid #e2e8f0; border-radius: 0; padding: 10px 0; font-size: 15px;">
+                <input id="config_name_input" class="premium-input" placeholder="VD: Blog SEO cơ bản" style="width: 100%; border: none; border-bottom: 1px solid #e2e8f0; border-radius: 0; padding: 10px 0; font-size: 15px;">
             </div>
         </div>
 
         <!-- Main Config Box -->
         <div class="card" style="min-height: auto; padding: 30px;">
-            <!-- Lengths -->
             <div class="form-group">
-                <label style="font-weight: 500; color: #64748b; font-size: 14px;">Độ dài bài viết</label>
+
+            </div>
+            <div class="form-group">
+                <label>Độ dài bài viết</label>
                 <div class="custom-select-wrapper">
                     <select id="content_lengths"></select>
                 </div>
@@ -168,7 +237,6 @@
             <div class="form-group">
                 <label>Mức độ sáng tạo</label>
                 <div class="slider-wrapper">
-                    <span id="creativity_val" class="slider-value-badge">50%</span>
                     <input type="range" id="creativity_level" min="0" max="100" class="premium-slider">
                 </div>
             </div>
@@ -216,10 +284,11 @@
                     <label class="switch"><input type="checkbox"><span class="slider"></span></label>
                 </div>
                 <div class="toggle-row">
-                    <span class="toggle-label" style="color: #64748b;">Đi kèm hình ảnh:</span>
+                    <span class="toggle-label" style="color: #64748b;">Upload hình ảnh:</span>
                     <a style="font-size: 12px; color: #3b82f6; text-decoration: none; margin-left: auto; margin-right: 15px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                         <i class="fas fa-magic"></i> Tao ảnh bằng trợ lý AIS
                     </a>
+
                     <label class="switch">
                         <input type="checkbox" id="toggle-image" checked>
                         <span class="slider round"></span>
@@ -227,26 +296,35 @@
                 </div>
             </div>
 
-
-            <!-- Image Upload Group -->
-            <div id="modal-image-group" class="image-upload-wrapper" style="margin-top: 10px;">
-                <div id="modal-upload-trigger" class="file-upload-wrapper" style="border: 1px solid #e2e8f0; background: white; padding: 12px;">
-                    <span class="file-upload-icon"><i class="fas fa-paperclip"></i></span>
-                    <span class="file-upload-placeholder" style="margin-left: 10px; font-size:14px; color: #94a3b8;">Duyệt hình ảnh của bạn tại đây</span>
+            <div class="form-group image-toggle-group">
+                <!-- Image Upload Group -->
+                <div id="main-upload-trigger" class="file-upload-wrapper-premium">
+                    <span class="file-upload-icon"><i class="fas fa-photo-video"></i></span>
+                    <span class="file-upload-placeholder" style="margin-left: -450px;">Duyệt hình ảnh của bạn tại đây</span>
                 </div>
-                <input type="file" id="modal-file-input" hidden accept="image/*">
+                <input type="file" id="main-file-input" hidden accept="image/*,video/*" multiple>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button id="save-config-btn" class="save-config-btn">LƯU CẤU HÌNH</button>
+                </div>
             </div>
-        </div>
-
-
-        <!-- Button -->
-        <div style="text-align: center; margin-top: 30px;">
-            <button id="save-config-btn" class="save-config-btn">LƯU CẤU HÌNH</button>
-        </div>
-    </div>
 </main>
+
+
+<!-- Lightbox Modal -->
+<div id="lightbox-modal" class="lightbox">
+    <span class="close-lightbox">&times;</span>
+    <img class="lightbox-content" id="lightbox-img">
+    <div id="lightbox-caption"></div>
+</div>
+
+<!-- Các script khác -->
+<script src="./js/api-helper.js"></script>
+<script src="./js/cau-hinh-facebook.js"></script>
+
 </div>
 </div>
 
-<script src="./js/thanh-dieu-huong.js"></script>
-<script src="./js/cau-hinh-facebook.js"></script>
+</body>
+
+</html>

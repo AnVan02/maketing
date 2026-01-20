@@ -1,25 +1,15 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Montserrat';
-}
-
-body {
-    background-color: #f0f2f5;
-    color: #1c1e21;
-    line-height: 1.34;
-}
-
+/* --- PAGE SPECIFIC --- */
 .page-body {
-    /* padding: 20px 30px; */
+    padding: 20px 30px;
     margin: 0;
     flex: 1;
     width: 100%;
     box-sizing: border-box;
-    /* overflow-x: auto; */
+    overflow-y: auto;
     font-family: 'Montserrat';
+    margin-bottom: 20px;
 }
+
 
 /* Removed .content-area as it is replaced by page-body */
 
@@ -31,9 +21,10 @@ body {
 }
 
 .page-title {
-    font-size: 20px;
-    font-weight: 500;
-    color: #111827;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
 }
 
 .step-indicator {
@@ -46,7 +37,7 @@ body {
     background-color: #eff6ff;
     border: 1px solid #dbeafe;
     border-radius: 8px;
-    padding: 12px 20px;
+    padding: 0px 20px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -66,26 +57,45 @@ body {
 
 /* New Preview Button (Outside Card) */
 .preview-btn-main {
-    margin-top: 20px;
+    margin-top: 25px;
     background-color: #2563eb;
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 12px 0;
-    width: 150px;
-    font-size: 15px;
+    padding: 14px 0;
+    width: 200px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    transition: background-color 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+    gap: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
 }
 
 .preview-btn-main:hover {
     background-color: #1d4ed8;
+}
+
+#generate-ai-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+}
+
+#publish-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+}
+
+#facebook-connection-status {
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+#facebook-connection-status:hover {
+    background: #f8fafc;
 }
 
 .left-column {
@@ -190,7 +200,7 @@ body {
 
 .gird-layout {
     display: grid;
-    grid-template-columns: 732px 1079px;
+    grid-template-columns: 657px 910px;
     gap: 30px;
     align-items: start;
 }
@@ -198,15 +208,18 @@ body {
 /* Cả hai card đều có chiều cao tối thiểu và cho phép cuộn nếu cần */
 .card {
     background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     padding: 30px;
-    /* Increased padding */
-    min-height: 800px; /*REMOVED Fixed Height*/
+    min-height: 500px;
     display: flex;
     flex-direction: column;
-    /* overflow-y: auto; */
     max-width: 1200px;
+    border: 1px solid #f1f5f9;
+}
+
+.basic-info-card {
+    min-height: auto !important;
 }
 
 .card-title {
@@ -214,11 +227,11 @@ body {
     font-weight: 600;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #dadde1;
+    /* border-bottom: 1px solid #dadde1; */
     color: #1c1e21;
 }
 
-card-title-manu {
+.card-title-manu {
     font-size: 20px;
     font-weight: 400;
     margin-bottom: 20px;
@@ -233,7 +246,7 @@ card-title-manu {
 
 label {
     display: block;
-    font-weight: 600;
+    /* font-weight: 600; */
     margin-bottom: 8px;
     color: #65676b;
     font-size: 15px;
@@ -249,8 +262,19 @@ select {
 }
 
 textarea {
-    height: 100px;
-    resize: vertical;
+    height: 150px;
+    resize: none;
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    font-weight: 500;
+    color: #334155;
+}
+
+textarea:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .checkbox-group {
@@ -298,7 +322,6 @@ textarea {
     align-items: center;
     margin-bottom: 15px;
     color: #1037B8;
-    margin: 100px;
 }
 
 .preview-btn-small {
@@ -320,7 +343,7 @@ textarea {
     max-width: 700px;
     min-width: 480px;
     width: 100%;
-    margin: 30px auto;
+    margin: -20px auto;
     /* Căn giữa và có khoảng cách đẹp */
     flex-shrink: 0;
 }
@@ -654,7 +677,7 @@ textarea {
 
 .toggle-label {
     color: #65676b;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 .switch {
@@ -697,8 +720,8 @@ textarea {
 }
 
 input:checked+.slider {
-    background-color: #2ebd59;
-    /* Green as in screenshot */
+    background-color: #3b82f6;
+    /* Blue to match theme */
 }
 
 input:checked+.slider:before {
@@ -712,27 +735,38 @@ input:checked+.slider:before {
     margin-top: 15px;
 }
 
-.file-upload-wrapper {
+.file-upload-wrapper-premium {
     position: relative;
-    width: 100%;
-    height: 40px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    width: 95%;
+    height: 48px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    background: #f9f9f9;
+    padding: 0 15px;
+    background: #fff;
     cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.file-upload-wrapper-premium:hover {
+    border-color: #3b82f6;
 }
 
 .file-upload-placeholder {
-    color: #aaa;
-    font-size: 13px;
+    color: #94a3b8;
+    font-size: 14px;
     flex: 1;
+    margin-left: -289px;
+    text-align: center;
+    cursor: pointer;
+
 }
 
 .file-upload-icon {
-    color: #aaa;
+    color: #94a3b8;
+    font-size: 18px;
+    margin-right: 15px;
 }
 
 .save-config-btn {
@@ -754,6 +788,192 @@ input:checked+.slider:before {
 }
 
 /* --- OPTIMIZED FACEBOOK PREVIEW STYLES --- */
+.facebook-image-grid {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.image-item-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.video-preview-thumb {
+    filter: brightness(0.6);
+}
+
+.video-play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 24px;
+    background: rgba(0, 0, 0, 0.4);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    border: 2px solid white;
+}
+
+.facebook-image-grid img,
+.facebook-image-grid video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.remove-img-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+}
+
+.remove-img-btn:hover {
+    background: rgba(255, 0, 0, 0.8);
+}
+
+.facebook-image-grid img:hover {
+    filter: brightness(0.9);
+}
+
+/* Grid Variatons */
+/* Case 1: 1 image */
+.facebook-image-grid.count-1 {
+    grid-template-columns: 1fr;
+}
+
+.facebook-image-grid.count-1 img {
+    max-height: 500px;
+}
+
+/* Case 2: 2 images */
+.facebook-image-grid.count-2 {
+    grid-template-columns: 1fr 1fr;
+    height: 300px;
+}
+
+/* Case 3: 3 images */
+.facebook-image-grid.count-3 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 200px 200px;
+}
+
+.facebook-image-grid.count-3 div:first-child {
+    grid-row: span 2;
+}
+
+/* Case 4: 4 images */
+.facebook-image-grid.count-4 {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 150px 150px 150px;
+}
+
+.facebook-image-grid.count-4 div:first-child {
+    grid-row: span 3;
+}
+
+/* Case 5+: More */
+.facebook-image-grid.count-more {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 150px 150px 150px;
+}
+
+.facebook-image-grid.count-more div:first-child {
+    grid-row: span 3;
+}
+
+.facebook-image-grid .more-overlay {
+    position: relative;
+}
+
+.facebook-image-grid .more-overlay::after {
+    content: attr(data-more);
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+/* Lightbox */
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.lightbox-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 80vh;
+    border-radius: 8px;
+    animation: zoom 0.3s;
+}
+
+@keyframes zoom {
+    from {
+        transform: scale(0.5)
+    }
+
+    to {
+        transform: scale(1)
+    }
+}
+
+.close-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#lightbox-caption {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+    text-align: center;
+    color: #ccc;
+    padding: 10px 0;
+}
 
 /* Empty State */
 .empty-state-content {
@@ -782,135 +1002,300 @@ input:checked+.slider:before {
     width: 100%;
 }
 
-.facebook-post {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 500px;
-    font-family: 'Montserrat';
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.post-header {
-    display: flex;
-    align-items: flex-start;
-    padding: 12px 16px 0;
-    margin-bottom: 12px;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-    object-fit: cover;
-}
-
-.user-info {
-    flex: 1;
-}
-
-.user-name {
-    font-weight: 600;
-    font-size: 15px;
-    color: #050505;
-    line-height: 1.2;
+/* Premium Interaction Row */
+.post-interaction-row {
     display: flex;
     align-items: center;
-    gap: 4px;
-}
-
-.post-time {
-    font-size: 13px;
-    color: #65676B;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 3px;
-}
-
-.post-options {
-    color: #65676B;
-    cursor: pointer;
-    font-size: 20px;
-    padding: 0 8px;
-}
-
-.post-content {
-    padding: 4px 16px 16px;
-    font-size: 15px;
-    color: #050505;
-    line-height: 1.5;
-}
-
-.post-image {
-    width: 100%;
-    height: auto;
-    display: block;
-    object-fit: cover;
-}
-
-.post-stats {
-    padding: 10px 16px;
-    display: flex;
     justify-content: space-between;
-    align-items: center;
-    color: #65676B;
-    font-size: 15px;
-    border-bottom: 1px solid #ced0d4;
-    border-top: none;
-    /* Existing CSS might have it */
+    padding: 10px 16px;
+    border-top: 1px solid #f0f2f5;
+    border-bottom: 1px solid #f0f2f5;
+    background: #fff;
+    width: 100%;
 }
 
-/* Actions Bar */
-.post-actions {
+.post-actions-premium {
     display: flex;
-    padding: 4px;
-    border-top: 1px solid #ced0d4;
-    margin: 0 12px;
-    /* Inner margin usually */
+    align-items: center;
+    gap: 10px;
 }
 
-.action-btn {
-    flex: 1;
+.action-item {
+    display: flex;
+    align-items: center;
+}
+
+.action-btn-circle {
+    width: 36px;
+    height: 36px;
+    background: #f1f5f9;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 6px 0;
-    margin: 2px 0;
-    border-radius: 4px;
     cursor: pointer;
-    color: #65676B;
-    font-weight: 600;
-    font-size: 15px;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
 }
 
-.action-btn:hover {
-    background-color: #f0f2f5;
+.action-btn-circle:hover {
+    transform: scale(1.1);
+    background: #e2e8f0;
 }
 
-.action-btn i {
-    font-size: 18px;
+.action-btn-circle.active {
+    background: #2563eb;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }
 
-/* Right Card overrides */
-.right-cpanel-card {
-    min-height: 500px;
-    position: relative;
-    display: flex;
+.action-btn-circle img {
+    width: 50px;
+    height: 40px;
+    object-fit: contain;
+    transition: all 0.2s;
+}
+
+/* Premium Comments Section */
+.comment-section-premium {
+    padding: 12px 16px;
+    border-top: 1px solid #f1f5f9;
+    background: #fafafa;
+    display: none;
     flex-direction: column;
+    gap: 12px;
 }
 
-/* Override existing margins if conflicting */
-.facebook-post .post-stats {
-    color: #65676B;
+.comment-section-premium.show {
+    display: flex;
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.comment-body {
+    flex: 1;
+}
+
+.comment-bubble {
+    background: #f1f5f9;
+    padding: 10px 14px;
+    border-radius: 12px;
+}
+
+.comment-user {
+    font-weight: 700;
+    font-size: 13px;
+    color: #050505;
+    margin-bottom: 2px;
+}
+
+.comment-text {
+    font-size: 13px;
+    color: #050505;
+    line-height: 1.4;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    padding-left: 4px;
+    font-weight: 500;
+}
+
+.comment-more {
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.comment-more:hover {
+    color: #64748b;
+}
+
+/* Comment Input Style */
+.comment-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+    border-top: 1px solid #f0f2f5;
+    padding-top: 12px;
+}
+
+.comment-input-field {
+    flex: 1;
+    background: #f0f2f5;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    outline: none;
+    transition: background 0.2s;
+}
+
+.comment-input-field:focus {
+    background: #e4e6eb;
+}
+
+/* Small Fix for Avatar in Post Header */
+.post-header .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #f0f2f5;
+}
+
+/* Toggle Round Slider Premium */
+.switch .slider.round {
+    border-radius: 34px;
+}
+
+.switch .slider.round:before {
+    border-radius: 50%;
+}
+
+/* Final Cleanup and Layout Fixes */
+.facebook-post-wrapper {
+    width: 100%;
+    /* overflow-x: auto; */
+    padding: 20px 0;
 }
 
 .preview-header {
-    margin: 0 0 20px 0;
-    /* Fix huge margin in previous CSS */
+    margin: 0 0 20px 0 !important;
+}
+
+.facebook-post .user-name {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Ensure the toggle looks premium */
+.switch {
+    width: 44px;
+    height: 24px;
+}
+
+.slider.round:before {
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+}
+
+/* --- CUSTOM SELECT WRAPPER --- */
+.custom-select-wrapper {
+    position: relative;
+}
+
+.custom-select-wrapper::after {
+    content: '▼';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.custom-select-wrapper select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+
+/* --- SLIDER STYLES --- */
+.slider-wrapper {
+    position: relative;
+    padding-top: 5px;
+}
+
+.premium-slider {
+    width: 100%;
+    height: 7px;
+    border-radius: 10px;
+    background: linear-gradient(to right, #3b82f6 50%, #e2e8f0 50%);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.premium-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 3px solid #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.premium-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 3px solid #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.slider-value-badge {
+    background: #3b82f6;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* AIS Toggle Link Style */
+.ais-toggle-link {
+    color: #64748b !important;
+    /* Gray default override inline if any left */
+    transition: color 0.3s ease;
+}
+
+.ais-toggle-link img {
+    filter: grayscale(100%);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.ais-toggle-link.active {
+    color: #2563EB !important;
+    /* Blue active */
+}
+
+.ais-toggle-link.active img {
+    filter: none;
+    opacity: 1;
+}
+
+/* Toggle Label Text Style */
+.toggle-label-text {
+    color: #64748b;
+    transition: color 0.3s ease;
+}
+
+.toggle-label-text.active {
+    color: #2563eb;
+    font-weight: 600;
 }

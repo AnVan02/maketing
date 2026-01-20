@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Demo Auth Cookie</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 16px;
+      margin-bottom: 10px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 12px;
+      margin-top: 20px;
+      max-width: 800px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Demo Login + UI Config</h1>
+
+  <button id="loginBtn">Login</button>
+  <button id="loadConfigBtn">Load UI Config</button>
+
+  <h3>Output:</h3>
+  <pre id="output">Output sẽ hiện ở đây</pre>
+
+  <script type="module">
+    import { login } from "./auth.js";
+    import { fetchUIConfigs } from "./uiConfig.js";
+
+    const output = document.getElementById('output');
+
+    // Login
+    document.getElementById('loginBtn').onclick = async () => {
+      output.textContent = 'Đang đăng nhập...';
+      
+      try {
+        const res = await login();
+        output.textContent = `✅ Đăng nhập thành công\n${JSON.stringify(res, null, 2)}`;
+      } catch (err) {
+        output.textContent = `❌ Lỗi: ${err.message}`;
+      }
+    };
+
+    // Load UI Config
+    document.getElementById('loadConfigBtn').onclick = async () => {
+      output.textContent = 'Đang lấy config...';
+      
+      try {
+        const configs = await fetchUIConfigs();
+        output.textContent = `✅ Lấy config thành công\n${JSON.stringify(configs, null, 2)}`;
+      } catch (err) {
+        output.textContent = `❌ Lỗi: ${err.message}`;
+      }
+    };
+  </script>
+
+</body>
+</html>

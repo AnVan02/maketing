@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Upload media lên Facebook</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 500px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        select,
+        input[type="file"],
+        button {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background: #1877f2;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #0f5ed7;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Upload ảnh / video Facebook</h2>
+
+        <form id="uploadForm">
+            <label>Loại media</label>
+            <select name="Media_type" id="mediaType" required>
+                <option value="photo">Ảnh (Photo)</option>
+                <option value="video">Video</option>
+            </select>
+
+            <label>Chọn file</label>
+            <input type="file" id="files" name="Files" multiple required />
+
+            <button type="submit">Upload</button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            const mediaType = document.getElementById("mediaType").value;
+            const files = document.getElementById("files").files;
+
+            if (files.length === 0) {
+                alert("Vui lòng chọn file!");
+                return;
+            }
+
+            formData.append("Media_type", mediaType);
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append("Files", files[i]);
+            }
+
+            try {
+                const response = await fetch("/api/v1/facebook/publish/media/upload", {
+                    method: "POST",
+                    headers: {
+                        // Nếu có auth
+                        // "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById("result").innerHTML =
+                        `<div class="success">
+                        ✅ ${data.message}<br>
+                        Media IDs: ${data.media_ids.join(", ")}
+                    </div>`;
+                } else {
+                    document.getElementById("result").innerHTML =
+                        `<div class="error">❌ Upload thất bại</div>`;
+                }
+            } catch (err) {
+                document.getElementById("result").innerHTML =
+                    `<div class="error">❌ Lỗi kết nối server</div>`;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

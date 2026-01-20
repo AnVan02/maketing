@@ -1,29 +1,72 @@
-/* --- TOP HEADER --- */
+:root {
+    --header-height: 70px;
+    --sidebar-width: 260px;
+    --bg-white: #ffffff;
+    --bg-body: #f0f2f5;
+    --primary-blue: #0d6efd;
+    --text-main: #060E21;
+    --text-sub: #4B5563;
+    --border-color: #E5E7EB;
+    --transition: all 0.2s ease;
+    --radius-md: 8px;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: var(--bg-body);
+}
+
 .top-header {
     height: var(--header-height);
+    min-height: var(--header-height);
+    max-height: var(--header-height);
     background-color: var(--bg-white);
-    /* border-bottom: 1px solid var(--border-color); */
     display: flex;
     align-items: center;
     padding: 0 30px;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
     flex-shrink: 0;
 }
 
+.app-body {
+    overflow: visible;
+}
+
+.nav-item {
+    border-right: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.nav-item.active {
+    background-color: var(--bg-hover, #f0f2f5);
+    color: var(--primary-color, #0d6efd);
+    font-weight: 600;
+    border-right: 3px solid var(--primary-color, #0d6efd);
+}
+
+/* --- TOP HEADER --- */
 .header-left {
     display: flex;
     align-items: center;
     gap: 15px;
     width: var(--sidebar-width);
-    /* Align with sidebar width approx */
     flex-shrink: 0;
 }
-
-
 
 .header-center {
     flex: 1;
     display: flex;
     justify-content: center;
+
 }
 
 .menu-toggle {
@@ -36,6 +79,7 @@
     color: var(--text-sub);
     transition: color 0.2s;
     padding: 5px;
+
 }
 
 .top-nav {
@@ -45,11 +89,12 @@
 
 .top-nav a {
     text-decoration: none;
-    color: #1E1E1E;
+    color: var(--white);
     font-weight: 600;
-    font-size: 16px;
-    transition: color 0.2s;
-
+    font-size: 15px;
+    opacity: 0.9;
+    transition: var(--transition);
+    color: #060E21;
 }
 
 .top-nav a:hover,
@@ -76,7 +121,7 @@
     border: 1px solid #E5E7EB;
     border-radius: 8px;
     transition: all 0.2s;
-    margin-left:8px;
+    margin-left: 8px;
 }
 
 .header-action:hover {
@@ -95,7 +140,7 @@
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--border-color);
-    margin-left:20px ;
+    margin-left: 20px;
 }
 
 /* --- LAYOUT --- */

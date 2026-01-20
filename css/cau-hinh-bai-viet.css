@@ -1,36 +1,5 @@
-/* --- VARIABLES & RESET --- */
-:root {
-     --primary-blue: #3B82F6;
-     --primary-hover: #2563EB;
-     --bg-body: #F9FAFB;
-     --bg-white: #FFFFFF;
-     --text-main: #111827;
-     --text-sub: #4B5563;
-     --text-light: #6B7280;
-     --border-color: #E5E7EB;
-     --sidebar-width: 260px;
-     --header-height: 64px;
-     --radius-md: 8px;
-     --radius-lg: 12px;
-     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-     font-family: 'Montserrat';
-}
+/* --- PAGE SPECIFIC --- */
 
-* {
-     box-sizing: border-box;
-     margin: 0;
-     padding: 0;
-     font-family: 'Montserrat';
-}
-
-body {
-     background-color: var(--bg-body);
-     color: var(--text-main);
-     font-size: 14px;
-     line-height: 1.5;
-     height: 100vh;
-     overflow: hidden;
-}
 
 /* --- CONTENT AREA --- */
 .page-body {
@@ -40,7 +9,13 @@ body {
      width: 100%;
      box-sizing: border-box;
      font-family: 'Montserrat';
-     overflow-x: auto;
+     overflow-y: auto;
+     display: flex;
+     flex-direction: column;
+}
+
+* {
+     box-sizing: border-box;
 }
 
 .page-header {
@@ -332,6 +307,16 @@ select {
      appearance: none;
 }
 
+/* Khóa chiều cao cột trái */
+.column.left>.card {
+     min-height: 800px;
+}
+
+/*  Chống nhảy tip */
+.tip-box {
+     min-height: 64px;
+}
+
 /* --- TITLE SUGGESTIONS --- */
 .title-suggestions-container {
      margin-top: 10px;
@@ -378,5 +363,28 @@ select {
 
      .video-wrapper iframe {
           border-radius: 12px;
+     }
+}
+
+/* Spinner Animation */
+.path {
+     animation: dash 1.5s ease-in-out infinite;
+     stroke-linecap: round;
+}
+
+@keyframes dash {
+     0% {
+          stroke-dasharray: 1, 150;
+          stroke-dashoffset: 0;
+     }
+
+     50% {
+          stroke-dasharray: 90, 150;
+          stroke-dashoffset: -35;
+     }
+
+     100% {
+          stroke-dasharray: 90, 150;
+          stroke-dashoffset: -124;
      }
 }

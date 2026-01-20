@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 el.innerHTML += Object.entries(arr).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
             }
         };
-
         try {
             const data = await apiRequest('/ui/configs');
             localStorage.setItem('ui_configs', JSON.stringify(data));
@@ -51,22 +50,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log("✅ Select options updated from API");
             }
         } catch (e) {
-            console.warn("⚠️ API Load options failed, trying cache...", e);
-            const cached = localStorage.getItem('ui_configs');
-            if (cached) {
-                const data = JSON.parse(cached);
-                const configData = data.data || data;
-                if (configData) {
-                    fill('content_lengths', configData.content_lengths);
-                    fill('content_types', configData.content_types);
-                    fill('writing_tones', configData.writing_tones);
-                    fill('languages', configData.languages);
-                    fill('bots', configData.bots);
-                }
-            }
+            console.error("❌ Lỗi loadOptions:", e);
+            showNotification("Không thể tải danh sách tùy chọn cấu hình.", "error");
         }
     }
-    
+
     // Tải danh sách cấu hình người dùng (API 4: GET /api/v1/ui/user/configs)
     async function loadUserConfigs() {
         try {
@@ -80,9 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return [];
         } catch (error) {
             console.error('Lỗi khi tải danh sách cấu hình:', error);
-            // Fallback về cache nếu lỗi
-            const cached = localStorage.getItem('user_configs_api');
-            return cached ? JSON.parse(cached) : [];
+            throw error;
         }
     }
 
@@ -94,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             badge.textContent = this.value + "%";
         };
     }
-
+    
     // 3. Render danh sách bên trái
     async function refreshTable() {
         const body = document.getElementById('configTableBody');
@@ -103,6 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("❌ Không tìm thấy element #configTableBody");
             return;
         }
+
 
         console.log("🔄 Bắt đầu tải danh sách cấu hình...");
 
@@ -127,19 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
 
-            // CHỈ lấy từ cache nếu gọi API thất bại (response null)
-            if (response === null) {
-                console.log("⚠️ API lỗi, kiểm tra localStorage...");
-                const cached = localStorage.getItem('user_configs_api');
-                if (cached) {
-                    configs = JSON.parse(cached);
-                    console.log("💾 Dữ liệu lấy từ cache:", configs);
-                }
-            } else {
-                // Nếu API thành công (dù configs rỗng hay không), cập nhật cache
-                localStorage.setItem('user_configs_api', JSON.stringify(configs));
-            }
-
+            window.userConfigsData = configs;
             console.log(`📊 Số lượng cấu hình tìm thấy: ${configs.length}`);
 
             body.innerHTML = '';
@@ -312,10 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
     window.useConfig = (id) => {
-        const cached = localStorage.getItem('user_configs_api');
-        if (!cached) return alert("Không tìm thấy dữ liệu cấu hình!");
-
-        const configs = JSON.parse(cached);
+        const configs = window.userConfigsData || [];
         const found = configs.find(c => c.id == id || c._id == id);
 
         if (found) {
@@ -327,15 +299,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.editConfig = (id) => {
-        const cached = localStorage.getItem('user_configs_api');
-        if (!cached) return;
-        const configs = JSON.parse(cached);
+        const configs = window.userConfigsData || [];
         const found = configs.find(c => (c.id || c._id || c.config_id) == id);
         if (found) {
             editingConfigId = id;
             if (formTitle) formTitle.innerHTML = '<img src="./images/icon-sua.png" alt="">Sửa cấu hình';
             if (saveBtn) saveBtn.textContent = 'CẬP NHẬT CẤU HÌNH';
-
             // Điền dữ liệu vào form
             if (configNameInput) configNameInput.value = found.name || found.config_name || '';
             document.getElementById('bots').value = found.bot_id || found.model || '';
@@ -352,6 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const slider = document.getElementById('creativity_level');
             const badge = document.getElementById('creativity_val');
+
             if (slider) slider.value = sliderVal;
             if (badge) badge.textContent = sliderVal + "%";
 
@@ -360,7 +330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    
+
     window.deleteConfig = async (id) => {
         if (!id) return;
         if (confirm('Bạn có chắc muốn xóa mẫu này?')) {
@@ -380,3 +350,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadOptions();
     await refreshTable();
 });
+

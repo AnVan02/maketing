@@ -48,7 +48,9 @@
     <div class="bg-gradient"></div>
 
     <script src="./js/api-helper.js"></script>
-    <script src="./js/dang-nhap.js"></script>
+    <script type="module" src="./js/dang-nhap.js"></script>
+    <!-- bảo mật -->
+    <!-- <script src="./js/protection.js"></script> -->
     <script>
         // Simple console log for initialization
         console.log("Login page initialized");

@@ -54,6 +54,8 @@ function setupImageHandlers() {
         }
     });
 
+    
+
     // 2. DRAG START
     container.addEventListener('dragstart', (e) => {
         const wrapper = e.target.closest('.draggable-image');
@@ -371,24 +373,16 @@ async function handleAIAction(action, instruction) {
         }
 
         // 6️⃣ Gọi API rewrite
-        const response = await fetch('https://caiman-warm-swan.ngrok-free.app/api/v1/ai/contents/rewrite', {
+        const response = await apiRequest('/ai/contents/rewrite', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-
-            },
-            body: JSON.stringify({
+            body: {
                 blocks,
                 selected_block_id: selectedBlockId,
                 instruction: instruction || "Viết lại đoạn này theo phong cách chuyên nghiệp, chuẩn SEO"
-            })
+            }
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = response; // apiRequest đã parse JSON rồi
 
         if (!data.success) {
             throw new Error(data.message || "Rewrite thất bại");
@@ -488,9 +482,6 @@ function loadArticleData() {
         } else if (article.html_content) {
             console.log("📋 Rendering from 'html_content' (Priority Source)");
             renderArticleSections(article.html_content, responseData);
-        } else if (article.blocks && article.blocks.length > 0) {
-            console.log("📋 Rendering from 'blocks' (Fallback Source)");
-            renderFromBlocks(article.blocks, container);
         } else {
             console.warn("⚠️ No content found. Auto-triggering content generation...");
             // Kiểm tra tránh lặp vô tận hoặc gọi khi không có dữ liệu gốc
@@ -517,12 +508,6 @@ function loadArticleData() {
             hiddenInput.value = article.html_content;
         }
 
-        // ✅ TỰ ĐỘNG BỐ SUNG H3 CHO OUTLINE NẾU THIẾU (Đồng bộ với dan-y-bai-viet.js)
-        if (responseData.article_outline) {
-            ensureH3SubsectionsForData(responseData.article_outline);
-            // Lưu lại để các hàm generator sau này thấy H3
-            sessionStorage.setItem('finalArticleData', JSON.stringify(responseData));
-        }
     } catch (error) {
         console.error("❌ Lỗi hiển thị bài viết:", error);
         showNotification("Lỗi khi tải dữ liệu bài viết!", "error");
@@ -651,43 +636,6 @@ function setArticleTitle(articleData, article) {
     titleInput.value = title;
 }
 
-/**
- * Đảm bảo outline có các mục H3 (Đồng bộ logic với dan-y-bai-viet.js)
- */
-
-function ensureH3SubsectionsForData(outline) {
-    if (!Array.isArray(outline) || outline.length === 0) return;
-
-    const hasH3 = outline.some(item => item.level === 3);
-    if (!hasH3) {
-        console.log("⚡ [viet-bai-seo] Dàn ý thiếu H3, đang tự động bổ sung...");
-
-        const newItems = [];
-        outline.forEach((item, idx) => {
-            newItems.push(item);
-
-            if (item.level === 2) {
-                const titleLower = item.title.toLowerCase();
-                if (titleLower.includes("kết luận") || titleLower.includes("lời kết")) return;
-
-                // Tạo 2 H3 mẫu
-                for (let i = 1; i <= 2; i++) {
-                    newItems.push({
-                        id: `h3-auto-${idx}-${i}-${Date.now()}`,
-                        level: 3,
-                        title: `${item.title} - Phân tích chi tiết ${i}`,
-                        order: 0,
-                        config: { word_count: 150, keywords: [], tone: null, internal_link: null }
-                    });
-                }
-            }
-        });
-
-        // Cập nhật lại mảng outline (vì array pass by reference)
-        outline.length = 0;
-        newItems.forEach(item => outline.push(item));
-    }
-}
 // ============================================================
 // RENDER SECTIONS FROM OUTLINE (Improved)
 // ============================================================
@@ -711,22 +659,18 @@ function renderSectionsFromOutline(outline, htmlContent, articleData) {
     console.log("📋 HTML Keys:", htmlKeys);
     console.log("📋 MD Keys:", mdKeys);
 
-
     // Pick the richer map
-    let contentMap = (mdKeys.length >= htmlKeys.length) ? mdMap : htmlMap;
+    const contentMap = (mdKeys.length >= htmlKeys.length) ? mdMap : htmlMap;
 
-    // Fallback if empty
+    // Strictly check map
     if (Object.keys(contentMap).length === 0 && htmlContent) {
-        console.warn("⚠️ All parsers failed to find headings. Using raw content for first section.");
-        contentMap = { "Giới thiệu": htmlContent };
-
+        console.error("❌ All parsers failed to find headings.");
     }
 
     console.log("📋 Content Map Keys Prepared:", Object.keys(contentMap));
 
     const availableKeys = Object.keys(contentMap).filter(k => k !== "Giới thiệu");
     const usedKeys = new Set();
-    let sequentialIndex = 0;
 
     // image pool for auto-insertion
     const imagePool = getImagePool(articleData);
@@ -761,27 +705,6 @@ function renderSectionsFromOutline(outline, htmlContent, articleData) {
             content = contentMap[matchedKey];
             usedKeys.add(matchedKey);
         }
-
-        // Step C: Sequential Fallback (If still empty)
-        if (!content) {
-            // Find next unused key
-            while (sequentialIndex < availableKeys.length && usedKeys.has(availableKeys[sequentialIndex])) {
-                sequentialIndex++;
-            }
-            if (sequentialIndex < availableKeys.length) {
-                const fallbackKey = availableKeys[sequentialIndex++];
-                content = contentMap[fallbackKey];
-                usedKeys.add(fallbackKey);
-                console.log(`🔗 [SEQ] "${section.title}" matches "${fallbackKey}"`);
-            }
-        }
-
-        // Step D: Global Intro Fallback (Only for first section)
-        if (!content && sectionIndex === 0) {
-            content = contentMap["Giới thiệu"] || htmlContent;
-        }
-
-
 
         // Auto-insert image if missing
         if (content && !content.includes('<img') && imagePool.length > 0) {
@@ -952,7 +875,7 @@ function findFuzzyContentMatchKey(title, contentMap, usedKeys) {
     return Object.keys(contentMap).find(key => {
         if (usedKeys.has(key)) return false;
         const keyNorm = normalize(key);
-        // Special case: "Giới thiệu" can match almost anything at the start
+
         if (keyNorm === "gioithieu" && targetNorm.includes("gioithieu")) return true;
         return keyNorm.includes(targetNorm) || targetNorm.includes(keyNorm);
     });
@@ -1001,7 +924,6 @@ function findFuzzyContentMatch(sectionTitle, contentMap) {
         const kNorm = normalize(k);
         return kNorm.includes(sectionNorm) || sectionNorm.includes(kNorm);
     });
-
     if (key) {
         console.log(`🔗 Fuzzy Matched: "${sectionTitle}" -> "${key}"`);
         return contentMap[key];
@@ -1025,7 +947,6 @@ async function ContentGeneration() {
                 <p style="margin-top:15px; font-weight:bold;">AI đang viết bài...</p>
             </div>`;
     }
-
     try {
         const articleData = JSON.parse(finalArticleDataJson);
         const titleInput = document.getElementById('articleTitle');
@@ -1121,8 +1042,7 @@ async function ContentGeneration() {
             console.log("🔍 No H3 found after sync, auto-generating default H3 subsections...");
             const newOutline = [];
             let h3GlobalCounter = 1;
-
-            outline.forEach((item) => {
+                outline.forEach((item) => {
                 newOutline.push(item);
                 if (item.level === 2 && !item.title.toLowerCase().includes("kết luận") && !item.title.toLowerCase().includes("lời kết")) {
                     for (let i = 1; i <= 2; i++) {
@@ -1364,7 +1284,6 @@ function renderArticleSections(htmlContent, articleData) {
                     imageIndex++;
                 }
             }
-
             // Tạo section mới (không chèn ảnh ngay, chờ đến khi section hoàn tất để kiểm tra tránh duplicate)
             sectionCount++;
             const title = node.textContent.trim() || `Mục ${sectionCount}`;
@@ -2174,7 +2093,7 @@ async function searchImages() {
 
     try {
         const response = await fetch(
-            "https://caiman-warm-swan.ngrok-free.app/api/v1/crawl/images",
+            "https://dvcendpoint.rosachatbot.com/api/v1/crawl/images",
             {
                 method: "POST",
                 headers: {

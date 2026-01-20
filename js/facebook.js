@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // --- KHỞI TẠO BIẾN UI GLOBAL TRONG SCOPE NÀY ---
-    const managerGrid = document.getElementById('managerGrid');
+    const configFormSection = document.getElementById('configFormSection');
     const toggleBtn = document.getElementById('toggleFormBtn');
-    const closeBtn = document.getElementById('closeFormBtn');
     const saveBtn = document.getElementById('saveBtn');
 
     // Form Inputs
@@ -16,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sliderVal = document.getElementById('creativity_val');
     const toggleEmoji = document.getElementById('toggle_emoji');
     const toggleHashtag = document.getElementById('toggle_hashtag');
-    const toggleImage = document.getElementById('toggle_image');
 
     let editingConfigId = null; // Theo dõi đang sửa hay tạo mới
 
@@ -24,78 +22,73 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- XỬ LÝ ẨN/HIỆN FORM ---
     if (toggleBtn) {
-        toggleBtn.onclick = () => {
+        toggleBtn.onclick = (e) => {
+            e.preventDefault();
             resetForm(); // Reset form khi mở mới
-            if (managerGrid) managerGrid.classList.add('show-form');
-            toggleBtn.style.display = 'none';
-        };
-    }
-
-    if (closeBtn) {
-        closeBtn.onclick = () => {
-            if (managerGrid) managerGrid.classList.remove('show-form');
-            if (toggleBtn) toggleBtn.style.display = 'flex';
+            if (configFormSection) {
+                configFormSection.style.display = 'block';
+                configFormSection.scrollIntoView({ behavior: 'smooth' });
+            }
         };
     }
 
     // Slider value update
-    if (slider && sliderVal) {
-        slider.oninput = () => {
-            sliderVal.textContent = slider.value + '%';
-        };
+    function updateSliderBadge() {
+        if (!slider || !sliderVal) return;
+        const val = slider.value;
+        sliderVal.textContent = val + '%';
+
+        // Tính toán vị trí % để badge chạy theo
+        const percent = (val - slider.min) / (slider.max - slider.min);
+        // Điều chỉnh một chút để badge nằm giữa thumb (thumb rộng khoảng 20px)
+        sliderVal.style.left = `calc(${percent * 100}%)`;
     }
 
-    // --- DATA MOCKUP CHO DROPDOWNS ---
-    const MOCK_OPTIONS = {
-        lengths: [
-            { value: 'short', label: 'Ngắn (50-200 từ)' },
-           
-        ],
-        types: [
-            { value: 'ads', label: 'Bài quảng cáo' }
-        ],
-        tones: [
-            { value: 'professional', label: 'Chuyên nghiệp, đáng tin cậy' }
-        ],
-        bots: [
-          
-            { value: 'gpt-4o', label: 'GPT-4o' },
-            { value: 'claude-3-sonnet', label: 'Claude 3.5 Sonnet' }
-        ],
-        languages: [
-            { value: 'vi', label: 'Tiếng Việt' },
-           
-        ]
-    };
+    if (slider && sliderVal) {
+        slider.oninput = updateSliderBadge;
+        // Chạy lần đầu để set vị trí mặc định 50%
+        updateSliderBadge();
+    }
 
     // --- HÀM LOAD OPTIONS ---
     async function loadOptions() {
-        console.log("📥 Loading dropdown options...");
+        try {
+            const data = await apiRequest('/facebook/config');
+            const configData = data;
 
-        function populate(selectEl, data) {
-            if (!selectEl) return;
-            selectEl.innerHTML = '';
-            data.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.value;
-                opt.textContent = item.label;
-                selectEl.appendChild(opt);
-            });
+            const fill = (selectEl, arr, label = "Chọn...") => {
+                if (!selectEl) return;
+                selectEl.innerHTML = `<option value="">${label}</option>`;
+                if (!arr) return;
+
+
+                arr.forEach(i => {
+                    const opt = document.createElement('option');
+                    if (typeof i === 'object') {
+                        opt.value = i.id || i.value || i.code || i.name;
+                        opt.textContent = i.name || i.label || i.text || opt.value;
+                    } else {
+                        opt.value = i;
+                        opt.textContent = i;
+                    }
+                    selectEl.appendChild(opt);
+                });
+            };
+
+            if (configData) {
+                fill(lengthSelect, configData.content_lengths, "Chọn độ dài");
+                fill(typeSelect, configData.content_types, "Chọn loại bài viết");
+                fill(toneSelect, configData.writing_tones, "Chọn tone giọng");
+                fill(langSelect, configData.languages, "Chọn ngôn ngữ");
+                fill(botSelect, configData.bots, "Chọn AI Model");
+                console.log("Chọn các tùy chọn được cập nhật từ API");
+            }
+        } catch (e) {
+            console.error("❌ Lỗi loadOptions:", e);
+            showNotification("Không thể tải danh sách tuỳ chọn cấu hình.", "error");
         }
-
-        populate(lengthSelect, MOCK_OPTIONS.lengths);
-        populate(typeSelect, MOCK_OPTIONS.types);
-        populate(toneSelect, MOCK_OPTIONS.tones);
-        populate(botSelect, MOCK_OPTIONS.bots);
-        populate(langSelect, MOCK_OPTIONS.languages);
-
-        // Chọn mặc định
-        if (botSelect) botSelect.value = 'gemini-2.5-pro';
-        if (langSelect) langSelect.value = 'vi';
-        if (lengthSelect) lengthSelect.value = 'short';
-        if (typeSelect) typeSelect.value = 'ads';
-        if (toneSelect) toneSelect.value = 'professional';
     }
+
 
     // --- HÀM RENDER TABLE ---
     window.refreshTable = async function () {
@@ -110,20 +103,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Lấy từ API
             let configs = [];
             try {
-                const response = await apiRequest('');
-                if (response && Array.isArray(response)) configs = response;
+                const response = await apiRequest('/facebook/config/user');
+                if (response && response.configs) configs = response.configs;
+                else if (response && Array.isArray(response)) configs = response;
                 else if (response.data && Array.isArray(response.data)) configs = response.data;
             } catch (err) {
-                console.warn("API Error, checking cache...", err);
+                console.error("API Error:", err);
             }
 
-            // Fallback cache
-            if (configs.length === 0) {
-                const cached = localStorage.getItem('');
-                if (cached) configs = JSON.parse(cached);
-            } else {
-                localStorage.setItem('', JSON.stringify(configs));
-            }
+            window.userConfigsData = configs;
 
             if (!configs || configs.length === 0) {
                 if (emptyState) emptyState.style.display = 'block';
@@ -136,34 +124,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             configs.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
             configs.forEach((config, index) => {
+                const id = config.id || config._id || index;
                 const tr = document.createElement('tr');
+                tr.setAttribute('id', `row-${id}`); // Để tìm và cập nhật live
                 const name = config.name || "Mẫu không tên";
                 const model = config.bot_id || config.model || '-';
                 const type = config.article_type || '-';
                 const count = config.article_count || 0;
                 let dateStr = config.created_at ? new Date(config.created_at).toLocaleDateString('vi-VN') : '-';
-                const id = config.id || config._id || index;
 
                 tr.innerHTML = `
                   <td style="padding-left: 20px;">
-                    <strong style="color:#1e293b; font-size:15px;">${name}</strong>
-                    ${config.is_default ? '<span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:5px;">Mặc định</span>' : ''}
+                    <strong class="col-name" style="color:#1e293b; font-size:15px;">${name}</strong>
+                    ${config.is_default ? '<span class="badge-default" style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:5px;">Mặc định</span>' : ''}
                   </td>
-                  <td><span class="badge-model">${model}</span></td>
-                  <td><span style="color:#64748b;">${type}</span></td>
+                  <td><span class="badge-model col-model">${model}</span></td>
+                  <td><span class="col-type" style="color:#64748b;">${type}</span></td>
                   <td><span style="color:#64748b; font-weight:600;">${count}</span></td>
                   <td><span style="color:#94a3b8; font-size:14px;">${dateStr}</span></td>
                   <td>
-                      <div style="display: flex; gap: 8px; justify-content: center; align-items:center;">
-                          <button class="btn-use-sm" onclick="useConfig('${id}')">Sử dụng</button>
-                          <button class="btn-use-sm" onclick="editConfig('${id}')">Sửa</button>
-                          <button onclick="deleteConfig('${id}')" style="border:none;background:none;color:#cbd5e1;cursor:pointer;font-size:18px;">&times;</button>
-                      </div>
+                        <div style="display: flex; gap: 20px; justify-content: center; align-items:center;">
+                            <button class="btn-action-delete" onclick="deleteConfig('${id}')">
+                                <i class="fa-regular fa-trash-can"></i> Xoá
+                            </button>
+                            <button class="btn-action-edit" onclick="editConfig('${id}')">
+                                <i class="fa-regular fa-pen-to-square"></i> Sửa
+                            </button>
+                        </div>
                   </td>
                 `;
                 body.appendChild(tr);
             });
-
         } catch (error) {
             console.error("Refresh Table Error:", error);
             if (emptyState) emptyState.style.display = 'block';
@@ -171,36 +162,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // --- HÀM LƯU (CREATE / UPDATE) ---
+
     if (saveBtn) {
         saveBtn.onclick = async () => {
             const name = configNameInput ? configNameInput.value.trim() : '';
             if (!name) return alert("Vui lòng nhập tên cấu hình!");
 
+            const bot_id = document.getElementById('bots')?.value;
+            const article_type = document.getElementById('content_types')?.value;
+            const article_length = document.getElementById('content_lengths')?.value;
+            const tone = document.getElementById('writing_tones')?.value;
+            const language = document.getElementById('languages')?.value;
+            const creativity = document.getElementById('creativity_level')?.value || 50;
+
+            const temperature = parseFloat(creativity) / 100;
+            const is_default = document.getElementById('is_default')?.checked || false;
+
             const payload = {
                 name: name,
-                bot_id: botSelect?.value,
-                article_length: lengthSelect?.value,
-                article_type: typeSelect?.value,
-                tone: toneSelect?.value,
-                language: langSelect?.value,
-                temperature: parseInt(slider?.value || 50) / 100,
-                is_default: false
+                bot_id: bot_id,
+                article_length: article_length,
+                tone: tone,
+                article_type: article_type,
+                language: language,
+                temperature: temperature,
+                is_default: is_default
             };
 
-            // Nếu muốn thêm fields emoji/hashtag/image vào payload, API backend cần hỗ trợ
-            // payload.use_emoji = toggleEmoji?.checked;
-            // payload.use_hashtag = toggleHashtag?.checked;
-            // payload.use_image = toggleImage?.checked;
+            // const payload = {
+            //     name: name,
+            //     bot_id: botSelect?.value,
+            //     article_length: lengthSelect?.value,
+            //     article_type: typeSelect?.value,
+            //     tone: toneSelect?.value,
+            //     language: langSelect?.value,
+            //     temperature: parseInt(slider?.value || 50) / 100,
+            //     is_default: editingConfigId ? (window.userConfigsData.find(c => (c.id == editingConfigId || c._id == editingConfigId))?.is_default || false) : false
+            // };
+
 
             try {
                 saveBtn.disabled = true;
-                saveBtn.textContent = 'ĐANG LƯU...';
+                saveBtn.textContent = 'ĐANG XỬ..';
 
-                // Nếu đang edit -> PUT (giả sử có API), nếu không -> POST
-                // Hiện tại API docs chỉ thấy POST /ui/user/configs
+                let url = '/facebook/config';
+                let method = 'POST';
 
-                await apiRequest('', {
-                    method: 'POST',
+                if (editingConfigId) {
+                    url = `/facebook/config/user/${editingConfigId}`;
+                    method = 'PUT';
+                }
+
+                await apiRequest(url, {
+                    method: method,
                     body: JSON.stringify(payload)
                 });
 
@@ -211,8 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await window.refreshTable();
 
                 // Đóng form
-                if (managerGrid) managerGrid.classList.remove('show-form');
-                if (toggleBtn) toggleBtn.style.display = 'flex';
+                if (configFormSection) configFormSection.style.display = 'none';
 
             } catch (error) {
                 alert("Lỗi: " + error.message);
@@ -223,66 +236,112 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
+
     // --- CÁC HÀM GLOBAL (được gọi từ HTML) ---
 
     window.useConfig = (id) => {
-        const cached = localStorage.getItem('');
-        if (cached) {
-            const configs = JSON.parse(cached);
-            const found = configs.find(c => c.id == id || c._id == id);
-            if (found) {
-                sessionStorage.setItem('selected_template', JSON.stringify(found));
-                window.location.href = 'cau-hinh-bai-viet.php';
-                // Hoặc trang facebook post nếu có
-            }
+        const configs = window.userConfigsData || [];
+        const found = configs.find(c => c.id == id || c._id == id);
+        if (found) {
+            sessionStorage.setItem('selected_facebook_config', JSON.stringify(found));
+            window.location.href = 'cau-hinh-facebook.php';
         }
     };
 
     window.editConfig = (id) => {
-        const cached = localStorage.getItem('');
-        if (!cached) return;
-        const configs = JSON.parse(cached);
+        const configs = window.userConfigsData || [];
         const found = configs.find(c => c.id == id || c._id == id);
 
         if (found) {
             editingConfigId = id;
             if (configNameInput) configNameInput.value = found.name || '';
-            if (botSelect) botSelect.value = found.bot_id || found.model || 'gemini-2.5-pro';
-            if (typeSelect) typeSelect.value = found.article_type || 'ads';
-            if (lengthSelect) lengthSelect.value = found.article_length || 'short';
-            if (toneSelect) toneSelect.value = found.tone || 'professional';
+            if (botSelect) botSelect.value = found.bot_id || found.model || '';
+            if (typeSelect) typeSelect.value = found.article_type || '';
+            if (lengthSelect) lengthSelect.value = found.article_length || '';
+            if (toneSelect) toneSelect.value = found.tone || '';
             if (langSelect) langSelect.value = found.language || 'vi';
 
             if (slider) {
                 let val = (found.temperature || 0.5) * 100;
                 slider.value = val;
-                if (sliderVal) sliderVal.textContent = val + '%';
+                updateSliderBadge(); // Cập nhật vị trí badge khi load dữ liệu sửa
             }
 
             // Mở form
-            if (managerGrid) managerGrid.classList.add('show-form');
-            if (toggleBtn) toggleBtn.style.display = 'none';
-            if (saveBtn) saveBtn.textContent = 'CẬP NHẬT CẤU HÌNH';
+            if (configFormSection) {
+                configFormSection.style.display = 'block';
+                configFormSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            if (saveBtn) saveBtn.textContent = 'LƯU CẤU HÌNH';
         }
     };
 
+    // --- LIVE UPDATE LOGIC ---
+    function updateLiveRow() {
+        if (!editingConfigId) return;
+        const tr = document.getElementById(`row-${editingConfigId}`);
+        if (!tr) return;
+
+        const nameEl = tr.querySelector('.col-name');
+        const modelEl = tr.querySelector('.col-model');
+        const typeEl = tr.querySelector('.col-type');
+
+        if (nameEl && configNameInput) nameEl.textContent = configNameInput.value || "Mẫu không tên";
+        if (modelEl && botSelect) {
+            const selectedOption = botSelect.options[botSelect.selectedIndex];
+            modelEl.textContent = selectedOption ? selectedOption.text : botSelect.value;
+        }
+        if (typeEl && typeSelect) {
+            const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+            typeEl.textContent = selectedOption ? selectedOption.text : typeSelect.value;
+        }
+    }
+
+    if (configNameInput) configNameInput.oninput = updateLiveRow;
+    if (botSelect) botSelect.onchange = updateLiveRow;
+    if (typeSelect) typeSelect.onchange = updateLiveRow;
+
     window.deleteConfig = async (id) => {
-        if (!confirm('Bạn có chắc muốn xóa?')) return;
-        // Mock delete
-        alert("Đã gửi lệnh xóa (API chưa sẵn sàng)");
+        if (!confirm('Bạn có chắc muốn xóa cấu hình này?')) return;
+        try {
+            await apiRequest(`/facebook/config/user/${id}`, { method: 'DELETE' });
+            alert("Đã xóa thành công!");
+            await window.refreshTable();
+        } catch (error) {
+            alert("Lỗi khi xóa: " + error.message);
+        }
     };
+
+    window.setDefault = async (id) => {
+        try {
+            await apiRequest(`/facebook/config/user/${id}/default`, { method: 'PATCH' });
+            await window.refreshTable();
+        } catch (error) {
+            alert("Lỗi khi đặt mặc định: " + error.message);
+        }
+    };
+
 
     function resetForm() {
         editingConfigId = null;
         if (configNameInput) configNameInput.value = '';
-        if (slider) { slider.value = 50; if (sliderVal) sliderVal.textContent = '50%'; }
         if (saveBtn) saveBtn.textContent = 'LƯU CẤU HÌNH';
-        // Reset defaults
-        if (botSelect) botSelect.value = 'gemini-2.5-pro';
-        if (langSelect) langSelect.value = 'vi';
-    }
+        if (slider) {
+            slider.value = 50;
+            updateSliderBadge(); // Reset vị trí badge về 50%
+        }
 
+        // Reset defaults
+        if (botSelect) botSelect.value = '';
+        if (langSelect) langSelect.value = 'vi';
+        if (typeSelect) typeSelect.value = '';
+        if (lengthSelect) lengthSelect.value = '';
+        if (toneSelect) toneSelect.value = '';
+
+        if (configFormSection) configFormSection.style.display = 'none';
+    }
     // --- CHẠY LẦN ĐẦU ---
     await loadOptions();
     await window.refreshTable();
 });
+

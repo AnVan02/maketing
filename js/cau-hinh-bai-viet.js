@@ -42,9 +42,7 @@ async function loadConfigs() {
     });
     try {
         const data = await apiRequest('ui/configs');
-
         console.log("✅ Configs loaded:", data);
-
         const populate = (id, items, label) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -64,41 +62,10 @@ async function loadConfigs() {
         populate('writing_tones', data.writing_tones, 'Chọn tone giọng');
         populate('languages', data.languages, 'Chọn ngôn ngữ');
         populate('bots', data.bots, 'Chọn AI Model');
-
         return true;
-        
     } catch (e) {
-        console.error("❌ Lỗi loadConfigs:", e);
-        showNotification("Không kết nối được API. Dùng cấu hình mặc định.", "warning");
-        createDefaultConfigs();
         return false;
     }
-}
-function createDefaultConfigs() {
-    const defaults = {
-        content_lengths: ["Ngắn (900-1200 từ)", "Trung bình (1500-1800 từ)", "Dài (2000-2500 từ)"],
-        content_types: ["Blog SEO", "Tin tức", "Hướng dẫn"],
-        writing_tones: ["Chuyên nghiệp", "Thuyết phục", "Sáng tạo"],
-        languages: ["Tiếng Việt", "Tiếng Anh", "Tiếng Thái"],
-        bots: ["GPT-4.1", "Gemini-2.5-flash"]
-    };
-
-
-    const fill = (id, arr) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = '<option value="">Chọn...</option>';
-            arr.forEach(x => el.innerHTML += `<option value="${x}">${x}</option>`);
-        }
-    }
-    
-    
-
-    fill('content_lengths', defaults.content_lengths);
-    fill('content_types', defaults.content_types);
-    fill('writing_tones', defaults.writing_tones);
-    fill('languages', defaults.languages);
-    fill('bots', defaults.bots);
 }
 
 // ============================================
@@ -133,7 +100,7 @@ async function searchNews(query, maxResults = 10) {
     }
 }
 
-// BƯỚC 3.3: Crawl nội dung (ĐÃ SỬA: GÁN CONTENT_PREVIEW VÀO CONTENT)
+// BƯỚC 3.3: Lấy chi tiết nội dung bài viết 
 async function crawlArticles(articles) {
     console.log("📥 [API] Crawling articles:", articles.length);
     showNotification("Đang lấy nội dung chi tiết từ các bài viết...", "info");
@@ -240,30 +207,6 @@ async function filterNewsAndGenerateOutline(crawledArticles, mainKeyword, second
 
             return pipelineData.filteredNews;
         } else {
-            // Handle specific case: Analyzed but rejected all
-            if (data.total_analyzed > 0 && (!data.selected_news || data.selected_news.length === 0)) {
-                console.warn(`⚠️ AI đã đọc ${data.total_analyzed} bài nhưng không chọn được bài nào. Sử dụng dàn ý mặc định.`);
-
-                // FALLBACK: Tạo dàn ý sơ bộ dựa trên từ khóa thay vì Hardcode
-                const fallbackOutline = [
-                    { level: 1, title: articleTitle || `Bài viết về ${mainKeyword}`, order: 1 },
-                    { level: 2, title: `Giới thiệu về ${mainKeyword}`, order: 2, config: { word_count: 300 } },
-                    { level: 2, title: `Lợi ích quan trọng của ${mainKeyword}`, order: 3, config: { word_count: 500 } },
-                    { level: 2, title: `Các nội dung chính về ${mainKeyword}`, order: 4, config: { word_count: 500 } },
-                    { level: 2, title: `Lưu ý khi tìm hiểu ${mainKeyword}`, order: 5, config: { word_count: 400 } },
-                    { level: 2, title: "Kết luận và lời khuyên", order: 6, config: { word_count: 200 } }
-                ];
-
-                pipelineData.filteredNews = {
-                    selected_news: [],
-                    article_outline: fallbackOutline,
-                    reasoning: "AI không tìm thấy bài viết phù hợp từ nguồn tin tức, hệ thống tự động đề xuất dàn ý cơ bản dựa trên từ khóa."
-                };
-
-                showNotification("⚠️ Không tìm thấy nguồn tham khảo phù hợp. Hệ thống đề xuất dàn ý dựa trên từ khóa.", "warning");
-                return pipelineData.filteredNews;
-            }
-            // Fallback for other errors
             throw new Error(data.message || `Không tạo được dàn ý. API Response: ${JSON.stringify(data)}`);
         }
 
@@ -273,7 +216,7 @@ async function filterNewsAndGenerateOutline(crawledArticles, mainKeyword, second
     }
 }
 
-// BƯỚC 3.5: Tạo bài viêt SEO với api
+// BƯỚC 3.5: Tạo bài viết với AI 
 /**
  * Gọi API AI để tạo nội dung bài viết SEO.
  * @param {Array} topNews - Danh sách các bài viết được chọn (rank, title, url, images, content_preview).
@@ -315,7 +258,7 @@ async function generateSEOContent(topNews, config, title, outline, mainKeyword, 
                 });
             });
         }
-
+        
         const payload = {
             top_news: topNews,
             target_language: config.language || "Tiếng Việt",
@@ -663,10 +606,7 @@ function initializeKeywordTags(inputId, containerId, mainInputId) {
                 data.keywords.forEach(kw => addTag(kw));
                 showNotification(`Đã tìm thấy ${data.keywords.length} từ khóa liên quan!`, 'success');
             } else {
-                // Fallback for Demo
-                const mockKeywords = [query + " là gì", "lợi ích của " + query, "cách sử dụng " + query];
-                mockKeywords.forEach(kw => addTag(kw));
-                showNotification("Đã tìm thấy từ khóa gợi ý (Demo)", 'info');
+                showNotification("Không tìm thấy từ khóa gợi ý.", 'info');
             }
         } catch (e) {
             loadingTag.remove();
@@ -684,136 +624,62 @@ async function fetchTitleSuggestions(query, titleInputId, containerId) {
     }
 
     console.log("🔍 [fetchTitleSuggestions] Starting...");
-    console.log("   Query:", query);
-    console.log("   Title Input ID:", titleInputId);
-    console.log("   Container ID:", containerId);
-
     container.innerHTML = '<div class="suggestion-item loading">Đang gợi ý tiêu đề... ⏳</div>';
 
     try {
         // Lấy secondary keywords từ tag container tương ứng
         let secondary_keywords = [];
         if (containerId === 'internet_titleSuggestions') {
-            // Tab Internet
             const tags = document.querySelectorAll('#internet_tagContainer .tag');
-            secondary_keywords = Array.from(tags).map(t =>
-                t.textContent.replace('×', '').trim()
-            );
+            secondary_keywords = Array.from(tags).map(t => t.textContent.replace('×', '').trim());
         } else {
-            // Tab Private
             const tags = document.querySelectorAll('#tagContainer .tag');
-            secondary_keywords = Array.from(tags).map(t =>
-                t.textContent.replace('×', '').trim()
-            );
+            secondary_keywords = Array.from(tags).map(t => t.textContent.replace('×', '').trim());
         }
 
-        // Lấy ngôn ngữ từ dropdown (default: Tiếng Việt)
         const languageSelect = document.getElementById('languages');
         const language = languageSelect ? languageSelect.value : "Tiếng Việt";
 
-        // Tạo payload theo đúng format API yêu cầu
         const payload = {
             main_keyword: query,
             secondary_keywords: secondary_keywords,
             language: language
         };
 
-        console.log("📤 [API Request] ai/titles");
-        console.log("   Payload:", payload);
-
         const data = await apiRequest('ai/titles', {
             method: "POST",
             body: JSON.stringify(payload)
         });
 
-        console.log("📥 [API Response]");
         container.innerHTML = '';
 
-        if (data) {
-
-            console.log("✅ Response Data:", data);
-
-            // Kiểm tra cấu trúc response
-            if (data && Array.isArray(data.titles)) {
-                console.log(`✅ Found ${data.titles.length} titles from API`);
-                data.titles.forEach(title => {
-                    const item = document.createElement('div');
-                    item.className = 'suggestion-item';
-                    item.textContent = title;
-                    item.onclick = () => {
-                        const titleInput = document.getElementById(titleInputId);
-                        if (titleInput) {
-                            titleInput.value = title;
-                            // Trigger input event để cập nhật real-time
-                            titleInput.dispatchEvent(new Event('input'));
-                        }
-                        container.innerHTML = ''; // Hide after select
-                        showNotification("✅ Đã chọn tiêu đề: " + title, "success");
-                    };
-                    container.appendChild(item);
-                });
-
-                if (data.titles.length > 0) {
-                    showNotification(`✅ Đã tìm thấy ${data.titles.length} gợi ý tiêu đề!`, 'success');
-                } else {
-                    showNotification("ℹ️ Không tìm thấy gợi ý tiêu đề phù hợp", 'info');
-                }
-                return;
+        if (data && Array.isArray(data.titles)) {
+            data.titles.forEach(title => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = title;
+                item.onclick = () => {
+                    const titleInput = document.getElementById(titleInputId);
+                    if (titleInput) {
+                        titleInput.value = title;
+                        titleInput.dispatchEvent(new Event('input'));
+                    }
+                    container.innerHTML = '';
+                    showNotification("✅ Đã chọn tiêu đề: " + title, "success");
+                };
+                container.appendChild(item);
+            });
+            if (data.titles.length > 0) {
+                showNotification(`✅ Đã tìm thấy ${data.titles.length} gợi ý tiêu đề!`, 'success');
             } else {
-                console.warn("⚠️ API response structure unexpected:", data);
-                // Thử parse response theo format khác
-                if (data && data.success && Array.isArray(data.data)) {
-                    data.data.forEach(title => {
-                        const item = document.createElement('div');
-                        item.className = 'suggestion-item';
-                        item.textContent = title;
-                        item.onclick = () => {
-                            const titleInput = document.getElementById(titleInputId);
-                            if (titleInput) titleInput.value = title;
-                            container.innerHTML = '';
-                        };
-                        container.appendChild(item);
-                    });
-                    return;
-                }
-
+                showNotification("ℹ️ Không tìm thấy gợi ý tiêu đề phù hợp", 'info');
             }
         } else {
-            console.error("❌ API Error: No data received");
-            showNotification("Lỗi API: Không nhận được dữ liệu", 'error');
+            console.error("❌ API Error or structure unexpected:", data);
+            showNotification("Lỗi API: Không nhận được dữ liệu gợi ý tiêu đề hợp lệ", 'error');
         }
-
-
-        // Fallback/Mock nếu API fails
-        console.log("ℹ️ Using mock titles as fallback");
-        const mockTitles = [
-            `Top 10 bí mật về ${query} bạn chưa biết`,
-            `Hướng dẫn chi tiết cách sử dụng ${query} hiệu quả`,
-            `${query} là gì? Tại sao bạn cần quan tâm ngay hôm nay`,
-            `Sự thật đằng sau ${query} và những điều cần lưu ý`
-        ];
-
-        mockTitles.forEach(title => {
-            const item = document.createElement('div');
-            item.className = 'suggestion-item';
-            item.textContent = title;
-            item.onclick = () => {
-                const titleInput = document.getElementById(titleInputId);
-                if (titleInput) {
-                    titleInput.value = title;
-                    titleInput.dispatchEvent(new Event('input'));
-                }
-                container.innerHTML = '';
-                showNotification("✅ Đã chọn tiêu đề mẫu", "info");
-            };
-            container.appendChild(item);
-        });
-
-        showNotification("ℹ️ Hiển thị gợi ý mẫu (API chưa sẵn sàng)", 'info');
-
     } catch (e) {
         console.error("❌ Fetch Titles Error:", e);
-        console.error("   Error details:", e.message, e.stack);
         container.innerHTML = '';
         showNotification("Lỗi khi gọi API gợi ý tiêu đề: " + e.message, 'error');
     }

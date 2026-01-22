@@ -1,3 +1,6 @@
+* {
+    box-sizing: border-box;
+}
 /* Outline Container */
 #outlineResult {
     background-color: transparent;

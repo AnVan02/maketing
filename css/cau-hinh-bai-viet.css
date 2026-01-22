@@ -1,4 +1,6 @@
-/* --- PAGE SPECIFIC --- */
+* {
+     box-sizing: border-box;
+}
 
 
 /* --- CONTENT AREA --- */

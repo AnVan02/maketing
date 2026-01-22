@@ -8,7 +8,9 @@
     --green-seo: #10b981;
     --highlight-bg: #e0f2fe;
 }
-
+* {
+    box-sizing: border-box;
+}
 body {
     margin: 0;
     font-family: 'Montserrat';

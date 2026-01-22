@@ -141,8 +141,16 @@ if (strpos($contentType, 'multipart/form-data') !== false) {
 // LẤY ACCESS TOKEN TỪ COOKIE (THAY VÌ SESSION)
 $accessToken = $_COOKIE['access_token'] ?? null;
 
-// Ghi log để debug
-file_put_contents('debug_proxy.log', "[" . date('Y-m-d H:i:s') . "] Request: $method $endpoint | Content-Type: $contentType | Cookie AT: " . ($accessToken ? 'YES' : 'NO') . "\n", FILE_APPEND);
+// XỬ LÝ ĐẶC BIỆT CHO LOGOUT: Đảm bảo refresh_token được gửi lên backend để vô hiệu hóa
+if (strpos($endpoint, 'logout') !== false && $method === 'POST') {
+    if (empty($inputData) || $inputData === '{}' || $inputData === '[]') {
+        if (isset($_COOKIE['refresh_token'])) {
+            $inputData = json_encode(['refresh_token' => $_COOKIE['refresh_token']]);
+            $contentType = 'application/json';
+            file_put_contents('debug_proxy.log', "[" . date('Y-m-d H:i:s') . "] Logout: Injected refresh_token from cookie into body.\n", FILE_APPEND);
+        }
+    }
+}
 
 // GỬI REQUEST LẦN 1
 $result = sendRequest($targetUrl, $method, $inputData, $accessToken, $contentType);

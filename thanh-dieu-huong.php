@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./css/thanh-dieu-huong.css">
     <link rel="stylesheet" href="./css/header.css">
     <script src="./js/auth-check.js"></script>
+    <script src="./js/api-helper.js"></script>
     <script src="./bao-mat.js"></script>
 </head>
 
@@ -86,12 +87,6 @@ function isActive($page, $current_page)
                             </span> Viết bài SEO
                         </a>
 
-                        <a href="#" class="nav-item">
-                            <span class="icon">
-                                <img src="./images/icon-chuoi-seo.png" alt="">
-                            </span> Viết chuỗi bài SEO
-                        </a>
-
                         <a href="danh-sach-bai-viet.php" class="nav-item <?php echo isActive('danh-sach-bai-viet.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-danh-sach.png" alt="">
@@ -115,13 +110,13 @@ function isActive($page, $current_page)
                         <a href="AI-facebook.php" class="nav-item <?php echo isActive('AI-facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-face.png" alt="">
-                            </span> AI facebook
+                            </span> AI Facebook
                         </a>
 
                         <a href="cau-hinh-facebook.php" class="nav-item <?php echo isActive('cau-hinh-facebook.php', $current_page); ?>">
                             <span class="icon">
                                 <img src="./images/icon-sua.png" alt="">
-                            </span> Viết bài facebook
+                            </span> Viết bài Facebook
                         </a>
 
                         <a href="danh-sach-facebook.php" class="nav-item <?php echo isActive('danh-sach-facebook.php', $current_page); ?>">
@@ -136,8 +131,6 @@ function isActive($page, $current_page)
                                 <img src="./images/icon-mau-cau-hinh.png" alt="">
                             </span> Mẫu cấu hình
                         </a>
-
-
                     </div>
 
                     <div class="nav-group mt-auto">
@@ -157,11 +150,11 @@ function isActive($page, $current_page)
                             </span> Thiết đặt
                         </a>
 
-                        <!-- <a href="#" class="nav-item" onclick="logout()">
+                        <a href="#" class="nav-item" onclick="logout(); return false;">
                             <span class="icon">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                             </span> Đăng xuất
-                        </a> -->
+                        </a>
 
                     </div>
                 </nav>

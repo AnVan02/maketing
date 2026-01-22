@@ -34,16 +34,16 @@
                     <div class="form-row">
                         <div class="form-group flex-1">
                             <label>Họ và tên</label>
-                            <input type="text" placeholder="Văn An" class="form-control">
+                            <input type="text" id="full-name" placeholder="Văn An" class="form-control">
                         </div>
                         <div class="form-group flex-1">
                             <label>Email</label>
-                            <input type="email" placeholder="tvdell789@gmail.com" class="form-control">
+                            <input type="email" id="email" placeholder="tvdell789@gmail.com" class="form-control">
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Số điện thoại</label>
-                        <input type="text" placeholder="+84 123 456 789" class="form-control">
+                        <input type="text" id="phone-number" placeholder="+84 123 456 789" class="form-control">
                     </div>
                 </div>
             </div>

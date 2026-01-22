@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 /* --- PAGE SPECIFIC --- */
 .page-body {
     padding: 20px 30px;
@@ -343,9 +347,16 @@ textarea:focus {
     max-width: 700px;
     min-width: 480px;
     width: 100%;
-    margin: -20px auto;
+    margin: 0 auto;
     /* Căn giữa và có khoảng cách đẹp */
     flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #f0f2f5;
+}
+
+.facebook-post:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
 }
 
 .post-header {
@@ -753,7 +764,7 @@ input:checked+.slider:before {
     border-color: #3b82f6;
 }
 
-.file-upload-placeholder {
+.old-placeholder {
     color: #94a3b8;
     font-size: 14px;
     flex: 1;
@@ -1266,27 +1277,68 @@ input:checked+.slider:before {
     vertical-align: middle;
 }
 
-/* AIS Toggle Link Style */
+/* --- AI ASSISTANT PREMIUM STYLES --- */
 .ais-toggle-link {
-    color: #64748b !important;
-    /* Gray default override inline if any left */
-    transition: color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #94a3b8 !important;
+    cursor: default;
+    pointer-events: none;
 }
 
 .ais-toggle-link img {
-    filter: grayscale(100%);
-    opacity: 0.7;
+    width: 20px;
+    height: 20px;
+    filter: grayscale(1);
+    opacity: 0.5;
     transition: all 0.3s ease;
 }
 
 .ais-toggle-link.active {
-    color: #2563EB !important;
-    /* Blue active */
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #3b82f6;
+    color: #2563eb !important;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+}
+
+.ais-toggle-link.active:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
 }
 
 .ais-toggle-link.active img {
     filter: none;
     opacity: 1;
+    animation: ai-pulse 2s infinite;
+}
+
+@keyframes ai-pulse {
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0 rgba(59, 130, 246, 0));
+    }
+
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+    }
+
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0 rgba(59, 130, 246, 0));
+    }
 }
 
 /* Toggle Label Text Style */
@@ -1299,3 +1351,178 @@ input:checked+.slider:before {
     color: #2563eb;
     font-weight: 600;
 }
+/* Modal specific AIS link */
+#ais-assistant-toggle-modal {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 6px;
+    color: #3b82f6 !important;
+    font-weight: 500;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#ais-assistant-toggle-modal:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    transform: scale(1.02);
+}
+
+/* Glassmorphism for cards */
+.card {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+/* Animation for post creation */
+.facebook-image-grid div {
+    animation: fadeInScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+
+/* --- NEW PREMIUM UPLOAD AREA --- */
+.file-upload-wrapper-premium {
+    height: auto !important;
+    min-height: 100px;
+    padding: 20px !important;
+    border: 2px dashed #e2e8f0;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.file-upload-wrapper-premium:hover {
+    border-color: #2563eb;
+    background-color: #f8fafc;
+}
+
+.upload-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.upload-icon-box {
+    width: 50px;
+    height: 50px;
+    background: #eff6ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.upload-icon-box img {
+    width: 24px;
+    height: 24px;
+}
+
+.upload-text-box {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.upload-sub-text {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.folder-btn {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.folder-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    transform: translateY(-1px);
+}
+
+.folder-btn i {
+    color: #3b82f6;
+}
+
+
+.file-upload-placeholder {
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.file-upload-placeholder strong {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+
+/* --- URL UPLOAD ROW --- */
+.url-upload-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+#image-url-input {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+#image-url-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#add-url-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#add-url-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+#add-url-btn:active {
+    transform: translateY(0);
+}
+

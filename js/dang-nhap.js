@@ -65,7 +65,7 @@ async function logout() {
         // Xóa thông tin local
         localStorage.removeItem('user_info');
         localStorage.removeItem('ui_configs');
-        
+
         // Chuyển về trang đăng nhập
         window.location.href = 'dang-nhap.php';
     }
@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const emailInput = loginForm.querySelector('input[name="email"]');
         const passwordInput = loginForm.querySelector('input[name="password"]');
 
-        if (emailInput && !emailInput.value) emailInput.value = "user@example.com";
-        if (passwordInput && !passwordInput.value) passwordInput.value = "User123!";
+        if (emailInput && !emailInput.value) emailInput.value = "";
+        if (passwordInput && !passwordInput.value) passwordInput.value = "";
 
         // Lắng nghe sự kiện khi người dùng nhấn "Enter" hoặc bấm nút "Đăng nhập"
         loginForm.addEventListener('submit', async (e) => {
@@ -131,6 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'ĐĂNG NHẬP';
             }
+        });
+    }
+
+    // Toggle Password Visibility
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+
+    if (togglePassword && password) {
+        togglePassword.addEventListener('click', function (e) {
+            // toggle the type attribute
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            // toggle the eye slash icon
+            this.classList.toggle('fa-eye-slash');
+            this.classList.toggle('fa-eye');
         });
     }
 });

@@ -42,11 +42,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const percent = (val - slider.min) / (slider.max - slider.min);
         // Điều chỉnh một chút để badge nằm giữa thumb (thumb rộng khoảng 20px)
         sliderVal.style.left = `calc(${percent * 100}%)`;
+
+        // Cập nhật màu thanh kéo (Track color)
+        const colorPercent = percent * 100;
+        slider.style.background = `linear-gradient(to right, #32A6F9 0%, #32A6F9 ${colorPercent}%, #E2E8F0 ${colorPercent}%, #E2E8F0 100%)`;
     }
 
     if (slider && sliderVal) {
         slider.oninput = updateSliderBadge;
         // Chạy lần đầu để set vị trí mặc định 50%
+        
         updateSliderBadge();
     }
 
@@ -134,16 +139,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let dateStr = config.created_at ? new Date(config.created_at).toLocaleDateString('vi-VN') : '-';
 
                 tr.innerHTML = `
-                  <td style="padding-left: 20px;">
+                  <td>
                     <strong class="col-name" style="color:#1e293b; font-size:15px;">${name}</strong>
                     ${config.is_default ? '<span class="badge-default" style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:5px;">Mặc định</span>' : ''}
                   </td>
                   <td><span class="badge-model col-model">${model}</span></td>
-                  <td><span class="col-type" style="color:#64748b;">${type}</span></td>
-                  <td><span style="color:#64748b; font-weight:600;">${count}</span></td>
-                  <td><span style="color:#94a3b8; font-size:14px;">${dateStr}</span></td>
+                  <td><span class="col-type" style="color:#1e293b;">${type}</span></td>
+                  <td><span style="color:#1e293b; font-weight:500;">${count}</span></td>
+                  <td><span style="color:#1e293b; font-size:14px;">${dateStr}</span></td>
                   <td>
-                        <div style="display: flex; gap: 20px; justify-content: center; align-items:center;">
+                        <div style="display: flex; gap: 20px;align-items:center;">
                             <button class="btn-action-delete" onclick="deleteConfig('${id}')">
                                 <i class="fa-regular fa-trash-can"></i> Xoá
                             </button>
@@ -209,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let method = 'POST';
 
                 if (editingConfigId) {
-                    url = `/facebook/config/user/${editingConfigId}`;
+                    url = `/ facebook / config / user / ${editingConfigId} `;
                     method = 'PUT';
                 }
 
@@ -248,6 +253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+
     window.editConfig = (id) => {
         const configs = window.userConfigsData || [];
         const found = configs.find(c => c.id == id || c._id == id);
@@ -279,7 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- LIVE UPDATE LOGIC ---
     function updateLiveRow() {
         if (!editingConfigId) return;
-        const tr = document.getElementById(`row-${editingConfigId}`);
+        const tr = document.getElementById(`row - ${editingConfigId} `);
         if (!tr) return;
 
         const nameEl = tr.querySelector('.col-name');
@@ -304,7 +310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.deleteConfig = async (id) => {
         if (!confirm('Bạn có chắc muốn xóa cấu hình này?')) return;
         try {
-            await apiRequest(`/facebook/config/user/${id}`, { method: 'DELETE' });
+            await apiRequest(`/ facebook / config / user / ${id} `, { method: 'DELETE' });
             alert("Đã xóa thành công!");
             await window.refreshTable();
         } catch (error) {
@@ -314,7 +320,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.setDefault = async (id) => {
         try {
-            await apiRequest(`/facebook/config/user/${id}/default`, { method: 'PATCH' });
+            await apiRequest(`/ facebook / config / user / ${id}/default`, { method: 'PATCH' });
             await window.refreshTable();
         } catch (error) {
             alert("Lỗi khi đặt mặc định: " + error.message);

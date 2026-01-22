@@ -5,6 +5,38 @@ document.addEventListener('DOMContentLoaded', function () {
     const avatarPreview = document.getElementById('user-avatar-preview');
     const saveBtn = document.querySelector('.btn-save');
 
+    // Load User Info from localStorage
+    function loadUserInfo() {
+        const userInfoRaw = localStorage.getItem('user_info');
+        if (userInfoRaw) {
+            try {
+                const userInfo = JSON.parse(userInfoRaw);
+                const user = userInfo.user || {};
+
+                // Fill form fields
+                const fullNameInput = document.getElementById('full-name');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone-number');
+
+                if (fullNameInput) fullNameInput.value = user.full_name || user.username || '';
+                if (emailInput) emailInput.value = user.email || userInfo.email || '';
+                // Phone usually isn't in simple auth response, but we'll try
+                if (phoneInput && user.phone) phoneInput.value = user.phone;
+
+                // Update avatar if available
+                if (avatarPreview && user.avatar_url) {
+                    avatarPreview.src = user.avatar_url;
+                }
+
+                console.log('✅ Đã tải thông tin người dùng từ localStorage');
+            } catch (e) {
+                console.error('❌ Lỗi khi phân giải thông tin người dùng:', e);
+            }
+        }
+    }
+
+    loadUserInfo();
+
     // Handle avatar upload click
     if (avatarBtn && avatarInput) {
         avatarBtn.addEventListener('click', () => {

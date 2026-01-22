@@ -126,7 +126,8 @@ body {
      background: rgba(255, 255, 255, 0.05);
      border: 1px solid rgba(59, 130, 246, 0.5);
      border-radius: 99px;
-     padding: 16px 28px;
+     padding: 16px 50px 16px 28px;
+     /* Tăng padding bên phải từ 28px lên 50px */
      font-size: 20px;
      color: #727272;
      outline: none;
@@ -140,6 +141,28 @@ body {
 
 .login-container input::placeholder {
      color: #9CA3AF;
+}
+
+.password-wrapper {
+     position: relative;
+     width: 100%;
+}
+
+.toggle-password {
+     position: absolute;
+     right: 20px;
+     top: 50%;
+     transform: translateY(-50%);
+     cursor: pointer;
+     color: #9CA3AF;
+     font-size: 18px;
+     transition: color 0.3s;
+     z-index: 10;
+     /* Đảm bảo icon nằm trên input */
+}
+
+.toggle-password:hover {
+     color: #3B82F6;
 }
 
 .forgot-password {

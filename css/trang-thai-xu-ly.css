@@ -5,6 +5,9 @@
     --bg-white: #FFFFFF;
     --border-color: #E5E7EB;
 }
+* {
+    box-sizing: border-box;
+}
 
 /* Layout overrides */
 .content-area-thinking {

@@ -2,7 +2,6 @@
 
 <link rel="stylesheet" href="./css/facebook.css">
 
-
 <title>Quản lý cấu hình - AIS</title>
 <main class="page-body">
 
@@ -22,20 +21,21 @@
         <div class="manager-content">
             <!-- Section 1: Cấu hình bài viết -->
             <div class="card table-container">
-                <div style="padding: 20px 20px 10px; display: flex; justify-content: space-between; align-items: center;">
+                <!-- <div style="padding: 20px 20px 10px; display: flex; justify-content: space-between; align-items: center;">
                     <h2 style="font-size: 18px; font-weight: 600; color: #1e293b; margin: 0;">Mẫu cấu hình bài viết</h2>
-                </div>
+                </div> -->
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="text-align: left; padding-left: 20px;">Tên cấu hình</th>
+                            <th>Tên cấu hình</th>
                             <th>Model</th>
-                            <th>Loại bài viết </th>
+                            <th>Loại bài viết</th>
                             <th>Số bài được tạo</th>
                             <th>Ngày tạo</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
+
                     <tbody id="configTableBody">
                         <!-- dữ liệu  -->
                     </tbody>
@@ -58,7 +58,7 @@
                             <select id="content_lengths" class="premium-select"></select>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group form-group-inline">
                             <label>Mức độ sáng tạo:</label>
                             <div class="slider-wrapper">
                                 <span id="creativity_val" class="slider-value-badge">50%</span>
@@ -111,7 +111,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 

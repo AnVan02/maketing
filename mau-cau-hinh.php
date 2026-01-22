@@ -40,9 +40,18 @@
                     <img src="./images/icon-ai-bot.png" style="width: 64px; opacity: 0.2; margin-bottom: 20px">
                     <p style="font-size: 16px;">Bạn chưa có mẫu nào. Hãy bấm "Thêm mẫu cấu hình" để bắt đầu.</p>
                 </div>
+                <div class="table-footer" style="padding: 15px 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                    <!-- <div class="pagination-info" style="font-size: 13px; color: #64748b;">
+                        Hiển thị từ <span id="showingFrom" style="font-weight: 600; color: #1e293b;">0</span>
+                        đến <span id="showingTo" style="font-weight: 600; color: #1e293b;">0</span>
+                        trong tổng số <span id="totalArticles" style="font-weight: 600; color: #1e293b;">0</span> bài viết
+                    </div> -->
+                    <div id="paginationControls" class="pagination-controls" style="display: flex; gap: 5px;">
+                        <!-- Buttons will be injected via JS -->
+                    </div>
+                </div>
             </div>
         </div>
-
         <!-- CỘT PHẢI: FORM THÊM MỚI (Ẩn mặc định) -->
         <div class="manager-right">
             <div class="form-card bounce-in">
@@ -68,8 +77,8 @@
                         <select id="content_lengths" class="premium-select"></select>
                     </div>
 
-                    <div class="form-group">
-                        <label>Mức độ sáng tạo</label>
+                    <div class="form-group form-group-inline">
+                        <label>Mức độ sáng tạo:</label>
                         <div class="slider-wrapper">
                             <span id="creativity_val" class="slider-value-badge">50%</span>
                             <input type="range" id="creativity_level" min="0" max="100" value="50" class="premium-slider">
@@ -109,6 +118,7 @@
 
                 </div>
             </div>
+
         </div>
     </div>
 </main>

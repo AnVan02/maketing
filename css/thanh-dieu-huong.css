@@ -9,6 +9,10 @@
     --border-color: #E5E7EB;
     --transition: all 0.2s ease;
     --radius-md: 8px;
+    font-family:'Montserrat';
+}
+* {
+    box-sizing: border-box;
 }
 
 html,
@@ -44,6 +48,8 @@ body {
 .nav-item {
     border-right: 3px solid transparent;
     transition: all 0.2s ease;
+    font-family: 'Montserrat';
+
 }
 
 .nav-item.active {

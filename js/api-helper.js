@@ -73,7 +73,12 @@ async function apiRequest(endpoint, options = {}) {
             return { success: true, data: responseText };
         }
     } catch (error) {
-        console.error('❌ Lỗi kết nối API:', error.message);
+        // Chỉ log "Lỗi kết nối" nếu thực sự là lỗi mạng (TypeError)
+        if (error instanceof TypeError) {
+            console.error('❌ Lỗi mạng/Kết nối API:', error.message);
+        } else {
+            console.warn('⚠️ API Error:', error.message);
+        }
         throw error;
     }
 }
@@ -148,3 +153,25 @@ async function fetchUIConfigs() {
     }
 }
 
+/**
+ * PHẦN 4: ĐĂNG XUẤT (LOGOUT)
+ */
+
+async function logout() {
+    try {
+        console.log('⏳ Đang đăng xuất...');
+        // Gọi API đăng xuất để server xóa cookies và vô hiệu hóa token
+        await apiRequest('/auth/logout', {
+            method: 'POST'
+        });
+    } catch (error) {
+        console.warn('⚠️ Lỗi khi đăng xuất từ server:', error.message);
+    } finally {
+        // Xóa thông tin địa phương bất kể server có lỗi hay không
+        localStorage.removeItem('user_info');
+        localStorage.removeItem('ui_configs');
+
+        // Chuyển hướng về trang đăng nhập
+        window.location.href = 'dang-nhap.php';
+    }
+}

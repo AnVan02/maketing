@@ -47,7 +47,7 @@
                 <!-- Premium Search Bar -->
                 <div class="search-bar-wrapper">
                     <div class="search-bar">
-                        <input type="text" placeholder="Nhập chủ đề bạn muốn viết...">
+                        <input type="text" placeholder="">
                         <button class="search-btn">
                             <i class="fa-solid fa-play"></i>
                         </button>
@@ -239,7 +239,7 @@
                             <a href="/"><img src="./images/AIS.png" alt="Logo AIS"></a>
                         </div>
                         <p class="company-name">Nền tảng AI chuyên biệt<br>cho Digital Marketing</p>
-                        
+
                         <div class="contact-group">
                             <p class="tax-code"><strong>Địa chỉ:</strong> 150Ter Bùi Thị Xuân, Phường Bến Thành, TP.HCM</p>
                             <p class="contact-info"><strong>HTKT:</strong> (028) 39260996</p>
@@ -249,7 +249,7 @@
 
                     <!-- Về AIS -->
                     <div class="footer-column" role="navigation" aria-label="Về AIS">
-                        <p class="section-title">Về AIS</p>
+                        <p class="section-title" style="font-size: 20px;font-weight: 600;">Về AIS</p>
                         <ul>
                             <li><a href="">Giới thiệu</a></li>
                             <li><a href="">Bảng giá</a></li>
@@ -261,7 +261,7 @@
 
                     <!-- Chính sách  -->
                     <div class="footer-column" role="navigation" aria-label="Chính sách">
-                        <p class="section-title">Chính sách</p>
+                        <p class="section-title" style="font-size: 20px;font-weight: 600;">Chính sách</p>
                         <ul>
                             <li><a href="">Điều khoản dịch vụ</a></li>
                             <li><a href="">Chính sách bảo mật</a></li>
@@ -274,7 +274,7 @@
 
                     <!-- Tính Năng -->
                     <div class="footer-column" role="navigation" aria-label="Tính năng">
-                        <p class="section-title">Tính năng</p>
+                        <p class="section-title" style="font-size: 20px;font-weight: 600;">Tính năng</p>
                         <ul>
                             <li><a href="">AI SEO</a></li>
                             <li><a href="">AI Facebook</a></li>
@@ -286,10 +286,10 @@
                     <!-- DMCA & Social -->
                     <div class="footer-column social-column">
                         <div class="dmca-badge">
-                            <a href="#"><img src="images/dmca_protected.png" alt="DMCA.com Protection Status"></a>
+                            <a href="#"><img src="images/logo-DMCA.png" alt="DMCA.com Protection Status"></a>
                         </div>
                         <div class="social-icons">
-                            <a href="https://www.facebook.com/people/ROSA-AI-Computer/61559427752479/" target="_blank" title="Facebook"style="background: #1877F2; font-size: 24px">
+                            <a href="https://www.facebook.com/people/ROSA-AI-Computer/61559427752479/" target="_blank" title="Facebook" style="background: #1877F2; font-size: 24px">
                                 <i class="fab fa-facebook-f"></i>
                             </a>
                             <a href="https://www.youtube.com/@ROSAAIComputer" target="_blank" title="YouTube" style="background: #FF0000; font-size: 24px">

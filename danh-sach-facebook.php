@@ -1,40 +1,90 @@
 <?php require "thanh-dieu-huong.php" ?>
 
 <link rel="stylesheet" href="./css/facebook.css">
+<link rel="stylesheet" href="./css/danh-sach-facebook.css">
+
 
 <title>Danh sách bài viết Facebook - AIS</title>
-<main class="page-body">
+<main class=" page-body">
 
     <!-- HEADER -->
     <div class="content-header">
         <h1 class="page-title">Danh sách bài viết Facebook</h1>
-        <!-- Optional: Add filters or buttons here if needed -->
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-use-sm" style="background:#f1f5f9; color:#475569;" onclick="window.refreshPostsTable()">
+                <i class="fas fa-sync-alt"></i> Làm mới
+            </button>
+            <a href="cau-hinh-facebook.php" class="btn-use-sm" style="background:#2563eb; color:#fff; border-color:#2563eb; text-decoration:none;">
+                <i class="fas fa-plus"></i> Viết bài mới
+            </a>
+        </div>
     </div>
-
     <div class="tip-box">
-        <i class="fas fa-info-circle tip-icon-bulb"></i>
-        <span class="tip-text"><strong>Thông tin:</strong> Danh sách các bài viết đã được tạo và đăng lên Facebook Page của bạn.</span>
+        <img src="./images/icon-meo.png" alt="Tip" class="tip-icon">
+        <span class="tip-text"><strong>Thông tin:</strong> Bạn có thể lọc bài viết theo trạng thái để dễ dàng quản lý nội dung của mình.</span>
+    </div>
+    <!-- STATS -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <!-- <div class="stat-icon" style="background: #eff6ff; color: #3b82f6;">
+                <i class="fas fa-layer-group"></i>
+            </div> -->
+            <div class="stat-info">
+                <h3>Tổng số</h3>
+                <p id="stat-total">0</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <!-- <div class="stat-icon" style="background: #f1f5f9; color: #64748b;">
+                <i class="fas fa-edit"></i>
+            </div> -->
+            <div class="stat-info">
+                <h3>Bài nháp</h3>
+                <p id="stat-draft">0</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <!-- <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+                <i class="fas fa-check-circle"></i>
+            </div> -->
+            <div class="stat-info">
+                <h3>Đã đăng</h3>
+                <p id="stat-posted">0</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <!-- <div class="stat-icon" style="background: #fff7ed; color: #ea580c;">
+                <i class="fas fa-calendar-alt"></i>
+            </div> -->
+            <div class="stat-info">
+                <h3>Lên lịch</h3>
+                <p id="stat-scheduled">0</p>
+            </div>
+        </div>
     </div>
 
-    <div id="managerGrid" class="manager-grid" style="grid-template-columns: 1fr;"> <!-- Full width -->
-        <!-- LIST -->
-        <div class="manager-left" style="width: 100%;">
+    <div id="managerGrid" class="manager-grid">
+        <div class="manager-left">
             <div class="card table-container">
-                <div style="padding: 20px 20px 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <h2 style="font-size: 18px; font-weight: 600; color: #1e293b; margin: 0;">Bài viết đã đăng</h2>
-                    <button class="btn-use-sm" style="background:#f1f5f9; color:#475569;" onclick="window.refreshPostsTable()">
-                        <i class="fas fa-sync-alt"></i> Tải lại
-                    </button>
+                <!-- FILTER BAR -->
+                <div class="filter-tabs">
+                    <span class="filter-tab">Lọc theo trạng thái: </span>
+                    <div class="filter-tab active" data-status="">Tất cả bài viết</div>
+                    <div class="filter-tab" data-status="posted">Đã đăng</div>
+                    <div class="filter-tab" data-status="draft">Bài nháp</div>
+                    <div class="filter-tab" data-status="scheduled">Đã lên lịch</div>
                 </div>
+
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th style="width: 50px; text-align: center;">#</th>
                             <th style="text-align: left;">Nội dung</th>
-                            <th>Trang Fanpage</th>
+                            <th>Fanpage</th>
                             <th>Trạng thái</th>
-                            <th>Thời gian đăng</th>
-                            <th>Hành động</th>
+                            <th>Thời gian</th>
+                            <th>Link trang</th>
+                            <th>Hạnh động</th>
                         </tr>
                     </thead>
                     <tbody id="postsTableBody">
@@ -49,13 +99,44 @@
 
                 <div id="noDataState" style="display: none; padding: 60px 20px; text-align: center; color: #94a3b8;">
                     <i class="fab fa-facebook-square" style="font-size: 48px; opacity: 0.2; margin-bottom: 20px;"></i>
-                    <p style="font-size: 16px;">Chưa có bài viết nào được ghi nhận.</p>
+                    <p style="font-size: 16px;">Không tìm thấy bài viết nào.</p>
+                </div>
+
+                <div class="table-footer" style="padding: 15px 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                    <!-- <div class="pagination-info" style="font-size: 13px; color: #64748b;">
+                        Hiển thị từ <span id="showingFrom" style="font-weight: 600; color: #1e293b;">0</span>
+                        đến <span id="showingTo" style="font-weight: 600; color: #1e293b;">0</span>
+                        trong tổng số <span id="totalArticles" style="font-weight: 600; color: #1e293b;">0</span> bài viết
+                    </div> -->
+                    <div id="paginationControls" class="pagination-controls" style="display: flex; gap: 5px;">
+                        <!-- Buttons will be injected via JS -->
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 </main>
 </div>
+</div>
+
+<!-- Scheduling Modal -->
+<div id="scheduleModal" class="modal-premium" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: white; padding: 30px; border-radius: 12px; width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">Hẹn giờ đăng bài</h2>
+            <span class="close-modal" style="cursor: pointer; font-size: 24px; color: #94a3b8;">&times;</span>
+        </div>
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #475569;">Chọn thời gian đăng:</label>
+            <input type="datetime-local" id="scheduleTime" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+            <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Thời gian phải cách ít nhất 15 phút so với hiện tại.</p>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="cancelSchedule" class="btn-use-sm" style="background: #f1f5f9; color: #475569;">Hủy</button>
+            <button id="confirmSchedule" class="btn-use-sm" style="background: #2563eb; color: white;">Xác nhận</button>
+        </div>
+    </div>
 </div>
 
 <script src="./js/api-helper.js"></script>

@@ -156,14 +156,38 @@ function saveSidebarScroll() {
 function initializeSidebarToggle() {
     const toggleBtn = $('.menu-toggle');
     const appContainer = $('.app-container');
+    const overlay = $('.sidebar-overlay');
 
     if (!toggleBtn || !appContainer) {
         console.warn('⚠️ Không tìm thấy phần tử sidebar');
         return;
     }
 
+    // Tự động đóng sidebar trên mobile khi load
+    if (window.innerWidth <= 768) {
+        appContainer.classList.add('sidebar-collapsed');
+    }
+
     toggleBtn.addEventListener('click', () => {
         appContainer.classList.toggle('sidebar-collapsed');
+    });
+
+    // Đóng sidebar khi click vào overlay (mobile)
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            appContainer.classList.add('sidebar-collapsed');
+        });
+    }
+
+    // Xử lý khi resize cửa sổ
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            // Trên desktop, thường thì cho hiện sidebar (tùy thiết kế)
+            // appContainer.classList.remove('sidebar-collapsed');
+        } else {
+            // Chuyển sang mobile thì nên ẩn
+            appContainer.classList.add('sidebar-collapsed');
+        }
     });
 }
 

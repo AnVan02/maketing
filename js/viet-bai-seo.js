@@ -12,8 +12,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("=".repeat(50));
 
-    // Load Article Data
-    loadArticleData();
+    // Check if we are editing an existing article
+    const urlParams = new URLSearchParams(window.location.search);
+    const articleId = urlParams.get('id');
+
+    if (articleId) {
+        fetchArticleFromServer(articleId);
+    } else {
+        // Load Article Data from session (for new articles coming from outline)
+        loadArticleData();
+    }
+
+    async function fetchArticleFromServer(id) {
+        try {
+            showNotification("Đang tải bài viết từ máy chủ...", "info");
+            const response = await apiRequest(`/seo/articles/${id}`);
+            if (response && response.id) {
+                // Mocking the structure expected by loadArticleData
+                const mockPipelineData = {
+                    article: {
+                        id: response.id,
+                        title: response.title,
+                        html_content: response.content || response.html_content || "",
+                        meta_description: response.meta_description,
+                        primary_keyword: response.primary_keyword,
+                        secondary_keyword: response.secondary_keyword
+                    }
+                };
+                sessionStorage.setItem('finalArticleData', JSON.stringify(mockPipelineData));
+                loadArticleData();
+                showNotification("Tải bài viết thành công!", "success");
+            }
+        } catch (error) {
+            console.error("Error fetching article:", error);
+            showNotification("Không thể tải bài viết từ máy chủ.", "error");
+        }
+    }
 
     // Setup Event Listeners
     setupToolbar();
@@ -54,7 +88,7 @@ function setupImageHandlers() {
         }
     });
 
-    
+
 
     // 2. DRAG START
     container.addEventListener('dragstart', (e) => {
@@ -1042,7 +1076,7 @@ async function ContentGeneration() {
             console.log("🔍 No H3 found after sync, auto-generating default H3 subsections...");
             const newOutline = [];
             let h3GlobalCounter = 1;
-                outline.forEach((item) => {
+            outline.forEach((item) => {
                 newOutline.push(item);
                 if (item.level === 2 && !item.title.toLowerCase().includes("kết luận") && !item.title.toLowerCase().includes("lời kết")) {
                     for (let i = 1; i <= 2; i++) {
@@ -2092,22 +2126,14 @@ async function searchImages() {
     searchLoading.style.display = "block";
 
     try {
-        const response = await fetch(
-            "https://dvcendpoint.rosachatbot.com/api/v1/crawl/images",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "ngrok-skip-browser-warning": "true"
-                },
-                body: JSON.stringify({
-                    query: keyword,
-                    num_results: 12
-                })
+        const data = await apiRequest('crawl/images', {
+            method: "POST",
+            body: {
+                query: keyword,
+                num_results: 12
             }
-        );
+        });
 
-        const data = await response.json();
         searchLoading.style.display = "none";
 
         if (!data.success) {

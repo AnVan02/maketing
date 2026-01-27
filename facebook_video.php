@@ -15,7 +15,7 @@
             <p><strong>Mẹo:</strong> Nội dung càng rõ ràng, bài Facebook càng dễ chạm đúng người bạn muốn!</p>
         </div>
 
-        <div class="gird-layout">
+        <div class="grid-layout">
             <!-- Cột trái -->
             <div class="left-column">
                 <div class="card">
@@ -228,6 +228,7 @@
                     </label>
                 </div>
             </div>
+
 
             <!-- Image Upload Group -->
             <div id="modal-image-group" class="image-upload-wrapper" style="margin-top: 10px;">

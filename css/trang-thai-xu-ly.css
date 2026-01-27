@@ -4,6 +4,10 @@
     --text-sub: #6B7280;
     --bg-white: #FFFFFF;
     --border-color: #E5E7EB;
+    font-family: Montserrat;
+}
+* {
+    box-sizing: border-box;
 }
 
 /* Layout overrides */
@@ -21,7 +25,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .page-title {

@@ -7,8 +7,12 @@
     --text-gray: #64748b;
     --green-seo: #10b981;
     --highlight-bg: #e0f2fe;
+    font-family: Montserrat;
+        
 }
-
+* {
+    box-sizing: border-box;
+}
 body {
     margin: 0;
     font-family: 'Montserrat';
@@ -41,7 +45,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .page-title {

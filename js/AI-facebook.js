@@ -49,10 +49,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td><span style="color:#94a3b8; font-size:13px;">${dateStr}</span></td>
                     <td>
                         <div style="display: flex; gap: 8px; justify-content: center; align-items:center;">
-                            <button class="btn-use-sm" style="background:#f1f5f9; color:#475569;" onclick="editConnection('${conn.id}')">Sửa</button>
+                            <button class="btn-use-sm" style="color: #3B82F6; background:#f0f2f5"; onclick="editConnection('${conn.id}')">Sửa</button>
                             ${!isDefault ? `<button class="btn-use-sm" style="background:#f0fdf4; color:#16a34a; border-color:#bbf7d0;" onclick="setDefaultConnection('${conn.id}')">Đặt mặc định</button>` : ''}
+                            <button class="btn-use-sm"  style="color: #EF4444; background:#f0f2f5"; onclick="deleteConnection('${conn.id}')">Xóa</button>
                         </div>
                     </td>
+                    
                 `;
 
                 body.appendChild(tr);
@@ -62,7 +64,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (emptyState) emptyState.style.display = 'block';
         }
     };
+    // xoá kết nối facebook
+    window.deleteConnection = async (id) => {
+        if (!confirm("Bạn có chắc chắn muốn xóa kết nối này không?")) return;
 
+        try {
+            const response = await apiRequest(`/facebook/connections/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response && response.success) {
+                alert("Đã xóa kết nối thành công!");
+                await window.refreshConnectionsTable();
+            } else {
+                alert("Lỗi: " + (response.message || "Không thể xóa kết nối"));
+            }
+        } catch (error) {
+            alert("Lỗi khi xóa: " + error.message);
+        }
+    };
+    // kết nối mặc dịnh 
     window.setDefaultConnection = async (id) => {
         try {
             const conn = window.facebookConnections.find(c => c.id == id);
@@ -84,31 +105,137 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    window.editConnection = async (id) => {
+
+
+    window.openAddModal = function () {
+        // Reset modal for new connection
+        document.getElementById('connId').value = '';
+        document.getElementById('modalPageId').value = '';
+        document.getElementById('modalAccessToken').value = '';
+        document.getElementById('modalIsDefault').checked = false;
+        document.getElementById('modalTitle').textContent = 'Thêm kết nối mới';
+
+        const saveBtn = document.getElementById('saveConn');
+        if (saveBtn) saveBtn.textContent = 'Tạo kết nối';
+
+        const modal = document.getElementById('connectionModal');
+        if (modal) modal.style.display = 'flex';
+    };
+
+    window.editConnection = function (id) {
         const conn = window.facebookConnections.find(c => c.id == id);
         if (!conn) return;
 
-        const pageId = prompt("Nhập Page ID mới:", conn.page_id);
-        if (pageId === null) return;
+        // Populate modal for editing
+        document.getElementById('connId').value = id;
+        document.getElementById('modalPageId').value = conn.page_id;
+        document.getElementById('modalAccessToken').value = ''; // Don't show old token for security
+        document.getElementById('modalIsDefault').checked = conn.is_default;
+        document.getElementById('modalTitle').textContent = 'Cập nhật kết nối';
 
-        const accessToken = prompt("Nhập Page Access Token mới (để trống nếu không đổi):");
-        if (accessToken === null) return;
+        const saveBtn = document.getElementById('saveConn');
+        if (saveBtn) saveBtn.textContent = 'Lưu thay đổi';
 
-        try {
-            await apiRequest(`/facebook/connections/${id}`, {
-                method: 'PUT',
-                body: JSON.stringify({
-                    page_id: pageId,
-                    page_access_token: accessToken || conn.page_access_token || "",
-                    is_default: conn.is_default
-                })
-            });
-            alert("Đã cập nhật kết nối thành công!");
-            await window.refreshConnectionsTable();
-        } catch (error) {
-            alert("Lỗi khi cập nhật: " + error.message);
-        }
+        // Show modal
+        const modal = document.getElementById('connectionModal');
+        if (modal) modal.style.display = 'flex';
     };
+
+    // --- MODAL HANDLERS ---
+    const connectionModal = document.getElementById('connectionModal');
+    const closeBtn = document.getElementById('closeConnModal');
+    const cancelBtn = document.getElementById('cancelConn');
+    const saveBtn = document.getElementById('saveConn');
+    const testTokenBtn = document.getElementById('testTokenBtn');
+
+    if (closeBtn) closeBtn.onclick = () => connectionModal.style.display = 'none';
+    if (cancelBtn) cancelBtn.onclick = () => connectionModal.style.display = 'none';
+
+    if (testTokenBtn) {
+        testTokenBtn.onclick = async () => {
+            const pageId = document.getElementById('modalPageId').value.trim();
+            const accessToken = document.getElementById('modalAccessToken').value.trim();
+
+            if (!pageId || !accessToken) {
+                return alert("Vui lòng nhập cả Page ID và Token để kiểm tra!");
+            }
+
+            try {
+                testTokenBtn.disabled = true;
+                testTokenBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
+
+                // Thử gọi trực tiếp tới Graph API của Facebook (Client-side)
+                // Nếu bị CORS, lỗi này sẽ được bắt và thông báo cho người dùng
+                const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}?access_token=${accessToken}&fields=name,picture`);
+                const data = await response.json();
+
+                if (data && data.name) {
+                    alert(`✅ Kết nối hợp lệ!\nTrang: ${data.name}`);
+                } else {
+                    const errorMsg = data.error ? data.error.message : "Token không hợp lệ hoặc không có quyền truy cập trang này.";
+                    alert(`❌ Lỗi: ${errorMsg}`);
+                }
+            } catch (error) {
+                alert("⚠️ Không thể kiểm tra tự động (có thể do lỗi CORS). Bạn vẫn có thể thử lưu để hệ thống tự xác thực qua Server.");
+            } finally {
+                testTokenBtn.disabled = false;
+                testTokenBtn.innerHTML = '<i class="fas fa-vial"></i> Kiểm tra Token';
+            }
+        };
+    }
+
+    if (saveBtn) {
+        saveBtn.onclick = async () => {
+            const id = document.getElementById('connId').value;
+            const pageId = document.getElementById('modalPageId').value.trim();
+            const accessToken = document.getElementById('modalAccessToken').value.trim();
+            const isDefault = document.getElementById('modalIsDefault').checked;
+
+            if (!pageId) return alert("Vui lòng nhập Facebook Page ID!");
+            // Nếu thêm mới thì bắt buộc phải có token
+            if (!id && !accessToken) return alert("Vui lòng nhập Page Access Token!");
+
+            try {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+
+                let url = '/facebook/connections';
+                let method = 'POST';
+
+                if (id) {
+                    url = `/facebook/connections/${id}`;
+                    method = 'PUT';
+                }
+
+                const currentConn = id ? window.facebookConnections.find(c => c.id == id) : null;
+
+                // Payload chuẩn cho endpoint /facebook/connections
+                const payload = {
+                    page_id: pageId.match(/^\d+$/) ? String(pageId) : pageId, // Luôn gửi dạng string cho ID lớn
+                    page_access_token: accessToken || (currentConn ? currentConn.page_access_token : ""),
+                    is_default: isDefault
+                };
+
+                const response = await apiRequest(url, {
+                    method: method,
+                    body: JSON.stringify(payload)
+                });
+
+                if (response && (response.success || response.id)) {
+                    alert(id ? "✅ Cập nhật kết nối thành công!" : "Đã kết nối Facebook mới thành công!");
+                    connectionModal.style.display = 'none';
+                    await window.refreshConnectionsTable();
+                } else {
+                    alert("❌ Lỗi: " + (response.message || "Không thể thực hiện yêu cầu"));
+                }
+            } catch (error) {
+                alert("❌ Lỗi kết nối: " + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = id ? 'Lưu thay đổi' : 'Tạo kết nối';
+            }
+        };
+    }
 
     // --- CHẠY LẦN ĐẦU ---
     await window.refreshConnectionsTable();

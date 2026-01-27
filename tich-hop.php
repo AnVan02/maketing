@@ -16,7 +16,7 @@
 
     <div class="integration-grid">
         <!-- WordPress Card -->
-        <div class="integration-card wordpress">
+        <div class="integration-card wordpress" id="wpCard">
             <div class="card-info">
                 <h2 class="card-title">WordPress</h2>
                 <p class="card-desc">Nền tảng CMS website phổ biến nhất thế giới với khả năng tương thích cao</p>
@@ -29,7 +29,7 @@
         </div>
 
         <!-- GA4 Card -->
-        <div class="integration-card analytics">
+        <div class="integration-card analytics" id="analyticsCard">
             <div class="card-info">
                 <h2 class="card-title">Analytics (GA4)</h2>
                 <p class="card-desc">Công cụ phân tích số liệu lưu lượng truy cập mạnh mẽ của Google</p>
@@ -47,3 +47,6 @@
         </div>
     </div>
 </main>
+
+<!-- kết nối js -->
+<script src="./js/wordpress.js"></script>

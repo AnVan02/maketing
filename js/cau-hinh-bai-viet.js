@@ -62,9 +62,79 @@ async function loadConfigs() {
         populate('writing_tones', data.writing_tones, 'Chọn tone giọng');
         populate('languages', data.languages, 'Chọn ngôn ngữ');
         populate('bots', data.bots, 'Chọn AI Model');
+
+        // Load user-saved templates
+        await loadUserTemplates();
+
         return true;
     } catch (e) {
         return false;
+    }
+}
+
+async function loadUserTemplates() {
+    const templateSelect = document.getElementById('config_template');
+    if (!templateSelect) return;
+
+    try {
+        const response = await apiRequest('/ui/user/configs');
+        let configs = response.data || response.configs || response;
+        if (!Array.isArray(configs)) configs = [];
+
+        // Save for later use
+        window.userConfigs = configs;
+
+        // Populate dropdown
+        const firstOpt = templateSelect.options[0];
+        const lastOpt = Array.from(templateSelect.options).find(opt => opt.value === 'add-new');
+
+        templateSelect.innerHTML = '';
+        if (firstOpt) templateSelect.appendChild(firstOpt);
+
+        configs.forEach(cfg => {
+            const opt = document.createElement('option');
+            opt.value = cfg.id || cfg.config_id;
+            opt.textContent = cfg.name || cfg.config_name;
+            templateSelect.appendChild(opt);
+        });
+
+        if (lastOpt) templateSelect.appendChild(lastOpt);
+
+        // Auto-select default if exists
+        const defaultCfg = configs.find(c => c.is_default);
+        if (defaultCfg) {
+            templateSelect.value = defaultCfg.id || defaultCfg.config_id;
+            applyTemplateToUI(defaultCfg);
+        }
+
+    } catch (error) {
+        console.warn("Failed to load user templates:", error);
+    }
+}
+
+function applyTemplateToUI(config) {
+    if (!config) return;
+    const mapping = {
+        'bots': config.bot_id || config.model,
+        'content_types': config.article_type || config.type,
+        'writing_tones': config.tone,
+        'languages': config.language
+    };
+
+    for (const [id, value] of Object.entries(mapping)) {
+        const el = document.getElementById(id);
+        if (el && value) el.value = value;
+    }
+
+    // Article length might need regex or direct match
+    if (config.article_length) {
+        const lenSelect = document.getElementById('content_lengths');
+        if (lenSelect) {
+            // Find option that contains the length value
+            const options = Array.from(lenSelect.options);
+            const match = options.find(opt => opt.value.includes(config.article_length) || opt.textContent.includes(config.article_length));
+            if (match) lenSelect.value = match.value;
+        }
     }
 }
 
@@ -258,7 +328,7 @@ async function generateSEOContent(topNews, config, title, outline, mainKeyword, 
                 });
             });
         }
-        
+
         const payload = {
             top_news: topNews,
             target_language: config.language || "Tiếng Việt",
@@ -805,40 +875,80 @@ function setupGenerateButton() {
             if (defaultPreview) defaultPreview.style.display = 'none';
             if (outlineResult) outlineResult.style.display = 'none';
 
-            // --- 2. TÌM KIẾM TIN TỨC ---
-            console.log("📡 Bước 1: Search News...");
-            const newsResults = await searchNews(user_query, 10);
+            let outlineDataResult = null;
 
-            if (!newsResults || newsResults.length === 0) {
-                throw new Error("Không tìm thấy tin tức liên quan.");
+            if (sourceType === 'private') {
+                // --- 2. XỬ LÝ DỮ LIỆU RIÊNG ---
+                console.log("📡 Bước 1: Processing Private Data...");
+                showNotification("Đang phân tích dữ liệu riêng của bạn...", "info");
+
+                const privateContext = document.getElementById('private_context')?.value || "";
+                const links = productLinks.map(p => p.url).join("\n");
+                const combinedData = `Từ khóa: ${user_query}\n\nNội dung bổ sung: ${privateContext}\n\nLink tham khảo:\n${links}`;
+
+                // Gọi API nội bộ
+                const response = await apiRequest('/ai/contents/internal', {
+                    method: "POST",
+                    body: JSON.stringify({
+                        main_keyword: user_query,
+                        secondary_keywords: secondary_keywords,
+                        title: title,
+                        internal_data: combinedData,
+                        files: selectedFiles.map(f => ({ name: f.name, base64: f.base64 })),
+                        config: {
+                            bot_id: bot,
+                            article_length: article_length,
+                            tone: tone,
+                            article_type: content_type,
+                            language: document.getElementById('languages')?.value || "Tiếng Việt"
+                        }
+                    })
+                });
+
+                if (response && response.success) {
+                    outlineDataResult = {
+                        article_outline: response.article_outline || response.outline,
+                        article_content: response.article_content || response.html_content
+                    };
+                } else {
+                    throw new Error("Lỗi khi AI phân tích dữ liệu riêng: " + (response?.message || "Không xác định"));
+                }
+            } else {
+                // --- 2. TÌM KIẾM TIN TỨC (Internet mode) ---
+                console.log("📡 Bước 1: Search News...");
+                const newsResults = await searchNews(user_query, 10);
+
+                if (!newsResults || newsResults.length === 0) {
+                    throw new Error("Không tìm thấy tin tức liên quan.");
+                }
+
+                // --- 3. CRAWL NỘI DUNG ---
+                console.log("📡 Bước 2: Crawl Content...");
+                const crawledArticles = await crawlArticles(newsResults);
+                if (!crawledArticles || crawledArticles.length === 0) {
+                    throw new Error("Không crawl được nội dung từ các bài viết.");
+                }
+
+                // --- 4. LỌC & TẠO DÀN Ý ---
+                console.log("📡 Bước 3: Filter & Outline...");
+                outlineDataResult = await filterNewsAndGenerateOutline(
+                    crawledArticles,
+                    user_query,
+                    secondary_keywords,
+                    title,
+                    5
+                );
             }
 
-            // --- 3. CRAWL NỘI DUNG ---
-            console.log("📡 Bước 2: Crawl Content...");
-            const crawledArticles = await crawlArticles(newsResults);
-            if (!crawledArticles || crawledArticles.length === 0) {
-                throw new Error("Không crawl được nội dung từ các bài viết.");
-            }
-
-            // --- 4. LỌC & TẠO DÀN Ý ---
-            console.log("📡 Bước 3: Filter & Outline...");
-            const outlineData = await filterNewsAndGenerateOutline(
-                crawledArticles,
-                user_query,
-                secondary_keywords,
-                title,
-                5
-            );
-
-            if (!outlineData) throw new Error("Lỗi khi AI phân tích và tạo dàn ý.");
+            if (!outlineDataResult) throw new Error("Lỗi khi AI phân tích và tạo dàn ý.");
 
             // --- 5. XỬ LÝ KẾT QUẢ ---
-            if (outlineData && outlineData.article_outline) {
+            if (outlineDataResult && outlineDataResult.article_outline) {
                 showLoading(false);
 
                 // Lưu outline vào sessionStorage
                 const outlineForStorage = {
-                    outline: outlineData.article_outline,
+                    outline: outlineDataResult.article_outline,
                     title: title,
                     main_keyword: user_query,
                     secondary_keywords: secondary_keywords
@@ -848,7 +958,7 @@ function setupGenerateButton() {
 
                 // Hiển thị ra UI
                 if (window.outlineEditor) {
-                    window.outlineEditor.setOutlineData(outlineData.article_outline);
+                    window.outlineEditor.setOutlineData(outlineDataResult.article_outline);
                     window.outlineEditor.renderOutline();
                 }
 
@@ -860,9 +970,13 @@ function setupGenerateButton() {
 
                 // Lưu pipeline data
                 const sessionData = {
-                    pipeline_results: pipelineData.filteredNews,
-                    article_outline: outlineData.article_outline,
+                    pipeline_results: sourceType === 'internet' ? pipelineData.filteredNews : null,
+                    article_outline: outlineDataResult.article_outline,
                     final_title: title,
+                    finalArticle: outlineDataResult.article_content ? {
+                        title: title,
+                        html_content: outlineDataResult.article_content
+                    } : null,
                     config: {
                         main_keyword: user_query,
                         secondary_keywords: secondary_keywords,
@@ -984,6 +1098,7 @@ async function initializePage() {
     // ⛔ KHÔNG DÁN SAU DÒNG NÀY
     showNotification('Hệ thống đã sẵn sàng!', 'info');
 }
+
 
 // --- Sidebar Toggle ---
 function initializeSidebarToggle() {

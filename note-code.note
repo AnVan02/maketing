@@ -1,0 +1,130 @@
+Phân nhóm theo tags:
+
+1. Authentication (Xác thực) - 5 API
+   POST /api/v1/auth/register - Đăng ký tài khoản
+
+POST /api/v1/auth/verify-otp - Xác thực OTP
+
+POST /api/v1/auth/resend-otp - Gửi lại OTP
+
+POST /api/v1/auth/login - Đăng nhập
+
+POST /api/v1/auth/logout - Đăng xuất
+
+POST /api/v1/auth/refresh - Làm mới token
+
+2. UI Config (Cấu hình giao diện) - 8 API
+   GET /api/v1/ui/configs - Lấy tất cả config
+
+GET /api/v1/ui/user/configs - Lấy config của user
+
+POST /api/v1/ui/user/configs - Tạo config mới
+
+GET /api/v1/ui/user/configs/default - Lấy config mặc định
+
+GET /api/v1/ui/user/configs/{config_id} - Lấy config theo ID
+
+PUT /api/v1/ui/user/configs/{config_id} - Cập nhật config
+
+DELETE /api/v1/ui/user/configs/{config_id} - Xóa config
+
+PATCH /api/v1/ui/user/configs/{config_id}/default - Đặt làm mặc định
+
+GET /api/v1/ui/user/configs/search - Tìm kiếm config
+
+3. AI Services (Dịch vụ AI) - 7 API
+   POST /api/v1/ai/news-filterings - Phân tích tin tức
+
+POST /api/v1/ai/titles - Gợi ý tiêu đề
+
+POST /api/v1/ai/contents - Tạo nội dung
+
+POST /api/v1/ai/contents/internal - Tạo nội dung nội bộ
+
+POST /api/v1/ai/contents/rewrite - Viết lại nội dung
+
+POST /api/v1/ai/images/generate - Tạo hình ảnh
+
+4. SEO Published (Bài viết SEO) - 3 API
+   GET /api/v1/seo/articles - Lấy bài viết đã xuất bản
+
+GET /api/v1/seo/articles/{article_id} - Lấy chi tiết bài viết
+
+DELETE /api/v1/seo/articles/{article_id} - Xóa bài viết
+
+5. Facebook Connection (Kết nối Facebook) - 6 API
+   GET /api/v1/facebook/connections - Lấy kết nối Facebook
+
+POST /api/v1/facebook/connections - Tạo kết nối Facebook
+
+GET /api/v1/facebook/connections/default - Lấy kết nối mặc định
+
+GET /api/v1/facebook/connections/{connection_id} - Lấy kết nối theo ID
+
+PUT /api/v1/facebook/connections/{connection_id} - Cập nhật kết nối
+
+DELETE /api/v1/facebook/connections/{connection_id} - Xóa kết nối
+
+6. Facebook Content Configs (Cấu hình nội dung Facebook) - 10 API
+   GET /api/v1/facebook/config - Lấy tất cả config Facebook
+
+POST /api/v1/facebook/config - Tạo config Facebook mới
+
+GET /api/v1/facebook/config/user - Lấy config user
+
+GET /api/v1/facebook/config/user/default - Lấy config mặc định
+
+GET /api/v1/facebook/config/user/{config_id} - Lấy config theo ID
+
+PUT /api/v1/facebook/config/user/{config_id} - Cập nhật config
+
+DELETE /api/v1/facebook/config/user/{config_id} - Xóa config
+
+PATCH /api/v1/facebook/config/user/{config_id}/default - Đặt làm mặc định
+
+7. Facebook Content Generation (Tạo nội dung Facebook) - 1 API
+   POST /api/v1/facebook/generate/content - Tạo nội dung bài đăng
+
+8. Facebook Publish (Đăng bài Facebook) - 12 API
+   POST /api/v1/facebook/publish/media/upload - Upload media từ thiết bị
+
+POST /api/v1/facebook/publish/media/upload-urls - Upload media từ URLs
+
+POST /api/v1/facebook/publish/posts/publish - Đăng bài
+
+GET /api/v1/facebook/publish/posts - Lấy danh sách bài draft
+
+GET /api/v1/facebook/publish/posts/{post_id} - Lấy chi tiết bài draft
+
+DELETE /api/v1/facebook/publish/posts/drafts/{draft_post_id} - Xóa bài draft
+
+PUT /api/v1/facebook/publish/posts/scheduled/{draft_post_id} - Cập nhật lịch đăng
+
+DELETE /api/v1/facebook/publish/posts/scheduled/{draft_post_id} - Hủy lịch đăng
+
+GET /api/v1/facebook/publish/posts/scheduled - Lấy bài đã đặt lịch
+
+9. Facebook Engagement Metrics (Phân tích tương tác) - 6 API
+   POST /api/v1/facebook/engagement/posts/{draft_post_id}/metrics/collect - Thu thập metrics bài post
+
+POST /api/v1/facebook/engagement/posts/metrics/collect-all - Thu thập metrics tất cả bài
+
+GET /api/v1/facebook/engagement/posts/{draft_post_id}/metrics - Lấy metrics bài post
+
+GET /api/v1/facebook/engagement/posts/{draft_post_id}/metrics/history - Lấy lịch sử metrics
+
+GET /api/v1/facebook/engagement/analytics/top-posts - Lấy top bài post
+
+GET /api/v1/facebook/engagement/analytics/summary - Lấy tổng hợp engagement
+
+
+Nhóm	API Thành phần	Trạng thái
+1. Authentication	Register, Login, OTP, Logout, Refresh	✅ Hoàn tất
+2. UI Config	Get, Create, Update, Delete, Set Default	✅ Hoàn tất
+3. AI Services	News, Titles, Content, Internal, Rewrite, Image	✅ Hoàn tất
+4. SEO Published	List, Detail, Delete	✅ Hoàn tất
+5. FB Connection	List, Create, Set Default, Update, Delete	✅ Hoàn tất
+6. FB Configs	System Config, User Configs, CRUD, Set Default	✅ Hoàn tất
+7. FB Gen Content	Generate Post Content	✅ Hoàn tất
+8. FB Publish	Media Upload (File/URL), Publish, Scheduled	✅ Hoàn tất
+9. FB Metrics	Collect, Metrics History, Analytics Summary	✅ Hoàn tất

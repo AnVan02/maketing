@@ -4,7 +4,11 @@
 // Gửi JSON hoặc FormData (upload file)
 // Lấy cấu hình giao diện (UI Configs) và lưu vào localStor
 
-const API_BASE_URL = 'https://dvcendpoint.rosachatbot.com/api/v1';
+// Đảm bảo API_BASE_URL không bị khai báo lại nếu script được tải nhiều lần
+if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'https://dvcendpoint.rosachatbot.com/api/v1';
+}
+const API_BASE_URL = window.API_BASE_URL;
 const PROXY_URL = 'proxy.php'; // Sử dụng proxy PHP để tránh lỗi CORS
 
 /**
@@ -37,6 +41,22 @@ async function apiRequest(endpoint, options = {}) {
 
         if (!response.ok) {
             if (response.status === 401) {
+                // Tự động Refresh Token nếu không phải là request Login/Refresh
+                if (!cleanEndpoint.includes('/auth/login') && !cleanEndpoint.includes('/auth/refresh')) {
+                    try {
+                        console.log('🔄 Access Token hết hạn (401). Đang Refresh...');
+                        // Gọi API Refresh để server cấp lại Access Cookie mới
+                        await apiRequest('/auth/refresh', { method: 'POST' });
+
+                        console.log('✅ Refresh thành công. Đang thực hiện lại request...');
+                        // Retry request ban đầu
+                        return await apiRequest(endpoint, options);
+                    } catch (refreshErr) {
+                        console.warn('⚠️ Refresh thất bại:', refreshErr);
+                        // Refresh lỗi -> Tiếp tục xuống logic logout
+                    }
+                }
+
                 console.warn('⚠️ Phiên đăng nhập đã hết hạn.');
                 if (!window.location.href.includes('dang-nhap.php')) {
                     window.location.href = 'dang-nhap.php';
@@ -73,7 +93,12 @@ async function apiRequest(endpoint, options = {}) {
             return { success: true, data: responseText };
         }
     } catch (error) {
-        console.error('❌ Lỗi kết nối API:', error.message);
+        // Chỉ log "Lỗi kết nối" nếu thực sự là lỗi mạng (TypeError)
+        if (error instanceof TypeError) {
+            console.error('❌ Lỗi mạng/Kết nối API:', error.message);
+        } else {
+            console.warn('⚠️ API Error:', error.message);
+        }
         throw error;
     }
 }
@@ -97,6 +122,18 @@ async function apiRequestFormData(endpoint, formData, method = "POST") {
 
         if (!response.ok) {
             if (response.status === 401) {
+                if (!cleanEndpoint.includes('/auth/login') && !cleanEndpoint.includes('/auth/refresh')) {
+                    try {
+                        console.log('🔄 Token (Upload) hết hạn. Đang Refresh...');
+                        await apiRequest('/auth/refresh', { method: 'POST' });
+
+                        console.log('✅ Refresh thành công. Retry Upload...');
+                        return await apiRequestFormData(endpoint, formData, method);
+                    } catch (err) {
+                        console.warn('⚠️ Refresh Upload thất bại:', err);
+                    }
+                }
+
                 window.location.href = 'dang-nhap.php';
                 throw new Error('Phiên đã hết hạn');
             }
@@ -148,3 +185,25 @@ async function fetchUIConfigs() {
     }
 }
 
+/**
+ * PHẦN 4: ĐĂNG XUẤT (LOGOUT)
+ */
+
+async function logout() {
+    try {
+        console.log('⏳ Đang đăng xuất...');
+        // Gọi API đăng xuất để server xóa cookies và vô hiệu hóa token
+        await apiRequest('/auth/logout', {
+            method: 'POST'
+        });
+    } catch (error) {
+        console.warn('⚠️ Lỗi khi đăng xuất từ server:', error.message);
+    } finally {
+        // Xóa thông tin địa phương bất kể server có lỗi hay không
+        localStorage.removeItem('user_info');
+        localStorage.removeItem('ui_configs');
+
+        // Chuyển hướng về trang đăng nhập
+        window.location.href = 'dang-nhap.php';
+    }
+}

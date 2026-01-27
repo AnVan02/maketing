@@ -1,7 +1,4 @@
-<?php
-$hideHeaderActions = true;
-require "thanh-dieu-huong.php";
-?>
+<?php require "thanh-dieu-huong.php" ?>
 <link rel="stylesheet" href="./css/tong-hop.css">
 <link rel="stylesheet" href="./css/thanh-dieu-huong.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -74,16 +71,37 @@ require "thanh-dieu-huong.php";
         </div>
     </div>
 
+
     <!-- Filter Section with the blue container -->
-    <div class="filter-section-container">
+    <!-- <div class="filter-section-container" id="filter-section" style="display: none;">
         <div class="filter-bar-custom">
             <div class="filter-left">
                 <span class="filter-label">Lọc theo trạng thái:</span>
                 <div class="status-filters">
-                    <button class="status-btn active">Tất cả</button>
-                    <button class="status-btn">Đã đăng</button>
-                    <button class="status-btn">Đã lên lịch</button>
-                    <button class="status-btn">Lỗi</button>
+                    <button class="status-btn active" data-status="">Tất cả</button>
+                    <button class="status-btn" data-status="">Đã đăng</button>
+                    <button class="status-btn" data-status="">Đã lên lịch </button>
+                    <button class="status-btn" data-status="">Lỗi </button>
+                </div>
+            </div>
+            <div class="filter-right">
+                <button class="sync-btn-custom">
+                    <i class="fas fa-sync-alt"></i> Đồng bộ lại
+                </button>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Filter Section with the blue container -->
+    <div class="filter-section-container" id="filter-section" style="display: none;">
+        <div class="filter-bar-custom">
+            <div class="filter-left">
+                <span class="filter-label">Lọc theo trạng thái:</span>
+                <div class="status-filters">
+                    <button class="status-btn active" data-status="">Tất cả bài viết</button>
+                    <button class="status-btn" data-status="posted">Đã đăng</button>
+                    <button class="status-btn" data-status="draft">Bài nháp</button>
+                    <button class="status-btn" data-status="scheduled">Đã lên lịch</button>
                 </div>
             </div>
             <div class="filter-right">
@@ -98,15 +116,13 @@ require "thanh-dieu-huong.php";
         <div class="activity-table-container">
             <table class="activity-table">
                 <thead>
-                    <tr>
-                        <th style="width: 40px;"><i class="far fa-square" style="color: #cbd5e1;"></i></th>
+                    <tr id="tableHeaderRow">
                         <th>Tiêu đề bài viết</th>
                         <th>Khoá chính</th>
-                        <th>Số lượng từ</th>
                         <th>Meta-description</th>
+                        <th style="text-align: center;">Số lượng từ</th>
+                        <th style="text-align: center;">SEO Score</th>
                         <th style="text-align: center;">Ngày đăng</th>
-                        <th style="text-align: center;">Hình ảnh</th>
-                        <th style="text-align: center;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody id="configTableBody">
@@ -117,9 +133,9 @@ require "thanh-dieu-huong.php";
 
         <!-- Pagination -->
         <div class="pagination-container">
-            <div class="pagination-info">
+            <!-- <div class="pagination-info">
                 Hiển thị <span id="showingFrom">0</span>-<span id="showingTo">0</span> của <span id="totalArticles">0</span> bài viết
-            </div>
+            </div> -->
             <div class="pagination-controls" id="paginationControls">
                 <!-- Pagination buttons will be generated here -->
             </div>
@@ -135,11 +151,14 @@ require "thanh-dieu-huong.php";
                     <h4>SEO – Lượt truy cập gần đây</h4>
                     <span class="header-subtitle">Thống kê 7 ngày qua</span>
                 </div>
-                <div class="card-actions">
-                    <div class="date-selector">
-                        <i class="far fa-calendar-alt"></i>
-                        <span>Tháng 07/2025 - 12/2025</span>
+                 <div class="card-actions">
+                    <div class="date-selector" style="background: #f8fafc; padding: 4px 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
+                        <i class="far fa-calendar-alt" style="color: #64748b;"></i>
+                        <input type="date" id="facebook_start_date" style="border: none; background: transparent; font-size: 13px; color: #334155; width: 110px;">
+                        <span style="color: #94a3b8;">-</span>
+                        <input type="date" id="facebook_end_date" style="border: none; background: transparent; font-size: 13px; color: #334155; width: 110px;">
                     </div>
+                    <button class="action-btn" id="btn-refresh-facebook-stats" title="Làm mới thống kê"><i class="fas fa-sync-alt"></i></button>
                     <button class="action-btn"><i class="fas fa-ellipsis-h"></i></button>
                 </div>
             </div>
@@ -148,53 +167,45 @@ require "thanh-dieu-huong.php";
                 <canvas id="seoChart"></canvas>
             </div>
 
-
             <div class="analytics-footer">
-                <div class="footer-item">
-                    <span class="footer-label">Lượt truy cập</span>
-                    <span class="footer-value">12,847</span>
-                    <span class="footer-trend trend-up">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <path d="M1 9L4.5 5.5L7 8L11 4M11 4V7.5M11 4H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        + 12.5%
-                    </span>
-                </div>
-                <div class="footer-item">
-                    <span class="footer-label">Số bài lên top</span>
-                    <span class="footer-value">15</span>
-                    <span class="footer-trend trend-up">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <path d="M1 9L4.5 5.5L7 8L11 4M11 4V7.5M11 4H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        + 3 bài
-                    </span>
-                </div>
-                <div class="footer-item">
-                    <span class="footer-label">CTR trung bình</span>
-                    <span class="footer-value">4.2%</span>
-                    <span class="footer-trend trend-up">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <path d="M1 9L4.5 5.5L7 8L11 4M11 4V7.5M11 4H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        + 0.8%
-                    </span>
-                </div>
+              <div class="footer-item">
+                <span class="footer-lalel">Bài viêt lên top</span>
+                <span class="footer-value">--</span>
+                <span class="footer-trend trend-neutral">
+                    <span style="font-size: 11px; color:#64748b"></span>
+                </span>
+              </div>
+              <div class="footer-item">
+                <span class="footer-label">Bài viết nổi bật</span>
+                <span class="footer-value">---</span>
+                <span class="footer-trend trend-neutral">Lượt tương tác seo</span>
+              </div>
+              <div class="footer-item">
+                <span class="footer-label">Ti lệ click (CTR)</span>
+                <span class="footer-value">--%</span>
+                <span class="footer-trend trend-neutral">
+                    <span style="font-size: 11px; color:#64748b;">Ước tính</span>
+                </span>
+
+              </div>
             </div>
         </div>
-
         <!-- Facebook Analytics -->
+
         <div class="analytics-card" id="analytics-facebook" style="display: none;">
             <div class="analytics-header">
                 <div class="header-info">
-                    <h4>Facebook – Lượt đổ mức độ quan tâm</h4>
+                    <h4>Facebook – Mức độ quan tâm</h4>
                     <span class="header-subtitle">Thống kê 7 ngày qua</span>
                 </div>
                 <div class="card-actions">
-                    <div class="date-selector">
-                        <i class="far fa-calendar-alt"></i>
-                        <span>12/01/2026 - 18/01/2026</span>
+                    <div class="date-selector" style="background: #f8fafc; padding: 4px 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
+                        <i class="far fa-calendar-alt" style="color: #64748b;"></i>
+                        <input type="date" id="facebook_start_date" style="border: none; background: transparent; font-size: 13px; color: #334155; width: 110px;">
+                        <span style="color: #94a3b8;">-</span>
+                        <input type="date" id="facebook_end_date" style="border: none; background: transparent; font-size: 13px; color: #334155; width: 110px;">
                     </div>
+                    <button class="action-btn" id="btn-refresh-facebook-stats" title="Làm mới thống kê"><i class="fas fa-sync-alt"></i></button>
                     <button class="action-btn"><i class="fas fa-ellipsis-h"></i></button>
                 </div>
             </div>
@@ -203,42 +214,104 @@ require "thanh-dieu-huong.php";
                 <canvas id="facebookChart"></canvas>
             </div>
 
-
             <div class="analytics-footer">
                 <div class="footer-item">
                     <span class="footer-label">Tổng tương tác</span>
-                    <span class="footer-value">9,584</span>
-                    <span class="footer-trend trend-up">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <path d="M1 9L4.5 5.5L7 8L11 4M11 4V7.5M11 4H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        + 18.2%
+                    <span class="footer-value">--</span>
+                    <span class="footer-trend trend-neutral">
+                        <span style="font-size: 11px; color: #64748b;">đang cập nhật...</span>
                     </span>
                 </div>
                 <div class="footer-item">
                     <span class="footer-label">Bài nổi bật</span>
-                    <span class="footer-value">1,247</span>
-                    <span class="footer-trend trend-up">lượt tương tác</span>
+                    <span class="footer-value">--</span>
+                    <span class="footer-trend trend-neutral">lượt tương tác</span>
                 </div>
                 <div class="footer-item">
-                    <span class="footer-label">Tỉ lệ click</span>
-                    <span class="footer-value">3.8%</span>
-                    <span class="footer-trend trend-up">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <path d="M1 9L4.5 5.5L7 8L11 4M11 4V7.5M11 4H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        + 0.5%
+                    <span class="footer-label">Tỉ lệ click (CTR)</span>
+                    <span class="footer-value">--%</span>
+                    <span class="footer-trend trend-neutral">
+                        <span style="font-size: 11px; color: #64748b;">(Ước tính)</span>
                     </span>
                 </div>
             </div>
         </div>
     </div>
+    <!-- Metrics Modal -->
+    <div id="metricsModal" class="custom-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Chi tiết tương tác bài viết</h3>
+                <button class="close-modal" onclick="closeMetricsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="chart-wrapper" style="height: 300px; width: 100%;">
+                    <canvas id="historyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scheduling Modal -->
+    <div id="scheduleModal" class="custom-modal" style="display: none;">
+        <div class="modal-content" style="width: 400px;">
+            <div class="modal-header">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">Hẹn giờ đăng bài</h3>
+                <button class="close-modal" id="closeScheduleModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #475569;">Chọn thời gian đăng:</label>
+                    <input type="datetime-local" id="scheduleTime" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                    <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Thời gian phải cách ít nhất 15 phút so với hiện tại.</p>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button id="cancelSchedule" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; font-size: 14px;">Hủy</button>
+                    <button id="confirmSchedule" style="padding: 8px 16px; border-radius: 6px; border: none; background: #2563eb; color: white; cursor: pointer; font-size: 14px;">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .custom-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .close-modal:hover { color: #1e293b; }
+    </style>
 </div>
 
-
+<!-- kết nối js -->
 <script src="./js/api-helper.js"></script>
-
+<script src="./js/date-picker-handler.js"></script>
 <script type="module" src="./js/tong-hop.js"></script>
-<!-- bảo mật -->
-<!-- <script src="./js/api-secure.js"></script>
-<script src="./js/api-test.js"></script> -->

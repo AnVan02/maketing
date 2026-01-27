@@ -7,6 +7,7 @@
     <title>Đăng nhập | AIS AI Marketing</title>
     <!-- Google Fonts: Montserrat -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="./css/dang-nhap.css">
 
 </head>
@@ -29,15 +30,14 @@
                     <input type="email" name="email" placeholder="Tên đăng nhập:" value="" required>
                 </div>
 
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Mật khẩu:" value="" required>
+                <div class="form-group password-wrapper">
+                    <input type="password" name="password" id="password" placeholder="Mật khẩu:" value="" required>
+                    <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                 </div>
-
                 <a href="#" class="forgot-password">Quên mật khẩu</a>
 
                 <button type="submit" class="login-btn">ĐĂNG NHẬP</button>
             </form>
-
             <p class="register-prompt">
                 Chưa có tài khoản? <a href="dang-ky.php">Đăng ký ngay</a>
             </p>
@@ -48,14 +48,13 @@
     <div class="bg-gradient"></div>
 
     <script src="./js/api-helper.js"></script>
-    <script type="module" src="./js/dang-nhap.js"></script>
+    <script src="./js/dang-nhap.js"></script>
     <!-- bảo mật -->
     <!-- <script src="./js/protection.js"></script> -->
     <script>
         // Simple console log for initialization
         console.log("Login page initialized");
     </script>
-
 </body>
 
 </html>

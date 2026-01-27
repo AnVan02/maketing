@@ -1,4 +1,7 @@
-/* --- PAGE SPECIFIC --- */
+* {
+     box-sizing: border-box;
+     font-family: Montserrat;
+}
 
 
 /* --- CONTENT AREA --- */
@@ -22,7 +25,7 @@
      display: flex;
      justify-content: space-between;
      align-items: center;
-     margin-bottom: 24px;
+     margin-bottom: 10px;
 }
 
 /* Updated Tip Box to match Facebook Config Style */

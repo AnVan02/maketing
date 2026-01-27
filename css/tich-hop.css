@@ -1,3 +1,8 @@
+* {
+    box-sizing: border-box;
+    font-family: Montserrat;
+}
+
 /* === INTEGRATION CARDS STYLES === */
 .integration-grid {
     display: grid;

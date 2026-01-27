@@ -2,6 +2,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const managerGrid = document.getElementById('managerGrid');
     const toggleBtn = document.getElementById('toggleFormBtn');
     const closeBtn = document.getElementById('closeFormBtn');
+    // const slider = document.getElementById('creativity_level');
+    // const sliderVal = document.getElementById('creativity_val');
+
+
 
     // --- XỬ LÝ ẨN/HIỆN FORM ---
     if (closeBtn) {
@@ -11,6 +15,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof resetForm === 'function') resetForm();
         };
     }
+
+    // upload % chạy của mẫu cấu hình
+    // function updateSliderBadge() {
+    //     if (!slider || !sliderVal) return;
+    //     const val = slider.value;
+    //     sliderVal.textContent = val + '%';
+
+    //     // tính toán vị trí % đê badge chạy theo
+    //     const percent= (val-slider.min ) / (slider.max -slider.min);
+    //     // điều chỉnh một chút để badge nằm giữa thumb 
+    //     sliderVal.style.left = `calc(${percent * 100}%)`;
+
+    //     //  cập nhật màu thanh kéo ( track color)
+    //     const colorPercent = percent * 100;
+    //     slider.style.background = `linear-gradient(to right, #32A6F9 0%, #32A6F9 ${colorPercent}%, #E2E8F0 ${colorPercent}%, #E2E8F0 100%)`;
+    // }
+    // if(slider && sliderVal) {
+    //     slider.oninput = updateSliderBadge;
+    //     updateSliderBadge();
+    // }
 
     // --- QUAN TRỌNG: Khởi tạo ---
     console.log("🚀 Script mau-cau-hinh.js is running...");
@@ -75,12 +99,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Xử lý Slider
     const slider = document.getElementById('creativity_level');
     const badge = document.getElementById('creativity_val');
-    if (slider && badge) {
-        slider.oninput = function () {
-            badge.textContent = this.value + "%";
-        };
+
+    function updateSliderBadge() {
+        if (!slider || !badge) return;
+        const val = slider.value;
+        badge.textContent = val + '%';
+
+        // Tính toán vị trí % để badge chạy theo
+        const percent = (val - slider.min) / (slider.max - slider.min);
+        // Điều chỉnh vị trí badge (left property)
+        badge.style.left = `calc(${percent * 100}%)`;
+
+        // Cập nhật màu thanh kéo (Track color)
+        const colorPercent = percent * 100;
+        slider.style.background = `linear-gradient(to right, #32A6F9 0%, #32A6F9 ${colorPercent}%, #E2E8F0 ${colorPercent}%, #E2E8F0 100%)`;
     }
-    
+
+    if (slider && badge) {
+        slider.oninput = updateSliderBadge;
+        // Chạy lần đầu
+        updateSliderBadge();
+    }
+
     // 3. Render danh sách bên trái
     async function refreshTable() {
         const body = document.getElementById('configTableBody');
@@ -116,7 +156,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             window.userConfigsData = configs;
             console.log(`📊 Số lượng cấu hình tìm thấy: ${configs.length}`);
-
             body.innerHTML = '';
             if (!configs || configs.length === 0) {
                 if (emptyState) emptyState.style.display = 'block';
@@ -166,13 +205,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                       <td><span style="color:#64748b; font-weight:600;">${count}</span></td>
                       <td><span style="color:#94a3b8; font-size:15px;">${dateStr}</span></td>
                       <td>
-                        <div style="display: flex; gap: 20px; justify-content: center; align-items:center;">
+                        <div style="display: flex; gap: 15px; justify-content: center; align-items:center;">
                             <button class="btn-action-delete" onclick="deleteConfig('${id}')">
                                 <i class="fa-regular fa-trash-can"></i> Xoá
                             </button>
                             <button class="btn-action-edit" onclick="editConfig('${id}')">
                                 <i class="fa-regular fa-pen-to-square"></i> Sửa
                             </button>
+                            ${!config.is_default ? `
+                            <button class="btn-action-edit" style="color: #0369a1; border-color: #e0f2fe;" onclick="setDefaultConfig('${id}')">
+                                <i class="fa-solid fa-star"></i> Mặc định
+                            </button>
+                            ` : ''}
                         </div>
                       </td>
                     `;
@@ -185,6 +229,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (emptyState) emptyState.style.display = 'block';
         }
     }
+
+    window.setDefaultConfig = async (id) => {
+        try {
+            await apiRequest(`/ui/user/configs/${id}/default`, { method: 'PATCH' });
+            alert("Đã đặt làm cấu hình mặc định!");
+            await refreshTable();
+        } catch (e) {
+            alert("Lỗi: " + e.message);
+        }
+    };
 
     // 4. Lưu cấu hình mới (API 3: POST /api/v1/ui/user/configs)
     const saveBtn = document.getElementById('saveBtn');
@@ -208,10 +262,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Reset slider
-        const slider = document.getElementById('creativity_level');
-        const badge = document.getElementById('creativity_val');
-        if (slider) slider.value = 50;
-        if (badge) badge.textContent = "50%";
+        if (slider) {
+            slider.value = 50;
+            updateSliderBadge();
+        }
     }
 
     if (toggleBtn) {
@@ -298,6 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+
     window.editConfig = (id) => {
         const configs = window.userConfigsData || [];
         const found = configs.find(c => (c.id || c._id || c.config_id) == id);
@@ -319,11 +374,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tempVal = found.temperature !== undefined ? found.temperature : (found.creativity / 100 || 0.5);
             const sliderVal = Math.round(tempVal * 100);
 
+
             const slider = document.getElementById('creativity_level');
             const badge = document.getElementById('creativity_val');
 
-            if (slider) slider.value = sliderVal;
-            if (badge) badge.textContent = sliderVal + "%";
+            if (slider) {
+                slider.value = sliderVal;
+                updateSliderBadge();
+            }
 
             if (managerGrid) managerGrid.classList.add('show-form');
             if (toggleBtn) toggleBtn.style.display = 'none';
@@ -346,6 +404,50 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     };
+
+    // Cập nhập phân trang 
+    function renderPagination() {
+        const container = document.getElementById('paginationControls');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        if (totalPages <= 1) return;
+
+        // Nút Trước
+        const prev = document.createElement('button');
+        prev.textContent = 'Trước';
+        prev.disabled = currentPage === 1;
+        prev.onclick = () => {
+            currentPage--;
+            refreshTable();
+        };
+        container.appendChild(prev);
+
+        // Nút số trang
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.className = i === currentPage ? 'active' : '';
+            btn.onclick = () => {
+                currentPage = i;
+                refreshTable();
+            };
+            container.appendChild(btn);
+        }
+
+        // Nút Sau
+        const next = document.createElement('button');
+        next.textContent = 'Sau';
+        next.disabled = currentPage === totalPages;
+        next.onclick = () => {
+            currentPage++;
+            refreshTable();
+        };
+        container.appendChild(next);
+    }
+
     // Chạy lần đầu
     await loadOptions();
     await refreshTable();

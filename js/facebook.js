@@ -42,11 +42,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const percent = (val - slider.min) / (slider.max - slider.min);
         // Điều chỉnh một chút để badge nằm giữa thumb (thumb rộng khoảng 20px)
         sliderVal.style.left = `calc(${percent * 100}%)`;
+
+        // Cập nhật màu thanh kéo (Track color)
+        const colorPercent = percent * 100;
+        slider.style.background = `linear-gradient(to right, #32A6F9 0%, #32A6F9 ${colorPercent}%, #E2E8F0 ${colorPercent}%, #E2E8F0 100%)`;
     }
 
     if (slider && sliderVal) {
         slider.oninput = updateSliderBadge;
         // Chạy lần đầu để set vị trí mặc định 50%
+
         updateSliderBadge();
     }
 
@@ -134,21 +139,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let dateStr = config.created_at ? new Date(config.created_at).toLocaleDateString('vi-VN') : '-';
 
                 tr.innerHTML = `
-                  <td style="padding-left: 20px;">
+                  <td>
                     <strong class="col-name" style="color:#1e293b; font-size:15px;">${name}</strong>
                     ${config.is_default ? '<span class="badge-default" style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:5px;">Mặc định</span>' : ''}
                   </td>
                   <td><span class="badge-model col-model">${model}</span></td>
-                  <td><span class="col-type" style="color:#64748b;">${type}</span></td>
-                  <td><span style="color:#64748b; font-weight:600;">${count}</span></td>
-                  <td><span style="color:#94a3b8; font-size:14px;">${dateStr}</span></td>
+                  <td><span class="col-type" style="color:#1e293b;">${type}</span></td>
+                  <td><span style="color:#1e293b; font-weight:500;">${count}</span></td>
+                  <td><span style="color:#1e293b; font-size:14px;">${dateStr}</span></td>
                   <td>
-                        <div style="display: flex; gap: 20px; justify-content: center; align-items:center;">
-                            <button class="btn-action-delete" onclick="deleteConfig('${id}')">
-                                <i class="fa-regular fa-trash-can"></i> Xoá
-                            </button>
-                            <button class="btn-action-edit" onclick="editConfig('${id}')">
+                        <div style="display: flex; gap: 15px; align-items:center;">
+                            ${!config.is_default ? `
+                            <!---<button class="btn-action-default" onclick="window.setDefault('${id}')" title="Đặt làm mặc định">
+                                <i class="fa-solid fa-star"></i> Mặc định
+                            </button>-->
+                            ` : ''}
+                            <button class="btn-action-edit" onclick="window.editConfig('${id}')">
                                 <i class="fa-regular fa-pen-to-square"></i> Sửa
+                            </button>
+                            <button class="btn-action-delete" onclick="window.deleteConfig('${id}')">
+                                <i class="fa-regular fa-trash-can"></i> Xoá
                             </button>
                         </div>
                   </td>
@@ -160,6 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (emptyState) emptyState.style.display = 'block';
         }
     };
+
 
     // --- HÀM LƯU (CREATE / UPDATE) ---
 
@@ -199,7 +210,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             //     temperature: parseInt(slider?.value || 50) / 100,
             //     is_default: editingConfigId ? (window.userConfigsData.find(c => (c.id == editingConfigId || c._id == editingConfigId))?.is_default || false) : false
             // };
-
 
             try {
                 saveBtn.disabled = true;
@@ -248,6 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+
     window.editConfig = (id) => {
         const configs = window.userConfigsData || [];
         const found = configs.find(c => c.id == id || c._id == id);
@@ -267,6 +278,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateSliderBadge(); // Cập nhật vị trí badge khi load dữ liệu sửa
             }
 
+            const isDefaultCheck = document.getElementById('is_default');
+            if (isDefaultCheck) isDefaultCheck.checked = found.is_default || false;
+
             // Mở form
             if (configFormSection) {
                 configFormSection.style.display = 'block';
@@ -275,6 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (saveBtn) saveBtn.textContent = 'LƯU CẤU HÌNH';
         }
     };
+    // ---
 
     // --- LIVE UPDATE LOGIC ---
     function updateLiveRow() {
@@ -308,6 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert("Đã xóa thành công!");
             await window.refreshTable();
         } catch (error) {
+            console.error("Delete error:", error);
             alert("Lỗi khi xóa: " + error.message);
         }
     };
@@ -315,8 +331,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.setDefault = async (id) => {
         try {
             await apiRequest(`/facebook/config/user/${id}/default`, { method: 'PATCH' });
+            alert("Đã đặt cấu hình mặc định!");
             await window.refreshTable();
         } catch (error) {
+            console.error("Set default error:", error);
             alert("Lỗi khi đặt mặc định: " + error.message);
         }
     };
@@ -337,6 +355,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeSelect) typeSelect.value = '';
         if (lengthSelect) lengthSelect.value = '';
         if (toneSelect) toneSelect.value = '';
+
+        const isDefaultCheck = document.getElementById('is_default');
+        if (isDefaultCheck) isDefaultCheck.checked = false;
 
         if (configFormSection) configFormSection.style.display = 'none';
     }

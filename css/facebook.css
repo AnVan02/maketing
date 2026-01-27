@@ -1,444 +1,550 @@
-    :root {
-        font-family: 'Montserrat';
-    }
+* {
+    box-sizing: border-box;
+    font-family: Montserrat;
+}
 
-    .page-body {
-        padding: 20px 30px;
-        margin: 0;
-        flex: 1;
-        /* Allow growing in flex container */
-        width: 100%;
-        box-sizing: border-box;
-        overflow-x: auto;
-        /* Allow scroll if needed */
-        font-family: 'Montserrat',
-    }
-
-
-
-    .manager-grid {
-        display: block;
-        /* Chuyển sang dạng dọc */
-        width: 100%;
-        margin-top: 20px;
-    }
-
-    .manager-content {
-        width: 100%;
-    }
-
-    /* === ĐIỀU CHỈNH TIÊU ĐỀ === */
-    .content-header {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .page-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-    }
-
-    .add-config-link {
-        font-size: 16px;
-        color: #1E40AF;
-        /* Blue text */
-        text-decoration: none !important;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .add-config-link:hover {
-        text-decoration: underline;
-
-    }
-
-    /* Tip Box Styled like Screenshot */
-    .tip-box {
-        background-color: #eff6ff;
-        border: 1px solid #dbeafe;
-        border-radius: 8px;
-        padding: 12px 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 25px;
-        color: #1e40af;
-        font-family: 'Montserrat',
-
-    }
-
-    .tip-icon-bulb {
-        font-size: 18px;
-        color: #2563eb;
-    }
-
-    .tip-text {
-        font-size: 14px;
-        line-height: 1.5;
-    }
-
-
-    /* === BẢNG VÀ FORM (Nằm trong 1 card) === */
-    .table-container {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #BFDBFE;
-        padding: 0;
-        overflow: hidden;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    }
-
-    .config-form-section {
-        background: linear-gradient(to bottom, #ffff, #BFDBFE);
-        /* Nền xanh nhạt như trong ảnh */
-        border-top: 1px solid #BFDBFE;
-        padding: 40px;
-        animation: slideDown 0.4s ease-out;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .form-body-custom {
-        max-width: 1200px;
-        /* Mở rộng form hơn */
-        margin: 0 auto;
-        /* Căn giữa form trong vùng xanh */
-    }
-
-    .data-table {
-        width: 100%;
-        border-spacing: 0;
-    }
-
-    .data-table th {
-        text-align: center;
-        padding: 20px 15px;
-        color: #1E40AF;
-        /* Blue headers */
-        font-size: 16px;
-        font-weight: 600;
-        text-transform: none;
-        /* Title Case */
-        margin-bottom: 10px;
-        transition: all 0.3s ease;
-    }
+.page-body {
+    padding: 20px 30px;
+    margin: 0;
+    flex: 1;
+    /* Allow growing in flex container */
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    /* Allow scroll if needed */
+    font-family: 'Montserrat';
+}
 
 
 
-    .data-table td {
-        padding: 20px 15px;
-        border-bottom: 1px solid #f1f5f9;
-        text-align: center;
-        vertical-align: middle;
-        font-size: 15px;
-        color: #1e293b;
-        transition: all 0.2s ease;
-    }
+.manager-grid {
+    display: block;
+    /* Chuyển sang dạng dọc */
+    width: 100%;
+    margin-top: 20px;
+}
 
-    .data-table tr:hover td {
-        background-color: #f8fbff;
-    }
+.manager-content {
+    width: 100%;
+}
 
-    /* First column alignment */
-    .data-table th:first-child,
-    .data-table td:first-child {
-        text-align: left;
-        padding-left: 35px;
-    }
+/* === ĐIỀU CHỈNH TIÊU ĐỀ === */
+.content-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-    .is-default-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 25px;
-    }
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
 
-    .tip-box-mini {
-        background: #f0f7ff;
-        padding: 15px 18px;
-        border-radius: 16px;
-        display: flex;
-        gap: 12px;
-        margin-bottom: 30px;
-        border: 1px solid #e0eeff;
-    }
+.add-config-link {
+    font-size: 16px;
+    color: #1E40AF;
+    /* Blue text */
+    text-decoration: none !important;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
 
-    .tip-box-mini p {
-        font-size: 12.5px;
-        color: #1e40af;
-        line-height: 1.6;
-        margin: 0;
-    }
+.add-config-link:hover {
+    text-decoration: underline;
 
-    .form-group {
-        margin-bottom: 25px;
-    }
+}
 
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #161616;
-        font-size: 13.5px;
-    }
+/* Tip Box Styled like Screenshot */
+.tip-box {
+    background-color: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 25px;
+    color: #1e40af;
+    font-family: 'Montserrat';
 
-    .premium-input {
-        width: 100%;
-        padding: 15px 18px;
-        border-radius: 14px;
-        border: 1.5px solid #e2e8f0;
-        font-size: 15px;
-        color: #161616;
-        transition: all 0.2s;
-        background: #fcfdfe;
-        box-sizing: border-box;
-    }
+}
 
-    .premium-input:focus {
-        border-color: #3b82f6;
-        outline: none;
-        background: #fff;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
+.tip-icon-bulb {
+    font-size: 18px;
+    color: #2563eb;
+}
 
-    .premium-select {
-        width: 100%;
-        padding: 14px 18px;
-        border-radius: 14px;
-        border: 1.5px solid #e2e8f0;
-        background: #fff;
-        font-size: 14.5px;
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 18px center;
-        background-size: 18px;
-        box-sizing: border-box;
-    }
+.tip-text {
+    font-size: 14px;
+    line-height: 1.5;
+}
 
-    .btn-save-full {
-        width: 20%;
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 18px;
-        border-radius: 16px;
-        font-weight: 600;
-        font-size: 16px;
-        cursor: pointer;
-        margin-top: 10px;
-        transition: all 0.3s;
-        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
-        display: block;
-        margin-left: auto;
-    }
 
-    .slider-wrapper {
-        position: relative;
-        padding-top: 35px;
-        /* Tạo không gian cho badge chạy trên đầu */
-        margin-bottom: 10px;
-    }
+/* === BẢNG VÀ FORM (Nằm trong 1 card) === */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #BFDBFE;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
 
-    .premium-slider {
-        width: 100%;
-        height: 7px;
-        border-radius: 10px;
-        background: #e2e8f0;
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
-    }
+.config-form-section {
+    background: linear-gradient(to bottom, #FFFFFF 0%, #EBF7FF 100%);
+    border-top: 1px solid #BFDBFE;
+    padding: 40px;
+    animation: slideDown 0.4s ease-out;
+}
 
-    .premium-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 20px;
-        height: 20px;
-        background: #fff;
-        border: 3px solid #32A6F9;
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
 
-    .slider-value-badge {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #32A6F9;
-        color: white;
-        padding: 5px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        pointer-events: none;
-        white-space: nowrap;
-    }
-
-    /* Tam giác chỉ xuống của badge */
-    .slider-value-badge::after {
-        content: '';
-        position: absolute;
-        bottom: -6px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-width: 6px 6px 0 6px;
-        border-style: solid;
-        border-color: #3b82f6 transparent transparent transparent;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .badge-model {
-        background: #f1f5f9;
-        padding: 5px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        color: #161616;
-        font-weight: 600;
-    }
-
-    .btn-use-sm {
-        padding: 6px 14px;
-        border-radius: 8px;
-        border: 1.5px solid #dbeafe;
-        background: #fff;
-        color: #3b82f6;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 13px;
-        transition: all 0.2s;
-    }
-
-    .btn-use-sm:hover {
-        background: #3b82f6;
-        color: #fff;
-        border-color: #3b82f6;
-    }
-
-    /* === CÁC NÚT HÀNH ĐỘNG DƯỚI BẢNG === */
-    .btn-action-delete {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: none;
-        border: none;
-        color: #ef4444;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.2s;
-        padding: 8px 12px;
-        border-radius: 8px;
-    }
-
-    .btn-action-delete:hover {
-        background-color: #fee2e2;
-        color: #dc2626;
-    }
-
-    .btn-action-edit {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: none;
-        border: none;
-        color: #3b82f6;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.2s;
-        padding: 8px 12px;
-        border-radius: 8px;
-    }
-
-    .btn-action-edit:hover {
-        background-color: #dbeafe;
-        color: #2563eb;
-    }
-
-    /* Toggle Switches */
-    .toggle-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .toggle-label {
-        font-size: 14px;
-        color: #161616;
-        font-weight: 500;
-    }
-
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 44px;
-        height: 24px;
-    }
-
-    .switch input {
+@keyframes slideDown {
+    from {
         opacity: 0;
-        width: 0;
-        height: 0;
+        transform: translateY(-20px);
     }
 
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #cbd5e1;
-        -webkit-transition: .4s;
-        transition: .4s;
-        border-radius: 34px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
 
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 18px;
-        width: 18px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        -webkit-transition: .4s;
-        transition: .4s;
-        border-radius: 50%;
-    }
+.form-body-custom {
+    max-width: 1200px;
+    /* Mở rộng form hơn */
+    margin: 0 auto;
+    /* Căn giữa form trong vùng xanh */
+}
 
-    input:checked+.slider {
-        background-color: #2ebd59;
-    }
+.data-table {
+    width: 100%;
+    border-spacing: 0;
+    font-family: 'Montserrat';
+}
 
-    input:checked+.slider:before {
-        -webkit-transform: translateX(20px);
-        -ms-transform: translateX(20px);
-        transform: translateX(20px);
-    }
+.data-table th {
+    text-align: left;
+    padding: 20px 15px;
+    color: #1E40AF;
+    /* Blue headers */
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: none;
+    /* Title Case */
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.data-table td {
+    padding: 20px 15px;
+    border-bottom: 1px solid #f1f5f9;
+    /* text-align: center; */
+    vertical-align: middle;
+    font-size: 15px;
+    color: #1e293b;
+    transition: all 0.2s ease;
+
+}
+
+.data-table tr:hover td {
+    background-color: #f8fbff;
+}
+
+/* First column alignment */
+.data-table th:first-child,
+.data-table td:first-child {
+    text-align: left;
+    padding-left: 35px;
+}
+
+.is-default-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.tip-box-mini {
+    background: #f0f7ff;
+    padding: 15px 18px;
+    border-radius: 16px;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+    border: 1px solid #e0eeff;
+}
+
+.tip-box-mini p {
+    font-size: 12.5px;
+    color: #1e40af;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group-inline {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.form-group-inline label {
+    margin-bottom: 0 !important;
+    min-width: 130px;
+}
+
+.form-group-inline .slider-wrapper {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 13.5px;
+}
+
+.premium-input {
+    width: 100%;
+    padding: 15px 18px;
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 15px;
+    color: #161616;
+    transition: all 0.2s;
+    background: #fcfdfe;
+    box-sizing: border-box;
+}
+
+.premium-input:focus {
+    border-color: #3b82f6;
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.premium-select {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    font-size: 14.5px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    background-size: 18px;
+    box-sizing: border-box;
+    font-family: 'Montserrat';
+}
+
+.btn-save-full {
+    width: 15%;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s;
+    box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+    display: block;
+    margin-left: auto;
+}
+
+.slider-wrapper {
+    position: relative;
+    padding-top: 35px;
+    /* Tạo không gian cho badge chạy trên đầu */
+    margin-bottom: 10px;
+
+}
+
+.premium-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 10px;
+    background: #e2e8f0;
+    /* Default background */
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.premium-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 3px solid #32A6F9;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.slider-value-badge {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #32A6F9;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Tam giác chỉ xuống của badge */
+.slider-value-badge::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0 6px;
+    border-style: solid;
+    border-color: #3b82f6 transparent transparent transparent;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.badge-model {
+    background: #f1f5f9;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #161616;
+    font-weight: 600;
+}
+
+.btn-use-sm {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #dbeafe;
+    background: #fff;
+    color: #3b82f6;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.btn-use-sm:hover {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+
+/* === CÁC NÚT HÀNH ĐỘNG DƯỚI BẢNG === */
+.btn-action-delete {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Montserrat';
+}
+
+.btn-action-delete:hover {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-action-edit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Montserrat';
+}
+
+.btn-action-edit:hover {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.btn-action-default {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #059669;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Montserrat';
+}
+
+.btn-action-default:hover {
+    background-color: #d1fae5;
+    color: #047857;
+}
+
+/* Toggle Switches */
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.toggle-label {
+    font-size: 14px;
+    color: #161616;
+    font-weight: 500;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #2ebd59;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+}
+
+/* === PAGINATION === */
+.table-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 5px;
+    margin-left: auto
+}
+
+.pagination-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.pagination-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+.pagination-ellipsis {
+    padding: 0 5px;
+    color: #94a3b8;
+    font-size: 13px;
+}

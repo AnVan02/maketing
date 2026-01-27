@@ -1,7 +1,7 @@
-
 // ============================================
 // 1. API HELPER & CONFIGS (GLOBAL SCOPE)
 // ============================================
+const processedFiles = new Set();
 
 // --- // Load các option cấu hình (độ dài bài, tone, ngôn ngữ, AI model…)---
 async function loadOptions() {
@@ -98,7 +98,7 @@ async function loadUserConfigs() {
         configs.forEach(cfg => {
             const opt = document.createElement('option');
             opt.value = cfg.id;
-            opt.textContent = cfg.name;
+            opt.textContent = cfg.is_default ? `${cfg.name} (Mặc định)` : cfg.name;
             configSelect.appendChild(opt);
         });
 
@@ -108,15 +108,20 @@ async function loadUserConfigs() {
     }
 }
 
+// State
+let editingFacebookConfigId = null;
+
 function applyConfigToUI(config) {
     if (!config) return;
     console.log("🛠 Đang áp dụng cấu hình:", config.name);
 
+    editingFacebookConfigId = config.id || config.config_id || null;
+
     const mapping = {
-        'config_name_input': config.name,
+        'config_name_input': config.name || config.config_name,
         'bots': config.bot_id || config.model,
-        'content_types': config.article_type,
-        'content_lengths': config.article_length,
+        'content_types': config.article_type || config.type,
+        'content_lengths': config.article_length || config.length,
         'writing_tones': config.tone,
         'languages': config.language
     };
@@ -153,7 +158,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     const connectedPageName = document.getElementById('connected-page-name');
 
     // State
-    let draftPostId = null;
+    let draft_post_id = null;
+    let parsedDraftId = null; // Thêm biến này để theo dõi
     let uploadedMediaIds = { photos: [], videos: [] };
     let currentDefaultConnection = null;
 
@@ -161,13 +167,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     let allSelectedImages = [];
     let allFileObjects = []; // Parallel array to store original File objects for better upload performance
 
+
     // --- // Lưu trạng thái nháp (nội dung + ảnh + config)---
     function saveDraft() {
         try {
             const draftData = {
                 topic: inputIdea.value,
                 content: previewContent.innerHTML,
-                draftPostId: draftPostId,
+                draft_post_id: draft_post_id,
                 selectedImages: allSelectedImages,
                 configId: document.getElementById('config_template')?.value
             };
@@ -190,8 +197,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 updatePreviewVisibility();
                 if (publishBtn) publishBtn.style.display = 'block';
             }
-            if (draftData.draftPostId !== undefined && draftData.draftPostId !== null) {
-                draftPostId = draftData.draftPostId;
+            if (draftData.draft_post_id !== undefined && draftData.draft_post_id !== null) {
+                draft_post_id = draftData.draft_post_id;
             }
             if (draftData.selectedImages && draftData.selectedImages.length > 0) {
                 allSelectedImages = draftData.selectedImages;
@@ -206,6 +213,40 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         } catch (e) {
             console.error("Lỗi loadDraft:", e);
+        }
+    }
+    // Bài viết nháp
+    async function loadDraftFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlDraftId = urlParams.get('draft_id');
+        if (!urlDraftId) return;
+
+        console.log("Loading draft from URL:", urlDraftId);
+        try {
+            // API chi tiết bài viết nháp
+            const res = await apiRequest(`/facebook/publish/posts/${urlDraftId}/Ơ`);
+            if (res) {
+                // Map API response to UI
+                // Support both direct object or response.data wrapper
+                const data = res.data || res;
+
+                if (data.article_content || data.content || data.message) {
+                    const content = data.article_content || data.content || data.message;
+                    if (inputIdea) inputIdea.value = data.article_topic || "";
+                    if (previewContent) {
+                        previewContent.innerHTML = content.replace(/\n/g, '<br>');
+                        updatePreviewVisibility();
+                    }
+                    if (publishBtn) publishBtn.style.display = 'block';
+                }
+
+                draft_post_id = urlDraftId;
+
+                // Save this as the current active draft so page reloads don't lose it
+                saveDraft();
+            }
+        } catch (e) {
+            console.error("Lỗi tải draft từ URL:", e);
         }
     }
 
@@ -228,6 +269,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const modalImageGroup = document.getElementById('modal-image-group');
     const modalUploadTrigger = document.getElementById('modal-upload-trigger');
     const modalFileInput = document.getElementById('modal-file-input');
+    const aisToggleModal = document.getElementById('ais-assistant-toggle-modal');
 
     // Helper: Show Preview Block
     function updatePreviewVisibility() {
@@ -321,8 +363,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-
-
     function removeImage(index) {
         allSelectedImages.splice(index, 1);
         if (allFileObjects.length > index) allFileObjects.splice(index, 1);
@@ -373,12 +413,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const src = results[i];
-            const isVideo = src.startsWith('data:video');
+            // Update: recognize http/https URLs as well
+            const isVideo = src.startsWith('data:video') || src.match(/\.(mp4|mov|avi|wmv|webm)($|\?)/i);
 
             if (isVideo) {
                 const video = document.createElement('video');
                 video.src = src;
-                // video.controls = true; // No controls in grid preview, click to lightbox
                 video.style.width = '100%';
                 video.style.height = '100%';
                 video.style.objectFit = 'cover';
@@ -471,15 +511,44 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // --- Facebook Connection ---
+    // --- Kết nối API Facebook mặc định ---
     async function loadDefaultConnection() {
+        console.log("🔍 Đang kiểm tra kết nối Facebook...");
         try {
             const data = await apiRequest('/facebook/connections/default');
             if (data && data.page_id) {
+                console.log("📌 Đã tìm thấy kết nối:", data.page_id);
                 currentDefaultConnection = data;
                 if (connectedPageName) {
                     connectedPageName.textContent = `Sẵn sàng: ${data.page_id}`;
                     connectedPageName.style.color = '#16a34a';
+                }
+
+                // Cập nhật thông tin Page vào khung Preview nếu có token
+                if (data.page_access_token) {
+                    try {
+                        // Thử lấy tên và ảnh từ Facebook Graph API
+                        const fbRes = await fetch(`https://graph.facebook.com/v18.0/${data.page_id}?access_token=${data.page_access_token}&fields=name,picture.type(large)`);
+                        const fbData = await fbRes.json();
+
+                        if (fbData && fbData.name) {
+                            const pName = document.getElementById('preview-user-name');
+                            const pAvatar = document.getElementById('preview-user-avatar');
+
+                            if (pName) {
+                                pName.innerHTML = `${fbData.name} <i class="fas fa-check-circle" style="color: #1877f2; margin-left: 10px; font-size: 15px;"></i>`;
+                            }
+                            if (pAvatar && fbData.picture && fbData.picture.data && fbData.picture.data.url) {
+                                pAvatar.src = fbData.picture.data.url;
+                                pAvatar.style.background = 'transparent';
+                            }
+
+                            // Cập nhật lại thanh trạng thái cho đẹp hơn
+                            if (connectedPageName) connectedPageName.textContent = `Sẵn sàng: ${fbData.name}`;
+                        }
+                    } catch (err) {
+                        console.warn("⚠️ Không thể lấy thông tin chi tiết Page từ Facebook:", err);
+                    }
                 }
             } else {
                 if (connectedPageName) {
@@ -493,7 +562,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // --- trạng thái nháp ---
+    // --- tạo nội dung bài viết ---
     if (generateAiBtn) {
         generateAiBtn.onclick = async () => {
             const topic = inputIdea.value.trim();
@@ -518,14 +587,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                 });
 
                 if (response && response.success) {
+                    // Cấu trúc response có thể có .data hoặc không
+                    const resData = response.data || response;
+
                     // Lưu lại ID bài viết nháp mà AI vừa tạo
-                    draftPostId = response.draft_post_id;
+                    draft_post_id = resData.draft_id || resData.draft_post_id || resData.id;
 
                     // Hiển thị nội dung ra khung Preview (thay thế xuống dòng bằng thẻ <br>)
-                    previewContent.innerHTML = response.content.replace(/\n/g, '<br>');
+                    const finalContent = resData.content || resData.article_content || "";
+                    previewContent.innerHTML = finalContent.replace(/\n/g, '<br>');
+
                     // Hiện nút Đăng bài sau khi đã có nội dung
                     if (publishBtn) publishBtn.style.display = 'block';
 
+                    console.log("✅ Đã tạo nội dung AI thành công, draft_post_id:", draft_post_id);
                     saveDraft(); // Lưu lại bản nháp vào LocalStorage
                 }
 
@@ -537,6 +612,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         };
     }
+
 
     // photo 
     const ALLOWED_IMAGE_TYPES = [
@@ -562,16 +638,25 @@ document.addEventListener('DOMContentLoaded', async function () {
     const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 
     async function uploadAllMedia() {
-        // Không có media -> tra về rỗng 
-        if (!allSelectedImages || allSelectedImages.length === 0) return { photos: [], videos: [] };
+        // Khởi tạo kết quả mặc định
+        const result = { photos: [], videos: [] };
+
+        // Không có media -> trả về rỗng
+        if (!allSelectedImages || allSelectedImages.length === 0) {
+            console.log("⚠️ Không có media để upload");
+            return result;
+        }
 
         const photosBlobs = [];
         const videosBlobs = [];
+        const photosUrls = [];
+        const videosUrls = [];
 
-        // chuyển base54 (DataURL) -> blog để upload 
+        // Chuyển base64 (DataURL) -> Blob để upload
         const dataURLtoBlob = (dataurl) => {
             try {
                 const arr = dataurl.split(',');
+                if (arr.length < 2) return null;
                 const mime = arr[0].match(/:(.*?);/)[1];
                 const bstr = atob(arr[1]);
                 let n = bstr.length;
@@ -586,55 +671,70 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         };
 
-        // Upload ảnh hoặc video lên Facebook
+        // Phân loại tệp và URL
         for (let i = 0; i < allSelectedImages.length; i++) {
-            let blob = null;
+            const item = allSelectedImages[i];
 
-            // Prioritize original file object (from current session upload)
+            // Ưu tiên File object gốc
             if (allFileObjects[i]) {
-                blob = allFileObjects[i];
-            } else {
-                // Fallback to converting Base64 from draft
-                blob = dataURLtoBlob(allSelectedImages[i]);
-            }
-
-            if (blob) {
-                // Phân loại tệp để gửi vào mảng tương ứng
+                const blob = allFileObjects[i];
                 if (blob.type.startsWith('video/')) {
                     videosBlobs.push(blob);
                 } else {
                     photosBlobs.push(blob);
                 }
+                continue;
+            }
+
+            // DataURL (Base64) từ draft
+            if (item.startsWith('data:')) {
+                const blob = dataURLtoBlob(item);
+                if (blob) {
+                    if (blob.type.startsWith('video/')) {
+                        videosBlobs.push(blob);
+                    } else {
+                        photosBlobs.push(blob);
+                    }
+                }
+            }
+            // Remote URL
+            else if (item.startsWith('http')) {
+                if (item.match(/\.(mp4|mov|avi|wmv|webm)($|\?)/i)) {
+                    videosUrls.push(item);
+                } else {
+                    photosUrls.push(item);
+                }
             }
         }
-        let photoIds = [];
-        let videoIds = [];
 
-        // --- BƯỚC A: Tải Ảnh lên Facebook ---
+        // --- BƯỚC 1: Upload Blobs (Local Files) ---
+
+        // Upload Photos (Blobs)
         if (photosBlobs.length > 0) {
             try {
                 const fd = new FormData();
-                // Gom tất cả ảnh vào một lần gửi (multipart/form-data)
                 photosBlobs.forEach((blob, i) => {
                     const ext = blob.type.split('/')[1] || 'jpg';
                     fd.append('files[]', blob, `image_${Date.now()}_${i}.${ext}`);
                 });
                 fd.append('media_type', 'photo');
 
+                console.log("📤 Uploading", photosBlobs.length, "photos (file)...");
                 const res = await apiRequestFormData('/facebook/publish/media/upload', fd);
+
                 if (res && res.success && res.media_ids) {
-                    photoIds = res.media_ids; // Nhận về mảng ID ảnh từ Facebook
-                    console.log(`[Facebook API] ${res.message || 'Upload Photos Successful'}`);
+                    result.photos = result.photos.concat(res.media_ids);
+                    console.log(`✅ Uploaded ${res.media_ids.length} photos (file)`);
                 } else {
-                    throw new Error(res.message || "Upload Photos Failed (Unknown Error)");
+                    throw new Error(res.message || "Upload Photos Failed");
                 }
             } catch (e) {
-                console.error("Lỗi upload Photos:", e);
-                throw e; // Dừng quá trình đăng bài nếu upload ảnh lỗi
+                console.error("❌ Lỗi upload Photos (File):", e);
+                throw e;
             }
         }
 
-        // --- BƯỚC B: Tải Video lên Facebook ---
+        // Upload Videos (Blobs)
         if (videosBlobs.length > 0) {
             try {
                 const fd = new FormData();
@@ -644,79 +744,387 @@ document.addEventListener('DOMContentLoaded', async function () {
                 });
                 fd.append('media_type', 'video');
 
+                console.log("📤 Uploading", videosBlobs.length, "videos (file)...");
                 const res = await apiRequestFormData('/facebook/publish/media/upload', fd);
+
                 if (res && res.success && res.media_ids) {
-                    videoIds = res.media_ids; // Nhận về mảng ID video từ Facebook
-                    console.log(`[Facebook API] ${res.message || 'Upload Videos Successful'}`);
+                    result.videos = result.videos.concat(res.media_ids);
+                    console.log(`✅ Uploaded ${res.media_ids.length} videos (file)`);
                 } else {
-                    throw new Error(res.message || "Upload Videos Failed (Unknown Error)");
+                    throw new Error(res.message || "Upload Videos Failed");
                 }
             } catch (e) {
-                console.error("Lỗi upload Videos:", e);
+                console.error("❌ Lỗi upload Videos (File):", e);
                 throw e;
             }
         }
-        // Trả về tất cả IDs đã upload thành công
-        return { photos: photoIds, videos: videoIds };
+
+        // --- BƯỚC 2: Upload URLs (Remote Files) ---
+
+        // Upload Photos (URLs)
+        if (photosUrls.length > 0) {
+            try {
+                // Validate URLs
+                const validUrls = photosUrls.filter(url =>
+                    url && (url.startsWith('http://') || url.startsWith('https://'))
+                );
+
+                if (validUrls.length === 0) {
+                    console.warn("⚠️ Không có URL ảnh hợp lệ");
+                } else {
+                    const payload = {
+                        sources: validUrls,
+                        media_type: 'photo'
+                    };
+
+                    console.log("📤 Uploading", validUrls.length, "photos (URL)...");
+                    const res = await apiRequest('/facebook/publish/media/upload-urls', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res && res.success && res.media_ids) {
+                        result.photos = result.photos.concat(res.media_ids);
+                        console.log(`✅ Uploaded ${res.media_ids.length} photos (URL)`);
+                    } else {
+                        throw new Error(res.message || "Không thể tải ảnh từ URL");
+                    }
+                }
+            } catch (e) {
+                console.error("❌ Lỗi upload Photos (URL):", e);
+                throw new Error("Lỗi tải ảnh từ URL: " + e.message);
+            }
+        }
+
+        // Upload Videos (URLs)
+        if (videosUrls.length > 0) {
+            try {
+                // Validate URLs
+                const validUrls = videosUrls.filter(url =>
+                    url && (url.startsWith('http://') || url.startsWith('https://'))
+                );
+
+                if (validUrls.length === 0) {
+                    console.warn("⚠️ Không có URL video hợp lệ");
+                } else {
+                    const payload = {
+                        sources: validUrls,
+                        media_type: 'video'
+                    };
+
+                    console.log("📤 Uploading", validUrls.length, "videos (URL)...");
+                    const res = await apiRequest('/facebook/publish/media/upload-urls', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res && res.success && res.media_ids) {
+                        result.videos = result.videos.concat(res.media_ids);
+                        console.log(`✅ Uploaded ${res.media_ids.length} videos (URL)`);
+                    } else {
+                        throw new Error(res.message || "Không thể tải video từ URL");
+                    }
+                }
+            } catch (e) {
+                console.error("❌ Lỗi upload Videos (URL):", e);
+                throw new Error("Lỗi tải video từ URL: " + e.message);
+            }
+        }
+
+        // Trả về kết quả cuối cùng
+        console.log("✅ Upload hoàn tất:", result);
+        return result;
     }
 
     // --- Phần đăng bài lên Facebook (khi nhân nút đăng) ---
     if (publishBtn) {
         publishBtn.onclick = async () => {
-            // Kiểm tra ID bài viết nháp
-            if (!draftPostId) {
-                console.error("Lỗi: draftPostId đang bị null!");
-                return alert("Vui lòng nhấn 'Viết bài với AI' để tạo nội dung trước!");
+            // ✅ Lấy nội dung text từ khung preview
+            const previewContentEl = document.getElementById('preview-content');
+            if (!previewContentEl) {
+                return alert("⚠️ Không tìm thấy khung xem trước!");
             }
 
-            // Kiểm tra ID Fanpage
+            const currentContent = previewContentEl.innerHTML
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]+>/g, '')
+                .trim();
+
+            console.log("📝 Nội dung bài viết:", currentContent); // Debug
+
+            if (!currentContent || currentContent === 'Nhập nội dung để xem trước bài viết...') {
+                return alert("⚠️ Vui lòng nhập nội dung bài viết!");
+            }
+
             if (!currentDefaultConnection || !currentDefaultConnection.page_id) {
-                console.error("Lỗi: page_id không tồn tại!", currentDefaultConnection);
-                return alert("Chưa có thông tin Fanpage để đăng bài!");
+                return alert("⚠️ Chưa có thông tin Fanpage!");
             }
 
             try {
                 publishBtn.disabled = true;
                 publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng...';
 
-                // BƯỚC 1: Tải tất cả ảnh/video đang có lên server Facebook trước
-                const media = await uploadAllMedia();
+                // BƯỚC 1: Đảm bảo có draft_post_id
+                let finalDraftId = draft_post_id;
 
-                // BƯỚC 2: Chuẩn bị gói dữ liệu (Payload) gửi lệnh đăng bài
+                if (!finalDraftId || isNaN(parseInt(finalDraftId))) {
+                    console.log("📝 Tạo draft mới...");
+                    const configId = document.getElementById('config_template')?.value;
+
+                    const draftRes = await apiRequest('/facebook/generate/content', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            config_id: configId && !isNaN(parseInt(configId)) ? parseInt(configId) : 1,
+                            topic: inputIdea?.value || "Bài viết Facebook",
+                            content: currentContent
+                        })
+                    });
+
+                    console.log("📥 Draft Response:", draftRes);
+
+                    if (draftRes && (draftRes.success || draftRes.data)) {
+                        const dataObj = draftRes.data || draftRes;
+                        finalDraftId = dataObj.draft_id || dataObj.id || dataObj.draft_post_id;
+                        
+                        if (finalDraftId) {
+                            draft_post_id = finalDraftId;
+                            console.log("✅ Draft ID:", finalDraftId);
+                        } else {
+                            throw new Error("API không trả về draft_id");
+                        }
+                    } else {
+                        throw new Error(draftRes?.message || "Không thể tạo draft");
+                    }
+                }
+
+                // Kiểm tra lại finalDraftId
+                const parsedDraftId = parseInt(finalDraftId);
+                if (isNaN(parsedDraftId)) {
+                    // throw new Error("ID bài viết không hợp lệ: " + finalDraftId);
+                    throw new Error(`ID bài viết không hợp lệ: "${finalDraftId}" (type: ${typeof finalDraftId})`);
+                }
+
+                console.log("parsed draft id:",parsedDraftId, typeof parsedDraftId);
+
+                // BƯỚC 2: Upload media
+                console.log("📤 Đang upload media...");
+                const media = await uploadAllMedia();
+                console.log("✅ Media uploaded:", media);
+
+
+                // BƯỚC 3: Đăng bài
                 const payload = {
-                    draft_post_id: parseInt(draftPostId), // ID nội dung bài nháp
-                    page_id: String(currentDefaultConnection.page_id), // ID Fanpage đích
-                    photo_ids: media.photos || [], // Các ID ảnh đã upload ở BƯỚC 1
-                    video_ids: media.videos || [], // Các ID video đã upload ở BƯỚC 1
-                    published: true // true = Đăng ngay, false = Lưu nháp trên Facebook
+                    draft_post_id: parsedDraftId,
+                    page_id: String(currentDefaultConnection.page_id),
+                    message: currentContent,   // ✅ Facebook Graph API chuẩn dùng field này
+                    content: currentContent,   // ✅ Một số backend custom dùng field này
+                    photo_ids: media.photos || [],
+                    video_ids: media.videos || [],
+                    published: true
                 };
 
-                // Hiển thị dữ liệu gửi đi trong Console để kiểm tra lỗi nếu cần
-                console.log("Dữ liệu gửi đi (Payload):", payload);
+                console.log("📤 Publish Payload:", payload);
 
-                // BƯỚC 3: Gọi API thực hiện đăng bài lên tường Fanpage
                 const response = await apiRequest('/facebook/publish/posts/publish', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
+                console.log('📥 Publish Response:', response);
+
                 if (response && response.success) {
-                    alert("Đăng bài thành công!");
+                    alert('✅ Đăng bài thành công!');
                     clearDraft();
                     location.reload();
                 } else {
-                    // Hiển thị chi tiết lỗi từ Backend
-                    console.error("Backend Error:", response);
-                    alert("Lỗi từ máy chủ: " + (response.detail ? JSON.stringify(response.detail) : "Không xác định"));
+                    throw new Error(response?.message || "Đăng bài thất bại");
                 }
+
             } catch (e) {
-                console.error("Exception:", e);
-                alert("Đã xảy ra lỗi kết nối: " + e.message);
+                console.error("❌ Publish Error:", e);
+                alert("❌ Lỗi: " + e.message);
             } finally {
                 publishBtn.disabled = false;
                 publishBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Đăng bài ngay';
             }
         };
+        // --- Phần hẹn giờ đăng bài ---
+        const scheduleBtn = document.getElementById('schedule-btn');
+        const scheduleModal = document.getElementById('schedule-modal');
+        const scheduleTimeInput = document.getElementById('schedule-time');
+        const confirmScheduleBtn = document.getElementById('confirm-schedule');
+        const closeScheduleModal = scheduleModal?.querySelector('.close');
+
+        // Mở modal hẹn giờ
+        if (scheduleBtn) {
+            scheduleBtn.addEventListener('click', () => {
+                if (!currentDefaultConnection || !currentDefaultConnection.page_id) {
+                    return alert("⚠️ Chưa có thông tin Fanpage!");
+                }
+                
+                // Hiện modal
+                if (scheduleModal) {
+                    scheduleModal.style.display = 'block';
+                    // Set default time to now + 30 mins
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() + 30);
+                    const timeString = now.toISOString().slice(0, 16);
+                    scheduleTimeInput.value = timeString;
+                }
+            });
+        }
+
+        // Đóng modal
+        if (closeScheduleModal) {
+            closeScheduleModal.addEventListener('click', () => {
+                scheduleModal.style.display = 'none';
+            });
+        }
+
+        if (scheduleModal) {
+            scheduleModal.addEventListener('click', (e) => {
+                if (e.target === scheduleModal) {
+                    scheduleModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Xác nhận hẹn giờ
+        if (confirmScheduleBtn) {
+            confirmScheduleBtn.addEventListener('click', async () => {
+                const scheduleTime = scheduleTimeInput.value;
+                if (!scheduleTime) {
+                    return alert("⚠️ Vui lòng chọn thời gian hẹn giờ!");
+                }
+
+                // Validate thời gian
+                const selectedTime = new Date(scheduleTime);
+                const now = new Date();
+                const diffMinutes = (selectedTime - now) / (1000 * 60);
+                
+                if (diffMinutes < 15) {
+                    return alert("⚠️ Thời gian hẹn giờ phải ít nhất 15 phút sau thời điểm hiện tại!");
+                }
+
+                // Lấy nội dung từ preview
+                const previewContentEl = document.getElementById('preview-content');
+                if (!previewContentEl) {
+                    return alert("⚠️ Không tìm thấy nội dung bài viết!");
+                }
+
+                const content = previewContentEl.innerHTML
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    .replace(/<[^>]+>/g, '')
+                    .trim();
+
+                if (!content || content === 'Nhập nội dung để xem trước bài viết...') {
+                    return alert("⚠️ Vui lòng nhập nội dung bài viết!");
+                }
+
+                try {
+                    confirmScheduleBtn.disabled = true;
+                    confirmScheduleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lên lịch...';
+
+                    // 1. Upload media (nếu có)
+                    let mediaIds = { photos: [], videos: [] };
+                    if (allSelectedImages.length > 0) {
+                        mediaIds = await uploadAllMedia();
+                    }
+
+                    // 2. Tạo hoặc cập nhật drart
+                    let finalDraftId = draft_post_id;
+                    if (!finalDraftId) {
+                        // Tạo draft mới
+                        const configId = document.getElementById('config_template')?.value;
+                        const draftRes = await apiRequest('/facebook/generate/content', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                config_id: configId && !isNaN(parseInt(configId)) ? parseInt(configId) : 1,
+                                topic: inputIdea?.value || "Bài viết hẹn giờ",
+                                content: content
+                            })
+                        });
+                        
+                        if (draftRes && draftRes.success) {
+                            finalDraftId = draftRes.data?.draft_id || draftRes.data?.id;
+                        }
+                    }
+
+                    if (!finalDraftId) {
+                        throw new Error("Không thể tạo draft bài viết!");
+                    }
+
+                    // 3. Gọi API hẹn giờ
+                    const payload = {
+                        draft_post_id: finalDraftId,
+                        page_id: currentDefaultConnection.page_id,
+                        message: content,
+                        scheduled_publish_time: Math.floor(selectedTime.getTime() / 1000), // Unix timestamp
+                        access_token: currentDefaultConnection.page_access_token,
+                        published: false
+                    };
+
+                    // Thêm media nếu có
+                    if (mediaIds.photos.length > 0) {
+                        payload.attached_media = mediaIds.photos.map(id => ({ media_fbid: id }));
+                    }
+
+                    console.log("📤 Schedule payload:", payload);
+
+                    // Gọi API - ĐIỀU CHỈNH ENDPOINT NÀY THEO BACKEND CỦA BẠN
+                    const response = await apiRequest(`/facebook/publish/schedule/${parsedDraftId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    console.log("📥 Schedule response:", response);
+
+                    if (response && response.success) {
+                        const formattedTime = selectedTime.toLocaleString('vi-VN', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        
+                        alert(`✅ Đã hẹn giờ đăng bài thành công!\n\nThời gian: ${formattedTime}`);
+                        
+                        // Xóa draft local
+                        clearDraft();
+                        
+                        // Đóng modal
+                        scheduleModal.style.display = 'none';
+                        
+                        // Reset UI
+                        if (inputIdea) inputIdea.value = '';
+                        if (previewContent) {
+                            previewContent.innerHTML = '<span style="color:#65676b; font-style:italic;">Nhập nội dung để xem trước bài viết...</span>';
+                        }
+                        allSelectedImages = [];
+                        allFileObjects = [];
+                        renderImageGrid([]);
+                        
+                    } else {
+                        throw new Error(response?.message || "Hẹn giờ thất bại");
+                    }
+
+                } catch (error) {
+                    console.error("❌ Lỗi hẹn giờ:", error);
+                    alert(`❌ Lỗi hẹn giờ: ${error.message}`);
+                } finally {
+                    confirmScheduleBtn.disabled = false;
+                    confirmScheduleBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Xác nhận hẹn giờ';
+                }
+            });
+        }
     }
 
     // --- Interaction for Post Actions ---
@@ -738,6 +1146,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
 
+
         // Update Label
         if (labelImageToggle) {
             if (isChecked) {
@@ -752,6 +1161,58 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Initialize
         updateAisLinkState();
     }
+
+    // --- AIS Assistant Click Logic ---
+    async function handleAIGenerateImage(e) {
+        if (e) e.preventDefault();
+
+        // Check if connection is ready
+        if (!currentDefaultConnection) {
+            return alert("Vui lòng kết nối Facebook trước khi tạo ảnh!");
+        }
+
+        const prompt = window.prompt("Nhập mô tả cho hình ảnh bạn muốn tạo:", inputIdea?.value || "");
+        if (!prompt) return;
+
+        const btn = e.currentTarget;
+        const originalHtml = btn.innerHTML;
+
+        try {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
+            btn.style.pointerEvents = 'none';
+
+            // We assume there's an endpoint for generating images
+            const res = await apiRequest('/ai/images/generate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    prompt: prompt,
+                    config_id: document.getElementById('config_template')?.value
+                })
+            });
+
+            if (res && res.success && res.image_url) {
+                // Thêm URL ảnh mới vào danh sách
+                allSelectedImages.push(res.image_url);
+                allFileObjects.push(null); // Marker that this is a remote URL
+
+                renderImageGrid(allSelectedImages);
+                updatePlaceholderText();
+                saveDraft();
+
+                if (publishBtn) publishBtn.style.display = 'block';
+            } else {
+                alert("Lỗi khi tạo hình ảnh: " + (res.message || "Không có phản hồi từ AI"));
+            }
+        } catch (error) {
+            console.error("Error generating AI image:", error);
+            alert("Lỗi kết nối: " + error.message);
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.style.pointerEvents = 'auto';
+        }
+    }
+    // if (aisToggle) aisToggle.onclick = handleAIGenerateImage;
+    if (aisToggleModal) aisToggleModal.onclick = handleAIGenerateImage;
     const btnShare = document.getElementById('btn-share');
 
     if (btnLike) {
@@ -819,9 +1280,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
         }
 
-        mainFileInput.addEventListener('change', function () {
-            handleMultipleImages(this.files);
-        });
+        // Thêm flag để tránh duplicate event listener
+        if (!mainFileInput.dataset.listenerAttached) {
+            mainFileInput.dataset.listenerAttached = 'true';
+            mainFileInput.addEventListener('change', function () {
+                handleMultipleImages(this.files);
+            });
+        }
 
         mainUploadTrigger.addEventListener('dragover', function (e) {
             e.preventDefault();
@@ -848,14 +1313,75 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
             }
         });
+
+        // --- NEW: PASTE URL LOGIC ---
+        window.addEventListener('paste', async (e) => {
+            // Tránh việc thêm 2 lần nếu đang paste vào ô nhập link cụ thể
+            if (e.target && e.target.id === 'image-url-input') return;
+
+            const pasteData = e.clipboardData.getData('text');
+            if (!pasteData) return;
+
+            // Check if the pasted text is a URL
+            if (pasteData.startsWith('http://') || pasteData.startsWith('https://')) {
+                // Determine if it's an image or video URL
+                const isMedia = pasteData.match(/\.(jpeg|jpg|png|gif|webp|mp4|mov|avi|wmv|webm)($|\?)/i);
+
+                if (isMedia) {
+                    allSelectedImages.push(pasteData);
+                    allFileObjects.push(null); // Marker for remote URL
+
+                    renderImageGrid(allSelectedImages);
+                    updatePlaceholderText();
+                    saveDraft();
+
+                    if (publishBtn) publishBtn.style.display = 'block';
+                }
+            }
+        });
+
+        // --- NEW: LINK INPUT LOGIC ---
+        const addUrlBtn = document.getElementById('add-url-btn');
+        const imageUrlInput = document.getElementById('image-url-input');
+
+        if (addUrlBtn && imageUrlInput) {
+            addUrlBtn.addEventListener('click', function () {
+                const url = imageUrlInput.value.trim();
+                if (!url) return alert("Vui lòng nhập link ảnh hoặc video!");
+
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    allSelectedImages.push(url);
+                    allFileObjects.push(null);
+
+                    renderImageGrid(allSelectedImages);
+                    updatePlaceholderText();
+                    saveDraft();
+
+                    imageUrlInput.value = '';
+                    if (publishBtn) publishBtn.style.display = 'block';
+                    console.log("✅ Đã thêm ảnh/video từ link nhập vào:", url);
+                } else {
+                    alert("Vui lòng nhập định dạng link hợp lệ (http/https)");
+                }
+            });
+
+            imageUrlInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    addUrlBtn.click();
+                }
+            });
+        }
     }
 
     // Toggle Visibility of Upload Box in Main View
+    // Removed dependency between toggle and upload box to keep them separate
+    /*
     if (toggleImageMain && mainUploadTrigger) {
         toggleImageMain.addEventListener('change', function () {
             mainUploadTrigger.style.display = this.checked ? 'flex' : 'none';
         });
     }
+    */
     // --- 3. CONFIG SECTION (MODAL) LOGIC ---
     if (previewBtn) {
         previewBtn.addEventListener('click', function () {
@@ -992,24 +1518,34 @@ document.addEventListener('DOMContentLoaded', async function () {
                 tone: document.getElementById('writing_tones').value,
                 language: document.getElementById('languages').value,
                 temperature: parseFloat(document.getElementById('creativity_level')?.value || 50) / 100,
-                is_default: false
+                is_default: document.getElementById('is_default')?.checked || false
             };
 
             try {
                 saveConfigBtn.disabled = true;
                 saveConfigBtn.textContent = 'ĐANG LƯU...';
 
-                await apiRequest('/facebook/config', {
-                    method: 'POST',
+                let url = '/facebook/config';
+                let method = 'POST';
+
+                if (editingFacebookConfigId) {
+                    url = `/facebook/config/user/${editingFacebookConfigId}`;
+                    method = 'PUT';
+                }
+
+                await apiRequest(url, {
+                    method: method,
                     body: JSON.stringify(payload)
                 });
-                // alert("Đã lưu cấu hình thành công!");
+
+                alert(editingFacebookConfigId ? "Cập nhật thành công!" : "Đã lưu cấu hình mới thành công!");
 
                 if (configSection) configSection.style.display = 'none';
                 if (mainView) mainView.style.display = 'block';
 
-                // Optional: Reload list if needed
+                // Reload list
                 await loadUserConfigs();
+                editingFacebookConfigId = null;
 
             } catch (error) {
                 alert("Lỗi: " + error.message);
@@ -1020,6 +1556,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
+
     const configSelect = document.getElementById('config_template');
     if (configSelect) {
         configSelect.addEventListener('change', function () {
@@ -1027,6 +1564,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (mainView) mainView.style.display = 'none';
                 if (configSection) {
                     configSection.style.display = 'block';
+
+                    // Reset form fields
+                    document.getElementById('config_name_input').value = '';
+                    document.getElementById('bots').value = '';
+                    document.getElementById('content_lengths').value = '';
+                    document.getElementById('content_types').value = '';
+                    document.getElementById('writing_tones').value = '';
+                    document.getElementById('languages').value = '';
+                    if (document.getElementById('creativity_level')) document.getElementById('creativity_level').value = 50;
+                    if (document.getElementById('is_default')) document.getElementById('is_default').checked = false;
+
                     const pageBody = document.querySelector('.page-body');
                     if (pageBody) {
                         pageBody.scrollTo({
@@ -1052,9 +1600,83 @@ document.addEventListener('DOMContentLoaded', async function () {
                 inputIdea.value = '';
                 updateText();
             }
-            // Không xóa allSelectedImages để giữ lại hình ảnh đã đăng thêm
-            console.log("Đã khôi phục văn bản mặc định, giữ nguyên danh sách hình ảnh.");
+            // Khôi phục lại cấu hình mặc định cho các dropdown
+            loadConfigs();
+            console.log("Đã khôi phục văn bản và cấu hình mặc định.");
         });
+    }
+
+    // --- AIS Assistant Image Generation ---
+    const aiImageModal = document.getElementById('aiImageModal');
+    const aiAssistantToggle = document.getElementById('ais-assistant-toggle');
+    const aiAssistantToggleModal = document.getElementById('ais-assistant-toggle-modal');
+    const closeAiImageModal = document.getElementById('closeAiImageModal');
+    const generateAiImageBtn = document.getElementById('generateAiImageBtn');
+    const aiImagePrompt = document.getElementById('aiImagePrompt');
+    const generatedImagesList = document.getElementById('generatedImagesList');
+    const aiImageResult = document.getElementById('aiImageResult');
+
+    function openAiImageModal(e) {
+        if (e) e.preventDefault();
+        if (aiImageModal) {
+            aiImageModal.style.display = 'flex';
+            if (inputIdea && !aiImagePrompt.value) {
+                aiImagePrompt.value = "Hình ảnh minh họa cho: " + inputIdea.value;
+            }
+        }
+    }
+
+    if (aiAssistantToggle) aiAssistantToggle.onclick = openAiImageModal;
+    if (aiAssistantToggleModal) aiAssistantToggleModal.onclick = openAiImageModal;
+    if (closeAiImageModal) closeAiImageModal.onclick = () => aiImageModal.style.display = 'none';
+
+    if (generateAiImageBtn) {
+        generateAiImageBtn.onclick = async () => {
+            const prompt = aiImagePrompt.value.trim();
+            if (!prompt) return alert("Vui lòng nhập mô tả ảnh!");
+
+            try {
+                generateAiImageBtn.disabled = true;
+                generateAiImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
+
+                const response = await apiRequest('ai/images/generate', {
+                    method: 'POST',
+                    body: {
+                        prompt: prompt,
+                        n: 2,
+                        size: "1024x1024"
+                    }
+                });
+
+                if (response && response.success && response.images) {
+                    aiImageResult.style.display = 'block';
+                    generatedImagesList.innerHTML = response.images.map(img => `
+                        <img src="${img.url}" class="generated-preview-img" style="width: 100%; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.2s;">
+                    `).join('');
+
+                    // Add click handlers to generated images
+                    document.querySelectorAll('.generated-preview-img').forEach(img => {
+                        img.onclick = () => {
+                            // Add to selected images
+                            allSelectedImages.push(img.src);
+                            allFileObjects.push(null);
+                            renderImageGrid(allSelectedImages);
+                            updatePlaceholderText();
+                            saveDraft();
+                            aiImageModal.style.display = 'none';
+                            showNotification("Đã thêm ảnh AI thành công!", "success");
+                        };
+                        img.onmouseover = function () { this.style.borderColor = '#1877f2'; };
+                        img.onmouseout = function () { this.style.borderColor = 'transparent'; };
+                    });
+                }
+            } catch (error) {
+                alert("Lỗi tạo ảnh: " + error.message);
+            } finally {
+                generateAiImageBtn.disabled = false;
+                generateAiImageBtn.innerHTML = '<i class="fas fa-magic"></i> Bắt đầu tạo';
+            }
+        };
     }
 
     // --- 5. INITIALIZATION ---
@@ -1062,4 +1684,141 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadConfigs();
     await loadDefaultConnection();
     loadDraft();
+    await loadDraftFromURL();
+
+    // --- Xử lý Hẹn giờ đăng bài ---
+    const scheduleModal = document.getElementById('scheduleModal');
+    const btnActionSchedule = document.querySelector('.btn-action-schedule');
+    const closeScheduleModal = document.getElementById('closeScheduleModal');
+    const cancelSchedule = document.getElementById('cancelSchedule');
+    const confirmSchedule = document.getElementById('confirmSchedule');
+    const scheduleTimeInput = document.getElementById('scheduleTime');
+
+    if (btnActionSchedule && scheduleModal) {
+        btnActionSchedule.addEventListener('click', () => {
+            scheduleModal.style.display = 'flex';
+            // Set default time to now + 30 mins
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Local time adjustment
+            scheduleTimeInput.value = now.toISOString().slice(0, 16);
+        });
+    }
+
+    const hideScheduleModal = () => {
+        if (scheduleModal) scheduleModal.style.display = 'none';
+    };
+
+    if (closeScheduleModal) closeScheduleModal.addEventListener('click', hideScheduleModal);
+    if (cancelSchedule) cancelSchedule.addEventListener('click', hideScheduleModal);
+
+// THAY THẾ toàn bộ phần confirmSchedule bằng:
+if (confirmSchedule) {
+    confirmSchedule.addEventListener('click', async () => {
+        console.log("🔍 DEBUG - Click confirmSchedule");
+        console.log("draft_post_id trước:", draft_post_id);
+        
+        // Lấy nội dung trước
+        const previewContentEl = document.getElementById('preview-content');
+        if (!previewContentEl) return alert("⚠️ Không tìm thấy nội dung!");
+        
+        const currentContent = previewContentEl.innerHTML
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+            .trim();
+            
+        if (!currentContent || currentContent === 'Nhập nội dung để xem trước bài viết...') {
+            return alert("⚠️ Vui lòng nhập nội dung trước!");
+        }
+        
+        const timeVal = scheduleTimeInput.value;
+        if (!timeVal) return alert("⚠️ Vui lòng chọn thời gian!");
+        
+        const selectedDate = new Date(timeVal);
+        if (isNaN(selectedDate.getTime())) return alert("⚠️ Thời gian không hợp lệ!");
+        
+        if (!currentDefaultConnection?.page_id) {
+            return alert("⚠️ Chưa có thông tin Fanpage!");
+        }
+        
+        try {
+            confirmSchedule.disabled = true;
+            confirmSchedule.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            
+            // 1. Đảm bảo có draft_post_id
+            let finalDraftId = draft_post_id;
+            
+            if (!finalDraftId || finalDraftId === "null" || finalDraftId === "undefined") {
+                console.log("🆕 Tạo draft mới...");
+                const configId = document.getElementById('config_template')?.value;
+                
+                const draftRes = await apiRequest('/facebook/generate/content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        config_id: configId ? parseInt(configId) : 1,
+                        topic: inputIdea?.value || "Bài viết hẹn giờ",
+                        content: currentContent
+                    })
+                });
+                
+                if (draftRes?.success) {
+                    finalDraftId = draftRes.data?.draft_id || draftRes.data?.id;
+                    draft_post_id = finalDraftId;
+                    console.log("✅ Draft ID mới:", finalDraftId);
+                } else {
+                    throw new Error("Không thể tạo draft: " + (draftRes?.message || ""));
+                }
+            }
+            
+            // 2. Parse ID
+            const parsedId = parseInt(finalDraftId);
+            if (isNaN(parsedId)) {
+                throw new Error(`ID không hợp lệ: ${finalDraftId}`);
+            }
+            
+            // 3. Upload media
+            let media = { photos: [], videos: [] };
+            if (allSelectedImages.length > 0) {
+                media = await uploadAllMedia();
+            }
+            
+            // 4. Tạo payload
+            const payload = {
+                draft_post_id: parsedId,
+                page_id: currentDefaultConnection.page_id,
+                message: currentContent,
+                scheduled_time: selectedDate.toISOString(),
+                photo_ids: media.photos,
+                video_ids: media.videos
+            };
+            
+            console.log("📤 Sending payload:", payload);
+            
+            // 5. Gọi API
+            const response = await apiRequest('/facebook/publish/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (response?.success) {
+                const timeStr = selectedDate.toLocaleString('vi-VN');
+                alert(`✅ Đã lên lịch đăng bài!\nThời gian: ${timeStr}`);
+                hideScheduleModal();
+                clearDraft();
+                location.reload();
+            } else {
+                throw new Error(response?.message || "Lỗi hẹn giờ");
+            }
+            
+        } catch (error) {
+            console.error("❌ Lỗi:", error);
+            alert("❌ " + error.message);
+        } finally {
+            confirmSchedule.disabled = false;
+            confirmSchedule.innerHTML = '<i class="fas fa-calendar-check"></i> Xác nhận';
+        }
+    });
+}
 });

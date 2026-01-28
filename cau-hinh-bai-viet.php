@@ -186,10 +186,13 @@
 
         <!-- Right Column: Preview/Outline -->
         <div class="column right" id="right-panel">
-            <section class="card right-panel-card">
+            <section class="card right-cpanel-card" id="video-container" style="justify-content: center; align-items: center; text-align: center; height:auto;">
                 <button class="guide-btn">Hướng dẫn</button>
-                <div id="defaultPreview">
-                    <div class="video-wrapper">
+                <div id="defaultPreview" class="empty-state-content">
+                    <div class="video-placeholder-thumb">
+                        <div class="play-button-overlay">
+                            <i class="fas fa-play"></i>
+                        </div>
                         <iframe
                             src="https://www.youtube.com/embed/Uzqpwc5hpCE?si=xPtN0u8EW6KOsQ_J"
                             title="YouTube video player"
@@ -198,13 +201,8 @@
                             allowfullscreen>
                         </iframe>
                     </div>
-
-                    <div class="placeholder-content">
-                        <h3>Dàn ý của bạn sẽ hiển thị tại đây</h3>
-                        <p>
-                            Xem ví dụ bên trên để hiểu cách quy trình hoạt động <br> và tạo ra nội dung hấp dẫn. Tất cả bài viết trên nền <br> tảng đều được tạo từ công cụ này.
-                        </p>
-                    </div>
+                    <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 10px;">Dàn ý của bạn hiện hiển thị ở đây </h3>
+                    <p style="font-size: 14px; color: #64748b; max-width: 400px; line-height: 1.6;margin-left:auto; margin-right:auto; width:50%">Xem video bên trên để hiểu cách quy trình hoạt động và tạo ra nội dung hấp dẫn.Tất cả bài viết trên nền tảng đều được tạo ra từ công cụ này.</p>
                 </div>
 
                 <!-- Loading State -->

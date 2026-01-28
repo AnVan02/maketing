@@ -27,7 +27,7 @@ $targetUrl = $baseUrl . $endpoint;
 function sendRequest($url, $method, $data, $token = null, $contentType = 'application/json')
 {
     $headers = ['Accept: application/json'];
-    
+
     // Nếu là multipart và data là mảng, cURL sẽ tự set boundary.
     // Nhưng ở đây Proxy đang xây dựng string body ($data là string), nên bắt buộc phải gửi Content-Type kèm boundary.
     $headers[] = 'Content-Type: ' . $contentType;
@@ -56,7 +56,14 @@ function sendRequest($url, $method, $data, $token = null, $contentType = 'applic
     }
 
     curl_setopt($ch, CURLOPT_HEADER, true);
+    // thêm phần
     $response = curl_exec($ch);
+    if ($response === false) {
+        $curlError = curl_error($ch);
+        http_response_code(502);
+        echo json_encode(['error' => 'Proxy error: ' . $curlError]);
+        exit;
+    }
     $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
     $responseHeaders = substr($response, 0, $headerSize);
     $responseBody = substr($response, $headerSize);
@@ -81,7 +88,7 @@ ini_set('memory_limit', '512M');
 if (strpos($contentType, 'multipart/form-data') !== false) {
     // Xây dựng Raw Multipart Body để hỗ trợ duplicate keys (Files, Files,...)
     // PHP CURL mặc định không hỗ trợ gửi nhiều field cùng tên thông qua mảng
-    
+
     $boundary = '--------------------------' . microtime(true);
     $body = '';
 
@@ -98,7 +105,7 @@ if (strpos($contentType, 'multipart/form-data') !== false) {
         // VD: Client gửi Files[], PHP nhận key là 'Files'. Backend cần field 'Files'.
         // Nếu client gửi 'Files', PHP nhận 'Files' (nhưng chỉ 1 file cuối nếu trùng).
         // Vì client JS đã được sửa thành Files[], nên $key ở đây sẽ là 'Files'.
-        $fieldName = $key; 
+        $fieldName = $key;
 
         if (is_array($file['tmp_name'])) {
             // Multiple files
@@ -130,25 +137,34 @@ if (strpos($contentType, 'multipart/form-data') !== false) {
     }
 
     $body .= "--$boundary--\r\n";
-    
+
     // Cập nhật inputData và ContentType
     $inputData = $body;
     $contentType = "multipart/form-data; boundary=$boundary";
-
 } else {
     $inputData = file_get_contents('php://input');
 }
 
-// LẤY ACCESS TOKEN TỪ COOKIE (THAY VÌ SESSION)
-$accessToken = $_COOKIE['access_token'] ?? null;
+// LẤY ACCESS TOKEN TỪ AUTHORIZATION HEADER HOẶC COOKIE
+$accessToken = null;
+if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+    if (preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
+        $accessToken = $matches[1];
+    }
+}
+if (!$accessToken) {
+    $accessToken = $_COOKIE['access_token'] ?? null;
+}
 
-// XỬ LÝ ĐẶC BIỆT CHO LOGOUT: Đảm bảo refresh_token được gửi lên backend để vô hiệu hóa
-if (strpos($endpoint, 'logout') !== false && $method === 'POST') {
-    if (empty($inputData) || $inputData === '{}' || $inputData === '[]') {
-        if (isset($_COOKIE['refresh_token'])) {
-            $inputData = json_encode(['refresh_token' => $_COOKIE['refresh_token']]);
+// XỬ LÝ ĐẶC BIỆT CHO LOGOUT VÀ REFRESH: Đảm bảo refresh_token được gửi lên backend từ Cookie nếu Body trống
+if ((strpos($endpoint, 'logout') !== false || strpos($endpoint, 'refresh') !== false) && $method === 'POST') {
+    $decodedInput = json_decode($inputData, true);
+    if (empty($decodedInput['refresh_token'])) {
+        $rToken = $_COOKIE['refresh_token'] ?? null;
+        if ($rToken) {
+            $inputData = json_encode(['refresh_token' => $rToken]);
             $contentType = 'application/json';
-            file_put_contents('debug_proxy.log', "[" . date('Y-m-d H:i:s') . "] Logout: Injected refresh_token from cookie into body.\n", FILE_APPEND);
+            file_put_contents('debug_proxy.log', "[" . date('Y-m-d H:i:s') . "] Auth: Injected refresh_token from cookie into body for $endpoint.\n", FILE_APPEND);
         }
     }
 }
@@ -183,9 +199,12 @@ if (strpos($endpoint, 'login') !== false && $result['code'] === 200) {
         ]);
     }
 
+    // TRẢ VỀ CẢ TOKEN CHO JS LƯU VÀO LOCALSTORAGE
     $result['body'] = [
         'success' => true,
         'login_success' => true,
+        'access_token' => $data['access_token'] ?? null,
+        'refresh_token' => $data['refresh_token'] ?? null,
         'user' => $data['user'] ?? null
     ];
 }

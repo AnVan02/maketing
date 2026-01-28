@@ -348,11 +348,30 @@ select {
      position: absolute;
      top: 0;
      left: 0;
-     width: 100%;
-     height: 100%;
+     width: 800%;
+     height: 450%;
      border: 0;
      border-radius: 20px;
 }
+    .video-placeholder-thumb {
+         width: 100%;
+         /* Or a specific max-width */
+         position: relative;
+         padding-bottom: 56.25%;
+         /* For 16:9 aspect ratio (9 / 16 * 100) */
+         height: 0;
+         overflow: hidden;
+         /* To clip content outside if needed */
+    }
+
+    .video-placeholder-thumb iframe {
+         position: absolute;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+    }
+
 
 @media (max-width: 768px) {
      .video-container {

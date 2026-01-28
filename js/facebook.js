@@ -186,6 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const language = document.getElementById('languages')?.value;
             const creativity = document.getElementById('creativity_level')?.value || 50;
 
+            
             const temperature = parseFloat(creativity) / 100;
             const is_default = document.getElementById('is_default')?.checked || false;
 
@@ -199,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 temperature: temperature,
                 is_default: is_default
             };
-
+            
             // const payload = {
             //     name: name,
             //     bot_id: botSelect?.value,
@@ -248,7 +249,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // --- CÁC HÀM GLOBAL (được gọi từ HTML) ---
-
     window.useConfig = (id) => {
         const configs = window.userConfigsData || [];
         const found = configs.find(c => c.id == id || c._id == id);

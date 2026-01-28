@@ -22,45 +22,78 @@ async function apiRequest(endpoint, options = {}) {
     // Chuẩn hóa đường dẫn
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
+    // Lấy Access Token từ localStorage
+    const accessToken = localStorage.getItem('access_token');
+
     // Gửi yêu cầu qua file proxy.php thay vì gọi trực tiếp tới backend
-    // Điều này giúp tránh lỗi CORS và bảo mật thông tin API tốt hơn
     const targetUrl = `${PROXY_URL}?endpoint=${encodeURIComponent(cleanEndpoint)}`;
+
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+
+    // Nếu có Access Token, hãy đính kèm vào header Authorization
+    if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+    }
 
     try {
         const response = await fetch(targetUrl, {
             method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
+            headers: headers,
             body: method !== 'GET' ? body : null,
-            credentials: 'include' // Quan trọng để gửi HttpOnly Cookies
+            credentials: 'include' // Quan trọng để gửi HttpOnly Cookies (nếu backend dùng cookie)
         });
 
         const responseText = await response.text();
 
         if (!response.ok) {
+            // Tự động Refresh Token nếu là 401 (Unauthorized)
             if (response.status === 401) {
-                // Tự động Refresh Token nếu không phải là request Login/Refresh
-                if (!cleanEndpoint.includes('/auth/login') && !cleanEndpoint.includes('/auth/refresh')) {
-                    try {
-                        console.log('🔄 Access Token hết hạn (401). Đang Refresh...');
-                        // Gọi API Refresh để server cấp lại Access Cookie mới
-                        await apiRequest('/auth/refresh', { method: 'POST' });
+                // Tránh lặp vô hạn (không refresh khi chính API login/refresh/logout bị 401)
+                const isAuthPath = cleanEndpoint.includes('/auth/login') ||
+                    cleanEndpoint.includes('/auth/refresh') ||
+                    cleanEndpoint.includes('/auth/logout');
 
-                        console.log('✅ Refresh thành công. Đang thực hiện lại request...');
-                        // Retry request ban đầu
-                        return await apiRequest(endpoint, options);
-                    } catch (refreshErr) {
-                        console.warn('⚠️ Refresh thất bại:', refreshErr);
-                        // Refresh lỗi -> Tiếp tục xuống logic logout
+                if (!isAuthPath) {
+                    const refreshToken = localStorage.getItem('refresh_token');
+                    if (refreshToken) {
+                        try {
+                            console.log('🔄 Access Token hết hạn. Đang gọi API Refresh...');
+                            // Gọi API Refresh với refresh_token trong body
+                            const refreshResponse = await apiRequest('/auth/refresh', {
+                                method: 'POST',
+                                body: { refresh_token: refreshToken }
+                            });
+
+                            // Trích xuất access_token, có thể nằm trong data hoặc trực tiếp
+                            const data = refreshResponse.data || refreshResponse;
+                            const newAccessToken = data.access_token;
+                            const newRefreshToken = data.refresh_token;
+
+                            if (newAccessToken) {
+                                console.log('✅ Refresh Token thành công. Đang cập nhật localStorage...');
+                                localStorage.setItem('access_token', newAccessToken);
+                                if (newRefreshToken) {
+                                    localStorage.setItem('refresh_token', newRefreshToken);
+                                }
+
+                                // Retry request ban đầu với token mới
+                                console.log('🔄 Đang thực hiện lại request ban đầu...');
+                                return await apiRequest(endpoint, options);
+                            } else {
+                                console.error('❌ Refresh response không chứa access_token:', refreshResponse);
+                            }
+                        } catch (refreshErr) {
+                            console.error('❌ Refresh Token thất bại:', refreshErr.message);
+                        }
                     }
                 }
 
-                console.warn('⚠️ Phiên đăng nhập đã hết hạn.');
-                if (!window.location.href.includes('dang-nhap.php')) {
-                    window.location.href = 'dang-nhap.php';
-                }
+                // Nếu không thể refresh hoặc refresh thất bại -> Yêu cầu đăng nhập lại
+                console.warn('⚠️ Phiên đăng nhập không hợp lệ hoặc đã hết hạn.');
+                handleAuthFailure();
                 throw new Error('Chưa đăng nhập hoặc phiên đã hết hạn');
             }
 
@@ -93,13 +126,25 @@ async function apiRequest(endpoint, options = {}) {
             return { success: true, data: responseText };
         }
     } catch (error) {
-        // Chỉ log "Lỗi kết nối" nếu thực sự là lỗi mạng (TypeError)
         if (error instanceof TypeError) {
             console.error('❌ Lỗi mạng/Kết nối API:', error.message);
         } else {
             console.warn('⚠️ API Error:', error.message);
         }
         throw error;
+    }
+}
+
+/**
+ * HÀM XỬ LÝ KHI XÁC THỰC THẤT BẠI (401 & REFRESH FAIL)
+ */
+function handleAuthFailure() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user_info');
+
+    if (!window.location.href.includes('dang-nhap.php')) {
+        window.location.href = 'dang-nhap.php';
     }
 }
 
@@ -111,9 +156,16 @@ async function apiRequestFormData(endpoint, formData, method = "POST") {
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const targetUrl = `${PROXY_URL}?endpoint=${encodeURIComponent(cleanEndpoint)}`;
 
+    const accessToken = localStorage.getItem('access_token');
+    const headers = {};
+    if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     try {
         const response = await fetch(targetUrl, {
             method: method,
+            headers: headers,
             body: formData,
             credentials: 'include'
         });
@@ -122,19 +174,33 @@ async function apiRequestFormData(endpoint, formData, method = "POST") {
 
         if (!response.ok) {
             if (response.status === 401) {
-                if (!cleanEndpoint.includes('/auth/login') && !cleanEndpoint.includes('/auth/refresh')) {
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (refreshToken) {
                     try {
                         console.log('🔄 Token (Upload) hết hạn. Đang Refresh...');
-                        await apiRequest('/auth/refresh', { method: 'POST' });
+                        const refreshResponse = await apiRequest('/auth/refresh', {
+                            method: 'POST',
+                            body: { refresh_token: refreshToken }
+                        });
 
-                        console.log('✅ Refresh thành công. Retry Upload...');
-                        return await apiRequestFormData(endpoint, formData, method);
+                        const data = refreshResponse.data || refreshResponse;
+                        const newAccessToken = data.access_token;
+                        const newRefreshToken = data.refresh_token;
+
+                        if (newAccessToken) {
+                            localStorage.setItem('access_token', newAccessToken);
+                            if (newRefreshToken) {
+                                localStorage.setItem('refresh_token', newRefreshToken);
+                            }
+                            console.log('✅ Refresh thành công. Retry Upload...');
+                            return await apiRequestFormData(endpoint, formData, method);
+                        }
                     } catch (err) {
                         console.warn('⚠️ Refresh Upload thất bại:', err);
                     }
                 }
 
-                window.location.href = 'dang-nhap.php';
+                handleAuthFailure();
                 throw new Error('Phiên đã hết hạn');
             }
             let errorData = {};
@@ -199,7 +265,9 @@ async function logout() {
     } catch (error) {
         console.warn('⚠️ Lỗi khi đăng xuất từ server:', error.message);
     } finally {
-        // Xóa thông tin địa phương bất kể server có lỗi hay không
+        // Xóa thông tin local bất kể server có lỗi hay không
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('user_info');
         localStorage.removeItem('ui_configs');
 

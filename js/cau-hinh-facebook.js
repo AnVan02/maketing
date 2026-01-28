@@ -888,7 +888,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     if (draftRes && (draftRes.success || draftRes.data)) {
                         const dataObj = draftRes.data || draftRes;
                         finalDraftId = dataObj.draft_id || dataObj.id || dataObj.draft_post_id;
-                        
+
                         if (finalDraftId) {
                             draft_post_id = finalDraftId;
                             console.log("✅ Draft ID:", finalDraftId);
@@ -907,7 +907,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     throw new Error(`ID bài viết không hợp lệ: "${finalDraftId}" (type: ${typeof finalDraftId})`);
                 }
 
-                console.log("parsed draft id:",parsedDraftId, typeof parsedDraftId);
+                console.log("parsed draft id:", parsedDraftId, typeof parsedDraftId);
 
                 // BƯỚC 2: Upload media
                 console.log("📤 Đang upload media...");
@@ -957,7 +957,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         const scheduleModal = document.getElementById('schedule-modal');
         const scheduleTimeInput = document.getElementById('schedule-time');
         const confirmScheduleBtn = document.getElementById('confirm-schedule');
-        const closeScheduleModal = scheduleModal?.querySelector('.close');
+        const closeScheduleModal = document.getElementById('close-schedule-modal') || (scheduleModal ? scheduleModal.querySelector('.close-modal') : null);
+        const cancelScheduleBtn = document.getElementById('cancel-schedule');
 
         // Mở modal hẹn giờ
         if (scheduleBtn) {
@@ -965,56 +966,49 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (!currentDefaultConnection || !currentDefaultConnection.page_id) {
                     return alert("⚠️ Chưa có thông tin Fanpage!");
                 }
-                
-                // Hiện modal
+
                 if (scheduleModal) {
                     scheduleModal.style.display = 'block';
                     // Set default time to now + 30 mins
                     const now = new Date();
                     now.setMinutes(now.getMinutes() + 30);
-                    const timeString = now.toISOString().slice(0, 16);
-                    scheduleTimeInput.value = timeString;
+                    // Local time adjustment for datetime-local input
+                    const offset = now.getTimezoneOffset() * 60000;
+                    const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
+                    if (scheduleTimeInput) scheduleTimeInput.value = localISOTime;
                 }
             });
         }
 
-        // Đóng modal
-        if (closeScheduleModal) {
-            closeScheduleModal.addEventListener('click', () => {
-                scheduleModal.style.display = 'none';
-            });
-        }
+        const hideScheduleModal = () => {
+            if (scheduleModal) scheduleModal.style.display = 'none';
+        };
+
+        if (closeScheduleModal) closeScheduleModal.addEventListener('click', hideScheduleModal);
+        if (cancelScheduleBtn) cancelScheduleBtn.addEventListener('click', hideScheduleModal);
 
         if (scheduleModal) {
             scheduleModal.addEventListener('click', (e) => {
-                if (e.target === scheduleModal) {
-                    scheduleModal.style.display = 'none';
-                }
+                if (e.target === scheduleModal) hideScheduleModal();
             });
         }
 
         // Xác nhận hẹn giờ
         if (confirmScheduleBtn) {
             confirmScheduleBtn.addEventListener('click', async () => {
-                const scheduleTime = scheduleTimeInput.value;
-                if (!scheduleTime) {
-                    return alert("⚠️ Vui lòng chọn thời gian hẹn giờ!");
-                }
+                const scheduleTime = scheduleTimeInput?.value;
+                if (!scheduleTime) return alert("⚠️ Vui lòng chọn thời gian hẹn giờ!");
 
-                // Validate thời gian
                 const selectedTime = new Date(scheduleTime);
                 const now = new Date();
                 const diffMinutes = (selectedTime - now) / (1000 * 60);
-                
-                if (diffMinutes < 15) {
-                    return alert("⚠️ Thời gian hẹn giờ phải ít nhất 15 phút sau thời điểm hiện tại!");
+
+                if (diffMinutes < 10) {
+                    return alert("⚠️ Thời gian hẹn giờ phải ít nhất 10 phút sau!");
                 }
 
-                // Lấy nội dung từ preview
                 const previewContentEl = document.getElementById('preview-content');
-                if (!previewContentEl) {
-                    return alert("⚠️ Không tìm thấy nội dung bài viết!");
-                }
+                if (!previewContentEl) return alert("⚠️ Không tìm thấy nội dung!");
 
                 const content = previewContentEl.innerHTML
                     .replace(/<br\s*\/?>/gi, '\n')
@@ -1029,16 +1023,18 @@ document.addEventListener('DOMContentLoaded', async function () {
                     confirmScheduleBtn.disabled = true;
                     confirmScheduleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lên lịch...';
 
-                    // 1. Upload media (nếu có)
+                    // 1. Upload media nếu có
                     let mediaIds = { photos: [], videos: [] };
                     if (allSelectedImages.length > 0) {
                         mediaIds = await uploadAllMedia();
                     }
 
-                    // 2. Tạo hoặc cập nhật drart
+                    // 2. Đảm bảo có draft_post_id
                     let finalDraftId = draft_post_id;
-                    if (!finalDraftId) {
-                        // Tạo draft mới
+                    console.log("finalDraftId:", finalDraftId, typeof finalDraftId);
+
+                    if (!finalDraftId || finalDraftId === "null" || finalDraftId === "undefined") {
+                        console.log("Tạo draft mới...");
                         const configId = document.getElementById('config_template')?.value;
                         const draftRes = await apiRequest('/facebook/generate/content', {
                             method: 'POST',
@@ -1046,72 +1042,63 @@ document.addEventListener('DOMContentLoaded', async function () {
                             body: JSON.stringify({
                                 config_id: configId && !isNaN(parseInt(configId)) ? parseInt(configId) : 1,
                                 topic: inputIdea?.value || "Bài viết hẹn giờ",
-                                content: content
+                                content: content,
+                                published: false
                             })
                         });
-                        
+
                         if (draftRes && draftRes.success) {
                             finalDraftId = draftRes.data?.draft_id || draftRes.data?.id;
+                            if (finalDraftId) {
+                                draft_post_id = finalDraftId;
+                                saveDraft();
+                                await new Promise(r => setTimeout(r, 1000));
+                            }
                         }
                     }
 
-                    if (!finalDraftId) {
-                        throw new Error("Không thể tạo draft bài viết!");
-                    }
+                    if (!finalDraftId) throw new Error("Không lấy được draft_post_id!");
 
-                    // 3. Gọi API hẹn giờ
-                    const payload = {
-                        draft_post_id: finalDraftId,
-                        page_id: currentDefaultConnection.page_id,
+                    const parsedId = parseInt(finalDraftId);
+                    if (isNaN(parsedId)) throw new Error("draft_post_id không hợp lệ: " + finalDraftId);
+
+                    // 3. Tính timestamp
+                    const scheduledTimestamp = Math.floor(selectedTime.getTime() / 1000);
+
+                    // 4. Payload cho POST (đặt lịch lần đầu)
+                    const schedulePayload = {
+                        draft_post_id: parsedId,
+                        page_id: String(currentDefaultConnection.page_id),
                         message: content,
-                        scheduled_publish_time: Math.floor(selectedTime.getTime() / 1000), // Unix timestamp
-                        access_token: currentDefaultConnection.page_access_token,
-                        published: false
+                        photo_ids: mediaIds.photos || [],
+                        video_ids: mediaIds.videos || [],
+                        published: false,
+                        scheduled_time: scheduledTimestamp  // Thử scheduled_time trước (backend dùng tên này)
+                        // Nếu backend dùng scheduled_publish_time, đổi thành: scheduled_publish_time: scheduledTimestamp
                     };
 
-                    // Thêm media nếu có
-                    if (mediaIds.photos.length > 0) {
-                        payload.attached_media = mediaIds.photos.map(id => ({ media_fbid: id }));
-                    }
+                    console.log("📤 POST Đặt lịch payload:", JSON.stringify(schedulePayload, null, 2));
 
-                    console.log("📤 Schedule payload:", payload);
-
-                    // Gọi API - ĐIỀU CHỈNH ENDPOINT NÀY THEO BACKEND CỦA BẠN
-                    const response = await apiRequest(`/facebook/publish/schedule/${parsedDraftId}`, {
+                    
+                    // 5. Gọi POST publish với published=false để đặt lịch
+                    let response = await apiRequest('/facebook/publish/posts/publish', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(schedulePayload)
                     });
+                    
 
-                    console.log("📥 Schedule response:", response);
+                    console.log("📥 Response:", response);
 
                     if (response && response.success) {
-                        const formattedTime = selectedTime.toLocaleString('vi-VN', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
+                        const timeStr = selectedTime.toLocaleString('vi-VN', {
+                            weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit',
+                            hour: '2-digit', minute: '2-digit'
                         });
-                        
-                        alert(`✅ Đã hẹn giờ đăng bài thành công!\n\nThời gian: ${formattedTime}`);
-                        
-                        // Xóa draft local
+                        alert(`✅ Đã đặt lịch thành công!\n\n📅 Thời gian: ${timeStr}`);
+                        hideScheduleModal();
                         clearDraft();
-                        
-                        // Đóng modal
-                        scheduleModal.style.display = 'none';
-                        
-                        // Reset UI
-                        if (inputIdea) inputIdea.value = '';
-                        if (previewContent) {
-                            previewContent.innerHTML = '<span style="color:#65676b; font-style:italic;">Nhập nội dung để xem trước bài viết...</span>';
-                        }
-                        allSelectedImages = [];
-                        allFileObjects = [];
-                        renderImageGrid([]);
-                        
+                        location.reload();
                     } else {
                         throw new Error(response?.message || "Hẹn giờ thất bại");
                     }
@@ -1126,7 +1113,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
         }
     }
-
     // --- Interaction for Post Actions ---
     const btnLike = document.getElementById('btn-like');
     const btnComment = document.getElementById('btn-comment');
@@ -1134,7 +1120,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- AIS Assistant Link & Label State controlled by Toggle Switch ---
     const aisToggle = document.getElementById('ais-assistant-toggle');
     const labelImageToggle = document.getElementById('label-image-toggle');
-
     function updateAisLinkState() {
         const isChecked = toggleImageMain && toggleImageMain.checked;
         // Update AIS Link
@@ -1145,7 +1130,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 aisToggle.classList.remove('active');
             }
         }
-
 
         // Update Label
         if (labelImageToggle) {
@@ -1555,8 +1539,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
     }
-
-
     const configSelect = document.getElementById('config_template');
     if (configSelect) {
         configSelect.addEventListener('change', function () {
@@ -1679,6 +1661,207 @@ document.addEventListener('DOMContentLoaded', async function () {
         };
     }
 
+    // --- QUẢN LÝ BÀI VIẾT ĐÃ HẸN GIỜ (MODAL) ---
+    const manageScheduledBtn = document.getElementById('manage-scheduled-btn');
+    const scheduledPostsModal = document.getElementById('scheduled-posts-modal');
+    const closeScheduledPostsModal = document.getElementById('close-scheduled-posts-modal');
+    const scheduledListContainer = document.getElementById('scheduled-posts-list-container');
+    const refreshScheduledListBtn = document.getElementById('refresh-scheduled-list-btn');
+
+    const rescheduleModal = document.getElementById('reschedule-modal');
+    const closeRescheduleModal = document.getElementById('close-reschedule-modal');
+    const cancelRescheduleBtn = document.getElementById('cancel-reschedule');
+    const confirmRescheduleBtn = document.getElementById('confirm-reschedule');
+    const newScheduleTimeInput = document.getElementById('new-schedule-time');
+
+    let postBeingRescheduled = null;
+
+    if (manageScheduledBtn) {
+        manageScheduledBtn.onclick = () => {
+            if (scheduledPostsModal) {
+                scheduledPostsModal.style.display = 'block';
+                loadScheduledPostsList();
+            }
+        };
+    }
+
+    if (closeScheduledPostsModal) {
+        closeScheduledPostsModal.onclick = () => {
+            scheduledPostsModal.style.display = 'none';
+        };
+    }
+
+    if (refreshScheduledListBtn) {
+        refreshScheduledListBtn.onclick = loadScheduledPostsList;
+    }
+
+    async function loadScheduledPostsList() {
+        if (!scheduledListContainer) return;
+
+        try {
+            scheduledListContainer.innerHTML = `
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size: 30px; color: #2563eb; margin-bottom: 15px;"></i>
+                    <p style="color: #64748b;">Đang tải danh sách bài viết...</p>
+                </div>
+            `;
+
+            const response = await apiRequest('/facebook/publish/posts/scheduled');
+            const drafts = response.drafts || [];
+
+            if (drafts.length === 0) {
+                scheduledListContainer.innerHTML = `
+                    <div style="text-align: center; padding: 50px;">
+                        <img src="./images/icon-trong.png" style="width: 80px; opacity: 0.3; margin-bottom: 15px;">
+                        <p style="color: #64748b;">Chưa có bài viết nào được hẹn giờ.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            renderScheduledList(drafts);
+        } catch (error) {
+            scheduledListContainer.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #ef4444;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 30px; margin-bottom: 15px;"></i>
+                    <p>Lỗi: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function renderScheduledList(drafts) {
+        let html = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                    <tr>
+                        <th style="padding: 12px 20px; text-align: left; font-size: 13px; color: #475569;">Nội dung</th>
+                        <th style="padding: 12px 20px; text-align: left; font-size: 13px; color: #475569;">Lịch đăng</th>
+                        <th style="padding: 12px 20px; text-align: center; font-size: 13px; color: #475569;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        drafts.forEach(post => {
+            const timeStr = post.scheduled_time ? new Date(post.scheduled_time).toLocaleString('vi-VN') : 'N/A';
+            const content = post.article_content || post.content || '';
+            const snippet = content.length > 100 ? content.substring(0, 100) + '...' : content;
+
+            html += `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 15px 20px;">
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">${post.article_topic || 'Bài viết'}</div>
+                        <div style="font-size: 12px; color: #64748b; line-height: 1.5;">${snippet}</div>
+                    </td>
+                    <td style="padding: 15px 20px; white-space: nowrap;">
+                        <span style="display: flex; align-items: center; gap: 5px; color: #2563eb; font-weight: 500;">
+                            <i class="far fa-calendar-alt"></i> ${timeStr}
+                        </span>
+                    </td>
+                    <td style="padding: 15px 20px; text-align: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <button onclick="openRescheduleModal(${post.id}, '${post.scheduled_time}')" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                <i class="fas fa-edit"></i> Sửa giờ
+                            </button>
+                            <button onclick="cancelScheduledPost(${post.id})" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                <i class="fas fa-trash-alt"></i> Hủy
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        scheduledListContainer.innerHTML = html;
+    }
+
+    // --- CẬP NHẬT THỜI GIAN (PUT) ---
+    window.openRescheduleModal = function (id, currentTime) {
+        postBeingRescheduled = id;
+        if (rescheduleModal && newScheduleTimeInput) {
+            // Set current time to input
+            if (currentTime) {
+                const date = new Date(currentTime);
+                const offset = date.getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(date - offset)).toISOString().slice(0, 16);
+                newScheduleTimeInput.value = localISOTime;
+            }
+            rescheduleModal.style.display = 'block';
+        }
+    };
+
+    const hideRescheduleModal = () => {
+        if (rescheduleModal) rescheduleModal.style.display = 'none';
+        postBeingRescheduled = null;
+    };
+
+    if (closeRescheduleModal) closeRescheduleModal.onclick = hideRescheduleModal;
+    if (cancelRescheduleBtn) cancelRescheduleBtn.onclick = hideRescheduleModal;
+
+    if (confirmRescheduleBtn) {
+        confirmRescheduleBtn.onclick = async () => {
+            const newTime = newScheduleTimeInput.value;
+            if (!newTime) return alert("Vui lòng chọn thời gian mới!");
+
+            const selectedTime = new Date(newTime);
+            if (selectedTime < new Date()) {
+                return alert("Thời gian hẹn giờ phải ở tương lai!");
+            }
+
+            try {
+                confirmRescheduleBtn.disabled = true;
+                confirmRescheduleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang cập nhật...';
+
+                // Bắt buộc ID phải là số nguyên
+                const parsedId = parseInt(postBeingRescheduled);
+                if (isNaN(parsedId)) throw new Error("ID bài viết không hợp lệ");
+
+                const response = await apiRequest(`/facebook/publish/posts/scheduled/${parsedId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        draft_post_id: parsedId, // Có khi backend cần cả trong body
+                        scheduled_time: Math.floor(selectedTime.getTime() / 1000) // Backend dùng Unix Timestamp
+                    })
+                });
+
+                if (response && response.success) {
+                    alert("✅ Cập nhật ngày đăng thành công!");
+                    hideRescheduleModal();
+                    loadScheduledPostsList();
+                } else {
+                    throw new Error(response?.message || "Cập nhật thất bại");
+                }
+            } catch (error) {
+                console.error("❌ Lỗi cập nhật lịch:", error);
+                alert("❌ Lỗi: " + error.message);
+            } finally {
+                confirmRescheduleBtn.disabled = false;
+                confirmRescheduleBtn.innerHTML = 'Cập nhật';
+            }
+        };
+    }
+    // Hủy bài viết (DELETE)
+    window.cancelScheduledPost = async function (id) {
+        if (!confirm("Bạn có chắc chắn muốn hủy bỏ lịch đăng bài này không?")) return;
+
+        try {
+            const response = await apiRequest(`/facebook/publish/posts/scheduled/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response && response.success) {
+                alert("✅ Đã hủy lịch đăng bài thành công!");
+                loadScheduledPostsList();
+            } else {
+                throw new Error(response.message || "Không thể hủy lịch đăng.");
+            }
+        } catch (error) {
+            alert("❌ Lỗi: " + error.message);
+        }
+    };
+
     // --- 5. INITIALIZATION ---
     updatePreviewVisibility();
     await loadConfigs();
@@ -1686,139 +1869,4 @@ document.addEventListener('DOMContentLoaded', async function () {
     loadDraft();
     await loadDraftFromURL();
 
-    // --- Xử lý Hẹn giờ đăng bài ---
-    const scheduleModal = document.getElementById('scheduleModal');
-    const btnActionSchedule = document.querySelector('.btn-action-schedule');
-    const closeScheduleModal = document.getElementById('closeScheduleModal');
-    const cancelSchedule = document.getElementById('cancelSchedule');
-    const confirmSchedule = document.getElementById('confirmSchedule');
-    const scheduleTimeInput = document.getElementById('scheduleTime');
-
-    if (btnActionSchedule && scheduleModal) {
-        btnActionSchedule.addEventListener('click', () => {
-            scheduleModal.style.display = 'flex';
-            // Set default time to now + 30 mins
-            const now = new Date();
-            now.setMinutes(now.getMinutes() + 30);
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Local time adjustment
-            scheduleTimeInput.value = now.toISOString().slice(0, 16);
-        });
-    }
-
-    const hideScheduleModal = () => {
-        if (scheduleModal) scheduleModal.style.display = 'none';
-    };
-
-    if (closeScheduleModal) closeScheduleModal.addEventListener('click', hideScheduleModal);
-    if (cancelSchedule) cancelSchedule.addEventListener('click', hideScheduleModal);
-
-// THAY THẾ toàn bộ phần confirmSchedule bằng:
-if (confirmSchedule) {
-    confirmSchedule.addEventListener('click', async () => {
-        console.log("🔍 DEBUG - Click confirmSchedule");
-        console.log("draft_post_id trước:", draft_post_id);
-        
-        // Lấy nội dung trước
-        const previewContentEl = document.getElementById('preview-content');
-        if (!previewContentEl) return alert("⚠️ Không tìm thấy nội dung!");
-        
-        const currentContent = previewContentEl.innerHTML
-            .replace(/<br\s*\/?>/gi, '\n')
-            .replace(/<[^>]+>/g, '')
-            .trim();
-            
-        if (!currentContent || currentContent === 'Nhập nội dung để xem trước bài viết...') {
-            return alert("⚠️ Vui lòng nhập nội dung trước!");
-        }
-        
-        const timeVal = scheduleTimeInput.value;
-        if (!timeVal) return alert("⚠️ Vui lòng chọn thời gian!");
-        
-        const selectedDate = new Date(timeVal);
-        if (isNaN(selectedDate.getTime())) return alert("⚠️ Thời gian không hợp lệ!");
-        
-        if (!currentDefaultConnection?.page_id) {
-            return alert("⚠️ Chưa có thông tin Fanpage!");
-        }
-        
-        try {
-            confirmSchedule.disabled = true;
-            confirmSchedule.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-            
-            // 1. Đảm bảo có draft_post_id
-            let finalDraftId = draft_post_id;
-            
-            if (!finalDraftId || finalDraftId === "null" || finalDraftId === "undefined") {
-                console.log("🆕 Tạo draft mới...");
-                const configId = document.getElementById('config_template')?.value;
-                
-                const draftRes = await apiRequest('/facebook/generate/content', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        config_id: configId ? parseInt(configId) : 1,
-                        topic: inputIdea?.value || "Bài viết hẹn giờ",
-                        content: currentContent
-                    })
-                });
-                
-                if (draftRes?.success) {
-                    finalDraftId = draftRes.data?.draft_id || draftRes.data?.id;
-                    draft_post_id = finalDraftId;
-                    console.log("✅ Draft ID mới:", finalDraftId);
-                } else {
-                    throw new Error("Không thể tạo draft: " + (draftRes?.message || ""));
-                }
-            }
-            
-            // 2. Parse ID
-            const parsedId = parseInt(finalDraftId);
-            if (isNaN(parsedId)) {
-                throw new Error(`ID không hợp lệ: ${finalDraftId}`);
-            }
-            
-            // 3. Upload media
-            let media = { photos: [], videos: [] };
-            if (allSelectedImages.length > 0) {
-                media = await uploadAllMedia();
-            }
-            
-            // 4. Tạo payload
-            const payload = {
-                draft_post_id: parsedId,
-                page_id: currentDefaultConnection.page_id,
-                message: currentContent,
-                scheduled_time: selectedDate.toISOString(),
-                photo_ids: media.photos,
-                video_ids: media.videos
-            };
-            
-            console.log("📤 Sending payload:", payload);
-            
-            // 5. Gọi API
-            const response = await apiRequest('/facebook/publish/schedule', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            if (response?.success) {
-                const timeStr = selectedDate.toLocaleString('vi-VN');
-                alert(`✅ Đã lên lịch đăng bài!\nThời gian: ${timeStr}`);
-                hideScheduleModal();
-                clearDraft();
-                location.reload();
-            } else {
-                throw new Error(response?.message || "Lỗi hẹn giờ");
-            }
-            
-        } catch (error) {
-            console.error("❌ Lỗi:", error);
-            alert("❌ " + error.message);
-        } finally {
-            confirmSchedule.disabled = false;
-            confirmSchedule.innerHTML = '<i class="fas fa-calendar-check"></i> Xác nhận';
-        }
-    });
-}
 });

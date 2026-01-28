@@ -130,7 +130,7 @@
         <div class="form-group" style="margin-bottom: 20px;">
             <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #475569;">Chọn thời gian đăng:</label>
             <input type="datetime-local" id="scheduleTime" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
-            <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Thời gian phải cách ít nhất 15 phút so với hiện tại.</p>
+            <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Hệ thống hỗ trợ hẹn giờ từ 10 giây đến 6 tháng.</p>
         </div>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button id="cancelSchedule" class="btn-use-sm" style="background: #f1f5f9; color: #475569;">Hủy</button>

@@ -169,7 +169,6 @@ async function searchNews(query, maxResults = 10) {
         return null;
     }
 }
-
 // BƯỚC 3.3: Lấy chi tiết nội dung bài viết 
 async function crawlArticles(articles) {
     console.log("📥 [API] Crawling articles:", articles.length);

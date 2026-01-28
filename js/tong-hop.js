@@ -16,13 +16,16 @@ function checkAuth() {
  */
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+
+    const utcDate = new Date(dateString); // parse theo UTC hoặc local tùy chuỗi
+    const vnTime = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);  // +7 giờ
+    const day    = String(vnTime.getDate()).padStart(2, '0');
+    const month  = String(vnTime.getMonth() + 1).padStart(2, '0');
+    const year   = vnTime.getFullYear();
+    const hours  = String(vnTime.getHours()).padStart(2, '0');
+    const minutes = String(vnTime.getMinutes()).padStart(2, '0');
+
+    return `${hours}:${minutes} ${day}/${month}/${year}`;
 }
 
 /**
@@ -54,7 +57,6 @@ async function fetchArticles(limit = 10, offset = 0) {
 }
 
 let currentFbStatus = ''; // Biến lưu trạng thái lọc Facebook hiện tại
-
 async function fetchFacebookPosts(limit = 10, offset = 0) {
     try {
         let url = '/facebook/publish/posts';
@@ -318,7 +320,7 @@ function renderArticles(articles, isLoading = false) {
                             <i class="fas fa-chart-line"></i>
                         </button>-->
                         ${(item.status !== 'posted' && !item.published) ? `
-                        <button class="action-btn-mini" style="color: #ca8a04;" onclick="window.openScheduleModal('${item.id}')" title="${item.status === 'scheduled' ? 'Đổi lịch' : 'Hẹn giờ'}">
+                        <button class="action-btn-mini" style="color: #ca8a04;" onclick="window.openScheduleModal('${item.id}', '${item.status}')" title="${item.status === 'scheduled' ? 'Đổi lịch' : 'Hẹn giờ'}">
                             <i class="fas fa-clock"></i>
                         </button>
                         ` : ''}
@@ -372,8 +374,10 @@ window.editArticle = (id) => {
 };
 
 let currentSchedulingId = null;
-window.openScheduleModal = (id) => {
+let currentSchedulingStatus = null;
+window.openScheduleModal = (id, status = null) => {
     currentSchedulingId = id;
+    currentSchedulingStatus = status;
     const modal = document.getElementById('scheduleModal');
     const input = document.getElementById('scheduleTime');
     if (modal) {
@@ -398,35 +402,63 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
     if (cancelBtn) cancelBtn.onclick = () => modal.style.display = 'none';
     if (confirmBtn) {
-        confirmBtn.onclick = async () => {
+       confirmBtn.onclick = async () => {
             const time = input.value;
             if (!time) return alert("Vui lòng chọn thời gian!");
+
+            if (!currentSchedulingId) return alert("⚠️ Lỗi: Không xác định được ID bài viết.");
+
+            // Validate thời gian
+            const selectedTime = new Date(time);
+            const now = new Date();
+            const diffSeconds = (selectedTime - now) / 1000;
+            const sixMonthsSeconds = 6 * 30 * 24 * 60 * 60;
+
+            if (diffSeconds < 600) {  // 10 phút
+                return alert("⚠️ Thời gian hẹn giờ phải ít nhất 10 phút sau!");
+            }
+            if (diffSeconds > sixMonthsSeconds) {
+                return alert("⚠️ Thời gian hẹn giờ không được quá 6 tháng!");
+            }
+
+            // === THÊM DÒNG NÀY ĐỂ KHẮC PHỤC LỖI ===
+            const scheduledTimestamp = Math.floor(selectedTime.getTime() / 1000);
 
             try {
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = 'Đang xử lý...';
 
-                const response = await apiRequest(`/facebook/publish/posts/scheduled/${draft_post_id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        scheduled_publish_time: time
-                    })
+                const parsedId = parseInt(currentSchedulingId);
+                if (isNaN(parsedId)) throw new Error("ID bài viết không hợp lệ");
+
+                // Payload cho POST (cách đặt lịch lần đầu)
+                const payload = {
+                    draft_post_id: parsedId,
+                    published: false,
+                    scheduled_publish_time: scheduledTimestamp  // ← Sử dụng biến đã khai báo
+                    // Nếu backend yêu cầu thêm: page_id, message, photo_ids, video_ids
+                };
+
+                console.log("Gửi POST đặt lịch:", payload);
+
+                const response = await apiRequest('/facebook/publish/posts/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
-
                 if (response && response.success) {
-                    alert("Đã cập nhật lịch đăng bài thành công!");
+                    alert("Đã đặt lịch đăng bài thành công!");
                     modal.style.display = 'none';
-                    // We need access to goToPage and currentPage
-                    // These are global in tong-hop.js but this listener is in DOMContentLoaded
-                    // goToPage and currentPage are defined at the top level so they should be available
                     if (typeof goToPage === 'function') goToPage(currentPage);
                     if (typeof updateStats === 'function') updateStats();
                 } else {
-                    alert("Lỗi: " + (response.message || "Không thể cập nhật lịch bài đăng"));
+                    throw new Error(response?.message || "Hẹn giờ thất bại");
                 }
+
             } catch (error) {
-                alert("Lỗi kết nối: " + error.message);
+                console.error("❌ Lỗi hẹn giờ:", error);
+                alert("Lỗi: " + (error.message || "Không thể đặt lịch"));
             } finally {
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = 'Xác nhận';
@@ -475,6 +507,7 @@ window.deleteArticle = async (id) => {
 /**
  * PHẦN 5: CẬP NHẬT THỐNG KÊ (Stats Cards)
  */
+
 async function updateStats(startDate = null, endDate = null) {
     try {
         // 1. Tính tổng SEO
@@ -490,7 +523,6 @@ async function updateStats(startDate = null, endDate = null) {
 
             if (seoCardNum) seoCardNum.textContent = `${articles.length} bài`;
             if (seoCardSub) seoCardSub.textContent = `${draftCount} nháp · ${publishedCount} xuất bản`;
-
             if (currentTab === 'seo') totalArticles = seoRes.total || articles.length;
         }
 
@@ -850,7 +882,7 @@ window.renderFacebookChart = async (startDate = null, endDate = null) => {
                 }
             });
 
-            
+
             const hoursLabels = Array.from({ length: 24 }, (_, i) => i.toString());
 
             window.myFbChart = new Chart(fbCtx, {

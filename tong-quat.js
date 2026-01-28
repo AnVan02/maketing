@@ -93,7 +93,7 @@ async function fetchFacebookPosts(limit = 10, offset = 0) {
 /**
  * MODULE XỬ LÝ ANALYTICS FACEBOOK
  */
-const FacebookAnalytics = (function() {
+const FacebookAnalytics = (function () {
     // Biến toàn cục
     let facebookChart = null;
     let currentSummary = null;
@@ -162,16 +162,16 @@ const FacebookAnalytics = (function() {
     async function loadFacebookAnalytics() {
         try {
             console.log('📊 Đang tải Facebook analytics...');
-            
+
             // Hiển thị trạng thái loading
             showLoadingState(true);
 
             // Tính toán period dựa trên date range
             const period = calculatePeriodFromDates(dateRange.start, dateRange.end);
-            
+
             // Lấy dữ liệu tổng quan
             const summary = await getEngagementSummary(period);
-            
+
             if (summary && summary.success) {
                 currentSummary = summary.data;
                 updateChart(currentSummary);
@@ -187,7 +187,7 @@ const FacebookAnalytics = (function() {
             }
 
             showNotification('✅ Cập nhật dữ liệu Facebook thành công', 'success');
-            
+
         } catch (error) {
             console.error('❌ Lỗi tải Facebook analytics:', error);
             showNotification(`❌ Lỗi: ${error.message}`, 'error');
@@ -288,7 +288,7 @@ const FacebookAnalytics = (function() {
                             font: {
                                 size: 11
                             },
-                            callback: function(value) {
+                            callback: function (value) {
                                 if (value >= 1000) {
                                     return (value / 1000).toFixed(1) + 'k';
                                 }
@@ -332,7 +332,7 @@ const FacebookAnalytics = (function() {
         const totalInteractions = document.querySelector('#analytics-facebook .footer-item:nth-child(1) .footer-value');
         if (totalInteractions && summaryData.total_interactions) {
             totalInteractions.textContent = formatNumber(summaryData.total_interactions);
-            
+
             // Cập nhật trend
             const trendElement = totalInteractions.nextElementSibling;
             if (trendElement && summaryData.interaction_growth) {
@@ -350,7 +350,7 @@ const FacebookAnalytics = (function() {
         const ctrElement = document.querySelector('#analytics-facebook .footer-item:nth-child(3) .footer-value');
         if (ctrElement && summaryData.average_ctr) {
             ctrElement.textContent = `${summaryData.average_ctr.toFixed(2)}%`;
-            
+
             // Cập nhật trend CTR
             const ctrTrendElement = ctrElement.nextElementSibling;
             if (ctrTrendElement && summaryData.ctr_growth) {
@@ -369,7 +369,7 @@ const FacebookAnalytics = (function() {
             postName.className = 'footer-post-name';
             postName.textContent = truncateText(topPost.content || 'Bài viết không có nội dung', 30);
             postName.title = topPost.content || '';
-            
+
             // Thêm vào footer item
             const existingPostName = topPostItem.querySelector('.footer-post-name');
             if (existingPostName) {
@@ -422,7 +422,7 @@ const FacebookAnalytics = (function() {
         const startDate = new Date(start);
         const endDate = new Date(end);
         const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-        
+
         if (diffDays <= 1) return 'today';
         if (diffDays <= 7) return '7days';
         if (diffDays <= 30) return '30days';
@@ -433,12 +433,12 @@ const FacebookAnalytics = (function() {
         const dates = [];
         const currentDate = new Date(start);
         const endDate = new Date(end);
-        
+
         while (currentDate <= endDate) {
             dates.push(new Date(currentDate));
             currentDate.setDate(currentDate.getDate() + 1);
         }
-        
+
         return dates;
     }
 
@@ -461,9 +461,9 @@ const FacebookAnalytics = (function() {
 
     function updateTrendElement(element, growth, isPercentage = false) {
         if (!element || growth === undefined) return;
-        
+
         element.className = 'footer-trend';
-        
+
         if (growth > 0) {
             element.classList.add('trend-up');
             element.innerHTML = `<i class="fas fa-arrow-up"></i> ${isPercentage ? growth.toFixed(2) + '%' : formatNumber(growth)}`;
@@ -733,7 +733,7 @@ function renderArticles(articles, isLoading = false) {
             const totalEngage = likes + comments + shares;
 
             // Button metrics với chức năng thực
-            const metricsButton = item.facebook_post_id ? 
+            const metricsButton = item.facebook_post_id ?
                 `<button class="action-btn-mini" style="color: #10B981;" onclick="window.viewMetrics('${item.id}')" title="Xem chỉ số">
                     <i class="fas fa-chart-line"></i>
                 </button>` :
@@ -861,7 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await apiRequest(`/facebook/publish/posts/scheduled/${currentSchedulingId}`, {
                     method: 'PUT',
                     body: JSON.stringify({
-                        scheduled_publish_time: time
+                        scheduled_time: Math.floor(new Date(time).getTime() / 1000)
                     })
                 });
 
@@ -1596,7 +1596,7 @@ window.viewMetrics = async (draftId) => {
                         backgroundColor: 'rgba(245, 158, 11, 0.1)',
                         fill: true,
                         tension: 0.4
-                }
+                    }
                 ]
             },
             options: {

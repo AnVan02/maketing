@@ -13,6 +13,7 @@
 </head>
 
 <body>
+
     <?php require "header.php"; ?>
     <!-- Main Layout -->
     <main class="layout">
@@ -35,15 +36,14 @@
                     <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                 </div>
                 <a href="#" class="forgot-password">Quên mật khẩu</a>
-
                 <button type="submit" class="login-btn">ĐĂNG NHẬP</button>
             </form>
             <p class="register-prompt">
                 Chưa có tài khoản? <a href="dang-ky.php">Đăng ký ngay</a>
             </p>
+
         </div>
     </main>
-
     <!-- Background overlay elements for extra glow if needed -->
     <div class="bg-gradient"></div>
 

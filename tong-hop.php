@@ -111,7 +111,6 @@
             </div>
         </div>
     </div>
-
     <div class="activity-section">
         <div class="activity-table-container">
             <table class="activity-table">
@@ -151,7 +150,7 @@
                     <h4>SEO – Lượt truy cập gần đây</h4>
                     <span class="header-subtitle">Thống kê 7 ngày qua</span>
                 </div>
-                 <div class="card-actions">
+                <div class="card-actions">
                     <div class="date-selector" style="background: #f8fafc; padding: 4px 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
                         <i class="far fa-calendar-alt" style="color: #64748b;"></i>
                         <input type="date" id="facebook_start_date" style="border: none; background: transparent; font-size: 13px; color: #334155; width: 110px;">
@@ -168,26 +167,26 @@
             </div>
 
             <div class="analytics-footer">
-              <div class="footer-item">
-                <span class="footer-lalel">Bài viêt lên top</span>
-                <span class="footer-value">--</span>
-                <span class="footer-trend trend-neutral">
-                    <span style="font-size: 11px; color:#64748b"></span>
-                </span>
-              </div>
-              <div class="footer-item">
-                <span class="footer-label">Bài viết nổi bật</span>
-                <span class="footer-value">---</span>
-                <span class="footer-trend trend-neutral">Lượt tương tác seo</span>
-              </div>
-              <div class="footer-item">
-                <span class="footer-label">Ti lệ click (CTR)</span>
-                <span class="footer-value">--%</span>
-                <span class="footer-trend trend-neutral">
-                    <span style="font-size: 11px; color:#64748b;">Ước tính</span>
-                </span>
+                <div class="footer-item">
+                    <span class="footer-lalel">Bài viêt lên top</span>
+                    <span class="footer-value">--</span>
+                    <span class="footer-trend trend-neutral">
+                        <span style="font-size: 11px; color:#64748b"></span>
+                    </span>
+                </div>
+                <div class="footer-item">
+                    <span class="footer-label">Bài viết nổi bật</span>
+                    <span class="footer-value">---</span>
+                    <span class="footer-trend trend-neutral">Lượt tương tác seo</span>
+                </div>
+                <div class="footer-item">
+                    <span class="footer-label">Ti lệ click (CTR)</span>
+                    <span class="footer-value">--%</span>
+                    <span class="footer-trend trend-neutral">
+                        <span style="font-size: 11px; color:#64748b;">Ước tính</span>
+                    </span>
 
-              </div>
+                </div>
             </div>
         </div>
         <!-- Facebook Analytics -->
@@ -263,7 +262,7 @@
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #475569;">Chọn thời gian đăng:</label>
                     <input type="datetime-local" id="scheduleTime" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
-                    <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Thời gian phải cách ít nhất 15 phút so với hiện tại.</p>
+                    <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Hệ thống hỗ trợ hẹn giờ từ 10 giây đến 6 tháng.</p>
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                     <button id="cancelSchedule" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; font-size: 14px;">Hủy</button>
@@ -276,22 +275,26 @@
     <style>
         .custom-modal {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
         }
+
         .modal-content {
             background: white;
             padding: 24px;
             border-radius: 12px;
             width: 90%;
             max-width: 600px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -300,6 +303,7 @@
             padding-bottom: 12px;
             border-bottom: 1px solid #f1f5f9;
         }
+
         .close-modal {
             background: none;
             border: none;
@@ -307,7 +311,10 @@
             cursor: pointer;
             color: #64748b;
         }
-        .close-modal:hover { color: #1e293b; }
+
+        .close-modal:hover {
+            color: #1e293b;
+        }
     </style>
 </div>
 

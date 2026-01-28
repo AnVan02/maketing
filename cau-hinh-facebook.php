@@ -43,30 +43,33 @@
 
                     <!-- Hẹn giờ bài đăng  -->
                     <div class="toggle-row">
-                        <button class="btn-action-schedule" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                        <button id="schedule-btn" class="btn-action-schedule" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
                             <i class="fas fa-clock"></i> Hẹn giờ bài đăng
                         </button>
-                        <div id="scheduleModal" class="custom-modal" style="display: none;">
+                        <button id="manage-scheduled-btn" style="background: #fff; color: #64748b; border: 1px solid #e2e8f0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px; margin-left: 10px;">
+                            <i class="fas fa-tasks"></i> Quản lý lịch đăng
+                        </button>
+                        <div id="schedule-modal" class="custom-modal" style="display: none;">
                             <div class="modal-content" style="width: 400px;">
                                 <div class="modal-header">
                                     <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">Hẹn giờ đăng bài</h3>
-                                    <button class="close-modal" id="closeScheduleModal">&times;</button>
+                                    <span class="close" id="close-schedule-modal" style="cursor: pointer; font-size: 24px; color: #94a3b8;">&times;</span>
                                 </div>
                                 <div class="modal-body">
                                     <div class="form-group" style="margin-bottom: 20px;">
                                         <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #475569;">Chọn thời gian đăng:</label>
-                                        <input type="datetime-local" id="scheduleTime" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
-                                        <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Thời gian phải cách ít nhất 15 phút so với hiện tại.</p>
+                                        <input type="datetime-local" id="schedule-time" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                                        <p style="margin-top: 8px; font-size: 12px; color: #64748b;">Hệ thống hỗ trợ hẹn giờ từ 10 giây đến 6 tháng.</p>
                                     </div>
                                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                                        <button id="cancelSchedule" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; font-size: 14px;">Hủy</button>
-                                        <button id="confirmSchedule" style="padding: 8px 16px; border-radius: 6px; border: none; background: #2563eb; color: white; cursor: pointer; font-size: 14px;">Xác nhận</button>
+                                        <button id="cancel-schedule" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; font-size: 14px;">Hủy</button>
+                                        <button id="confirm-schedule" style="padding: 8px 16px; border-radius: 6px; border: none; background: #2563eb; color: white; cursor: pointer; font-size: 14px;">Xác nhận</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="margin-top: 20px;">
                         <!-- Toggles -->
                         <div class="toggle-row">
@@ -390,6 +393,48 @@
     <span class="close-lightbox">&times;</span>
     <img class="lightbox-content" id="lightbox-img">
     <div id="lightbox-caption"></div>
+</div>
+
+<!-- Scheduled Posts Modal -->
+<div id="scheduled-posts-modal" class="custom-modal" style="display: none;">
+    <div class="modal-content" style="width: 800px; max-width: 95%;">
+        <div class="modal-header">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-clock" style="color: #2563eb;"></i> Danh sách bài viết đã hẹn giờ
+            </h3>
+            <span class="close" id="close-scheduled-posts-modal" style="cursor: pointer; font-size: 24px; color: #94a3b8;">&times;</span>
+        </div>
+        <div class="modal-body" style="padding: 0;">
+            <div style="padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: flex-end;">
+                <button id="refresh-scheduled-list-btn" style="background: none; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #64748b; font-size: 13px; display: flex; align-items: center; gap: 5px;">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+            <div id="scheduled-posts-list-container" style="max-height: 500px; overflow-y: auto;">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reschedule Modal -->
+<div id="reschedule-modal" class="custom-modal" style="display: none; z-index: 1001;">
+    <div class="modal-content" style="width: 400px;">
+        <div class="modal-header">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Cập nhật thời gian đăng</h3>
+            <span class="close" id="close-reschedule-modal" style="cursor: pointer; font-size: 24px;">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Chọn thời gian mới:</label>
+                <input type="datetime-local" id="new-schedule-time" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="cancel-reschedule" style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; cursor: pointer;">Hủy</button>
+                <button id="confirm-reschedule" style="padding: 8px 16px; border: none; border-radius: 6px; background: #2563eb; color: white; cursor: pointer;">Cập nhật</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Các script khác -->

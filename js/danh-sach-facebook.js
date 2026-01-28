@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 apiRequest('/facebook/publish/posts/drafts'),
                 apiRequest('/facebook/publish/posts/drafts?status=draft'),
                 apiRequest('/facebook/publish/posts/drafts?status=posted'),
-                apiRequest('/facebook/publish/posts/drafts?status=scheduled')
+                apiRequest('/facebook/publish/posts/scheduled')
             ]);
 
             // Cập nhật UI
@@ -70,7 +70,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             let url = '/facebook/publish/posts/drafts';
 
             // Thêm query parameter status nếu có filter
-            if (currentFilterStatus) {
+            if (currentFilterStatus === 'scheduled') {
+                url = '/facebook/publish/posts/scheduled';
+            } else if (currentFilterStatus) {
                 url += `?status=${currentFilterStatus}`;
             }
             // Nếu không có filter (lấy tất cả), không cần thêm gì
@@ -202,9 +204,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <button class="btn-action-delete" onclick="window.deleteArticle(${post.id})">
                                 <i class="fas fa-trash-alt"></i> Xoá
                             </button>
-                            ${!isPublished ? `
-                            <button class="btn-action-schedule" onclick="window.openScheduleModal(${post.id})" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                            ${!isPublished && post.status === 'scheduled' ? `
+                            <button class="btn-action-cancel" onclick="window.cancelSchedule(${post.id})" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-calendar-times"></i> Hủy
+                            </button>
+                            ` : ''}
+                            ${!isPublished && post.status !== 'scheduled' ? `
+                            <button class="btn-action-schedule" onclick="window.openScheduleModal(${post.id}, '${post.status}')" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-clock"></i> Lịch
+                            </button>
+                            ` : ''}
+                            ${post.status === 'scheduled' ? `
+                            <button class="btn-action-schedule" onclick="window.openScheduleModal(${post.id}, '${post.status}')" style="background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-clock"></i> Đổi lịch
                             </button>
                             ` : ''}
                             <button class="btn-action-edit" onclick="window.editArticle(${post.id})">
@@ -300,11 +312,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- CÁC HÀM HÀNH ĐỘNG ---
 
     let currentSchedulingId = null;
+    let currentSchedulingStatus = null;
     const scheduleModal = document.getElementById('scheduleModal');
     const scheduleInput = document.getElementById('scheduleTime');
 
-    window.openScheduleModal = function (id) {
+    window.openScheduleModal = function (id, status = null) {
         currentSchedulingId = id;
+        currentSchedulingStatus = status;
         if (scheduleModal) {
             scheduleModal.style.display = 'flex';
             // Set default time to 30 mins from now
@@ -323,15 +337,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             const time = scheduleInput.value;
             if (!time) return alert("Vui lòng chọn thời gian!");
 
+            if (!currentSchedulingId) return alert(" Lỗi: Không xác định được ID bài viết.");
+
+            // Validate thời gian
+            const selectedTime = new Date(time);
+            const now = new Date();
+            const diffSeconds = (selectedTime - now) / 1000;
+            const sixMonthsSeconds = 6 * 30 * 24 * 60 * 60; // 180 ngày
+
+            if (diffSeconds < 10) {
+                return alert("Thời gian hẹn giờ phải ít nhất 10 giây sau thời điểm hiện tại!");
+            }
+            if (diffSeconds > sixMonthsSeconds) {
+                return alert(" Thời gian hẹn giờ không được quá 6 tháng!");
+            }
+
             try {
                 const btn = document.getElementById('confirmSchedule');
                 btn.disabled = true;
                 btn.textContent = 'Đang xử lý...';
-                // cập nhập thời gian đăng bài theo lịch trình 
-                const response = await apiRequest(`/facebook/publish/posts/scheduled/${currentSchedulingId}`, {
-                    method: 'PUT',
+
+                let url = '/facebook/publish/posts/scheduled';
+                let method = 'POST';
+
+                // Nếu đã là bài scheduled thì dùng PUT để cập nhật
+                if (currentSchedulingStatus === 'scheduled') {
+                    url = `/facebook/publish/posts/scheduled/${currentSchedulingId}`;
+                    method = 'PUT';
+                }
+
+                const response = await apiRequest(url, {
+                    method: method,
                     body: JSON.stringify({
-                        scheduled_publish_time: time
+                        draft_post_id: parseInt(currentSchedulingId),
+                        scheduled_time: Math.floor(selectedTime.getTime() / 1000)
                     })
                 });
 
@@ -371,9 +410,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = `cau-hinh-facebook.php?draft_id=${id}`;
     };
 
+    window.cancelSchedule = async (id) => {
+        if (!confirm('Bạn có chắc muốn hủy lịch đăng cho bài viết này?')) return;
+        try {
+            const res = await apiRequest(`/facebook/publish/posts/scheduled/${id}`, { method: 'DELETE' });
+            if (res && res.success) {
+                alert('Đã hủy lịch đăng thành công!');
+                window.refreshPostsTable(currentPage);
+                loadStats();
+            } else {
+                alert('Lỗi: ' + (res.message || 'Không thể hủy lịch'));
+            }
+        } catch (e) {
+            alert('Lỗi kết nối: ' + e.message);
+        }
+    };
+
+
     // --- KHỞI CHẠY ---
     await loadStats(); // Load thống kê trước
     await window.refreshPostsTable(1);
 });
-
-
